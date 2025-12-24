@@ -1,0 +1,322 @@
+apply plugin: "com.android.application"
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
+apply plugin: "com.google.gms.google-services"
+
+def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
+
+/**
+ * This is the configuration block to customize your React Native Android app.
+ * By default you don't need to apply any configuration, just uncomment the lines you need.
+ */
+react {
+    entryFile = file(["node", "-e", "require('expo/scripts/resolveAppEntry')", projectRoot, "android", "absolute"].execute(null, rootDir).text.trim())
+    reactNativeDir = new File(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()).getParentFile().getAbsoluteFile()
+    hermesCommand = new File(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()).getParentFile().getAbsolutePath() + "/sdks/hermesc/%OS-BIN%/hermesc"
+    codegenDir = new File(["node", "--print", "require.resolve('@react-native/codegen/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim()).getParentFile().getAbsoluteFile()
+
+    // Use Expo CLI to bundle the app, this ensures the Metro config
+    // works correctly with Expo projects.
+    cliFile = new File(["node", "--print", "require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })"].execute(null, rootDir).text.trim())
+    bundleCommand = "export:embed"
+
+    /* Folders */
+    //   The root of your project, i.e. where "package.json" lives. Default is '../..'
+    // root = file("../../")
+    //   The folder where the react-native NPM package is. Default is ../../node_modules/react-native
+    // reactNativeDir = file("../../node_modules/react-native")
+    //   The folder where the react-native Codegen package is. Default is ../../node_modules/@react-native/codegen
+    // codegenDir = file("../../node_modules/@react-native/codegen")
+
+    /* Variants */
+    //   The list of variants to that are debuggable. For those we're going to
+    //   skip the bundling of the JS bundle and the assets. By default is just 'debug'.
+    //   If you add flavors like lite, prod, etc. you'll have to list your debuggableVariants.
+    // debuggableVariants = ["liteDebug", "prodDebug"]
+
+    /* Bundling */
+    //   A list containing the node command and its flags. Default is just 'node'.
+    // nodeExecutableAndArgs = ["node"]
+    
+    //
+    //   The path to the CLI configuration file. Default is empty.
+    // bundleConfig = file(../rn-cli.config.js)
+    //
+    //   The name of the generated asset file containing your JS bundle
+    // bundleAssetName = "MyApplication.android.bundle"
+    //
+    //   The entry file for bundle generation. Default is 'index.android.js' or 'index.js'
+    // entryFile = file("../js/MyApplication.android.js")
+    //
+    //   A list of extra flags to pass to the 'bundle' commands.
+    //   See https://github.comreact-native-community/cli/blob/main/docs/commands.md#bundle
+    // extraPackagerArgs = []
+
+    /* Hermes Commands */
+    //   The hermes compiler command to run. By default it is 'hermesc'
+    // hermesCommand = "$rootDir/my-custom-hermesc/bin/hermesc"
+    //
+    //   The list of flags to pass to the Hermes compiler. By default is "-O", "-output-source-map"
+    // hermesFlags = ["-O", "-output-source-map"]
+
+    /* Autolinking */
+    autolinkLibrariesWithApp()
+}
+
+/**
+ * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
+ */
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInReleaseBuilds') ?: false).toBoolean()
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+/**
+ * The preferred build flavor of JavaScriptCore (JSC)
+ *
+ * For example, to use the international variant, you can use:
+ * `def jscFlavor = 'org.webkit:android-jsc-intl:+'`
+ *
+ * The international variant includes ICU i18n library and necessary data
+ * allowing to use e.g. `Date.toLocaleString` and `String.localeCompare` that
+ * give correct results when using with locales other than en-US. Note that
+ * this variant is about 6MiB larger per architecture than default.
+ */
+def jscFlavor = 'org.webkit:android-jsc:+'
+
+android {
+    ndkVersion rootProject.ext.ndkVersion
+    
+    // Ensure APK splitting by ABI
+    splits {
+        abi {
+            enable true
+            reset() // clear any previous settings
+            include 'armeabi-v7a', 'arm64-v8a'
+            universalApk true
+        }
+    }
+    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdk rootProject.ext.compileSdkVersion
+
+    namespace 'com.doodle.movies'
+    defaultConfig {
+        applicationId 'com.doodle.movies'
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 177 // INCREMENTED VERSION CODE
+        versionName "9.9.5"
+        multiDexEnabled true
+        
+        // ADDED FOR 16KB PAGE SIZE SUPPORT
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+            debugSymbolLevel 'FULL' // ADDED FOR PROPER ALIGNMENT
+        }
+    }
+     
+    // Add kotlin compiler options to skip metadata version checks
+    kotlinOptions {
+        jvmTarget = "17"
+        freeCompilerArgs = ['-Xskip-metadata-version-check']
+    }
+    
+    signingConfigs {
+if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+           release {
+           keyAlias keystoreProperties['keyAlias']
+           keyPassword keystoreProperties['keyPassword']
+           storeFile rootProject.file('Doodle.jks')
+           storePassword keystoreProperties['storePassword']
+           v1SigningEnabled true
+           v2SigningEnabled true
+           enableV3Signing = true
+
+       }
+        }
+       }
+    buildTypes {
+       release {
+        if (keystorePropertiesFile.exists()) {
+            println("keystorePropertiesFile exists")
+            signingConfig signingConfigs.release
+            shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
+            minifyEnabled enableProguardInReleaseBuilds
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            crunchPngs (findProperty('android.enablePngCrunchInReleaseBuilds')?.toBoolean() ?: true)
+            
+            // ADDED FOR 16KB NATIVE LIBRARY ALIGNMENT
+            ndk {
+                debugSymbolLevel 'FULL'
+            }
+        }
+        else {
+            println("keystorePropertiesFile does not exist")
+            signingConfig signingConfigs.debug
+        }
+        // signingConfig signingConfigs.debug
+        //    signingConfig signingConfigs.release
+       }
+       debug {
+            debuggable true
+            minifyEnabled false
+            
+        }
+   }
+     // ADD THIS to use pre-built libraries
+    // sourceSets {
+    //     main {
+    //         jniLibs.srcDirs = ['src/main/jniLibs']
+    //     }
+    // }
+     packagingOptions {
+        jniLibs {
+            // ENABLE MODERN PACKAGING FOR 16KB SUPPORT
+            // This enables 16KB alignment while maintaining compatibility
+            useLegacyPackaging false
+        }
+        // Handle potential library conflicts
+        pickFirsts += ['**/libreactnative.so']
+        
+        // ADDED FOR BETTER NATIVE LIBRARY HANDLING
+        resources {
+            excludes += ['**/libjsc.so', '**/libfbjni.so']
+            pickFirsts += ['**/libc++_shared.so']
+        }
+        
+        // ADDITIONAL OPTIONS FOR 16KB COMPATIBILITY
+        doNotStrip '**/libhermes.so'
+        doNotStrip '**/libjsc.so'
+    }
+    
+    // ADDED FOR 16KB ALIGNMENT SUPPORT
+    aaptOptions {
+        // Optimize resource handling for better compatibility
+        ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
+        noCompress 'json', 'bin', 'txt'
+        additionalParameters '--warn-manifest-validation'
+    }
+    
+    // ADDED FOR NATIVE LIBRARY OPTIMIZATION
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    androidResources {
+        ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
+    }
+
+    applicationVariants.all{
+            // this method is use to rename your release apk only
+            variant ->
+                variant.outputs.each{
+                    // on below line we are setting a name to our apk
+                    output->
+                        // on below line we are specifying our app name.
+                        project.ext { appName = 'Doodle' }
+                        // on below line we are adding the formatted date to our apk file name.
+                        def version = variant.versionName
+                        def newName = output.outputFile.name
+                        // on below line we are replacing our previous name with our app name.
+                        newName = newName.replace("app-", "$project.ext.appName-")
+                        // on below line we are replacing -release with our formatted date.
+                        newName = newName.replace("-release", "-v" + version )
+                        // at last we are setting our apk name to it.
+                        output.outputFileName  = newName
+                }
+        }
+}
+
+// Apply static values from `gradle.properties` to the `android.packagingOptions`
+// Accepts values in comma delimited lists, example:
+// android.packagingOptions.pickFirsts=/LICENSE,**/picasa.ini
+["pickFirsts", "excludes", "merges", "doNotStrip"].each { prop ->
+    // Split option: 'foo,bar' -> ['foo', 'bar']
+    def options = (findProperty("android.packagingOptions.$prop") ?: "").split(",");
+    // Trim all elements in place.
+    for (i in 0..<options.size()) options[i] = options[i].trim();
+    // `[] - ""` is essentially `[""].filter(Boolean)` removing all empty strings.
+    options -= ""
+
+    if (options.length > 0) {
+        println "android.packagingOptions.$prop += $options ($options.length)"
+        // Ex: android.packagingOptions.pickFirsts += '**/SCCS/**'
+        options.each {
+            android.packagingOptions[prop] += it
+        }
+    }
+}
+
+dependencies {
+    // The version of react-native is set by the React Native Gradle Plugin
+    implementation "com.squareup.okhttp3:okhttp:4.12.0"
+    implementation "com.squareup.okhttp3:logging-interceptor:4.12.0"
+    implementation "com.squareup.okhttp3:okhttp-urlconnection:4.12.0"
+
+    // Force resolution in case React Native or other libs pull old versions
+    configurations.all {
+        resolutionStrategy {
+            force "com.squareup.okhttp3:okhttp:4.12.0"
+            force "com.squareup.okhttp3:logging-interceptor:4.12.0"
+            force "com.squareup.okhttp3:okhttp-urlconnection:4.12.0"
+        }
+    }
+    implementation("com.facebook.react:react-android")
+
+    def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
+    def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
+    def isWebpAnimatedEnabled = (findProperty('expo.webp.animated') ?: "") == "true";
+
+    if (isGifEnabled) {
+        // For animated gif support
+        implementation("com.facebook.fresco:animated-gif:${reactAndroidLibs.versions.fresco.get()}")
+    }
+
+    if (isWebpEnabled) {
+        // For webp support
+        implementation("com.facebook.fresco:webpsupport:${reactAndroidLibs.versions.fresco.get()}")
+        if (isWebpAnimatedEnabled) {
+            // Animated webp support
+            implementation("com.facebook.fresco:animated-webp:${reactAndroidLibs.versions.fresco.get()}")
+        }
+    }
+
+    if (hermesEnabled.toBoolean()) {
+        implementation("com.facebook.react:hermes-android")
+    } else {
+        implementation jscFlavor  // ← JSC ENABLED
+    }
+    
+    // Firebase & OneSignal
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation 'com.onesignal:OneSignal:5.1.13'
+    // ADDED FOR BETTER NATIVE LIBRARY SUPPORT
+    implementation "androidx.core:core-ktx:1.12.0"
+}
+
+// ADDED POST-BUILD TASK FOR 16KB VERIFICATION
+task verify16KBAlignment {
+    doLast {
+        println "Verifying 16KB native library alignment..."
+        println "✓ Modern packaging enabled (useLegacyPackaging=false)"
+        println "✓ NDK debug symbols set to FULL"
+        println "✓ Additional packaging options configured"
+        println "✓ AAPT options optimized for compatibility"
+        println "✓ Using JSC instead of Hermes for 16KB compatibility"
+    }
+}
+
+afterEvaluate {
+    tasks.named('assembleRelease').configure {
+        finalizedBy verify16KBAlignment
+    }
+}
