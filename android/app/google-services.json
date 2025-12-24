@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "798975271908",
+    "project_id": "doodle-movies",
+    "storage_bucket": "doodle-movies.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:798975271908:android:f15c39411a823497b1ddf1",
+        "android_client_info": {
+          "package_name": "com.doodle.movies"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKPA3bgXs5KYRCwt1eUeSgpKM9mfKszhk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

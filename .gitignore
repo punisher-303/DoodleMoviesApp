@@ -82,9 +82,6 @@ index.android.bundle
 dist/
 web-build/
 
-# firebase
-google-services.json
-
 #env
 .env
 .env.*
