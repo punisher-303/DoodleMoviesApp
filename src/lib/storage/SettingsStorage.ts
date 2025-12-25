@@ -1,4 +1,4 @@
-import {mainStorage} from './StorageService';
+import { mainStorage } from './StorageService';
 
 /**
  * Storage keys for settings
@@ -69,7 +69,7 @@ export class SettingsStorage {
 
   // UI preferences
   showTabBarLabels(): boolean {
-   return this.getBool(SettingsKeys.SHOW_TAB_BAR_LABELS, true);
+    return this.getBool(SettingsKeys.SHOW_TAB_BAR_LABELS, true);
   }
 
   setShowTabBarLabels(show: boolean): void {
@@ -87,7 +87,7 @@ export class SettingsStorage {
 
   isNotificationsEnabled(): boolean {
     return mainStorage.getBool(SettingsKeys.NOTIFICATIONS_ENABLED) === null
-      ? true
+      ? false
       : mainStorage.getBool(SettingsKeys.NOTIFICATIONS_ENABLED);
   }
 
