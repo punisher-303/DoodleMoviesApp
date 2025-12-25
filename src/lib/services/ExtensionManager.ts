@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import {
   extensionStorage,
@@ -17,11 +18,11 @@ export class ExtensionManager {
 
   private manifestUrl = `${this.baseUrl}/manifest.json`;
 
-  // Test mode configuration 
+  // Test mode configuration
   private testModuleCacheExpiry = 200000;
   private testModuleCache = new Map<
     string,
-    { module: ProviderModule; cachedAt: number }
+    {module: ProviderModule; cachedAt: number}
   >();
 
   static getInstance(): ExtensionManager {
@@ -60,7 +61,7 @@ export class ExtensionManager {
         value: item.value,
         display_name: item.display_name,
         disabled: item.disabled || false,
-        version: String(item.version || '0.0'),
+        version: item.version,
         icon: item.icon || '',
         type: item.type || 'global',
         category: item.category || 'movie/tvshow',

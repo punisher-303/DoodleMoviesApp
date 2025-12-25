@@ -44,6 +44,7 @@ class NotificationService {
   constructor() {
     this.initialize();
   }
+
   private async initialize() {
     if (this.initialized) {
       return;
@@ -126,7 +127,6 @@ class NotificationService {
         pressAction: {
           id: 'default',
         },
-
         progress: options.progress,
         actions: options.actions,
         onlyAlertOnce: options.onlyAlertOnce || false,
@@ -196,7 +196,7 @@ class NotificationService {
       id: fileName,
       title: title,
       body: progressText,
-      data: { jobId, fileName },
+      data: {jobId, fileName},
       progress: {
         max: 100,
         current: Math.min(Math.max(progress * 100, 0), 100),
@@ -244,7 +244,7 @@ class NotificationService {
   async showUpdateAvailable(
     title: string,
     body: string,
-    actions?: Array<{ title: string; pressAction: { id: string } }>,
+    actions?: Array<{title: string; pressAction: {id: string}}>,
   ): Promise<void> {
     await this.displayUpdateNotification({
       id: 'updateAvailable',
@@ -322,7 +322,7 @@ class NotificationService {
   async showUpdateProgress(
     title: string,
     body: string,
-    progress?: { max: number; current: number; indeterminate?: boolean },
+    progress?: {max: number; current: number; indeterminate?: boolean},
   ): Promise<void> {
     await this.displayUpdateNotification({
       id: 'updateProgress',
