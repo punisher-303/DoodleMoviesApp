@@ -61,7 +61,7 @@ enableScreens(true);
 enableFreeze(true);
 
 const isLargeScreen = Dimensions.get('window').width > 768;
-
+import { initDownloadChannel } from './lib/downloader';
 
 
 export type HomeStackParamList = {
@@ -216,12 +216,11 @@ const App = () => {
   }, []);
 
   const handleAllowNotifications = async () => {
-    const result = await request(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
-    if (result === RESULTS.GRANTED) {
-      setShowNotificationModal(false);
-    } else {
-      setShowNotificationModal(false);
-    }
+    // requesting via OneSignal ensures the SDK is aware of the change
+    const result = await OneSignal.Notifications.requestPermission(true);
+    // On Android, result is boolean or has specific properties. The SDK handles the system prompt.
+    setShowNotificationModal(false);
+    settingsStorage.setNotificationsEnabled(true);
   };
 
   useEffect(() => {
@@ -287,7 +286,7 @@ const App = () => {
       OneSignal.initialize(ONESIGNAL_APP_ID);
 
       // Request permission
-      OneSignal.Notifications.requestPermission(true);
+      OneSignal.Notifications.requestPermission(false);
 
       // 🔴 FIX: Explicitly opt-in to ensure "Unsubscribed" status is cleared
       OneSignal.User.pushSubscription.optIn();
@@ -320,6 +319,7 @@ const App = () => {
   useEffect(() => {
     // Start automatic update checking at app startup
     updateProvidersService.startAutomaticUpdateCheck();
+    initDownloadChannel();
 
     // Cleanup on unmount
     return () => {

@@ -33,7 +33,7 @@ const IOSModal: React.FC<IOSModalProps> = ({ visible, title, message, actions, o
             visible={visible}
             onRequestClose={onClose}
         >
-            <View className="flex-1 justify-end items-center bg-black/50 pb-8 px-4">
+            <View className="flex-1 justify-center items-center bg-black/50 pb-0 px-4">
                 {/* Main Content Block */}
                 <BlurView
                     intensity={40}

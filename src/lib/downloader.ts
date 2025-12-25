@@ -141,7 +141,7 @@ export const downloadManager = async ({
 };
 
 // 📱 Notification setup
-async function initDownloadChannel() {
+export async function initDownloadChannel() {
   if (Platform.OS === 'android') {
     await notifee.createChannel({
       id: 'download',
@@ -169,6 +169,8 @@ async function showDownloadNotification(task: DownloadTask) {
         { title: 'Cancel', pressAction: { id: `cancel_${task.fileName}` } },
       ],
       onlyAlertOnce: true,
+      asForegroundService: true,
+      ongoing: true,
     },
   });
 }
