@@ -45,11 +45,13 @@ import { updateProvidersService } from './lib/services/UpdateProviders';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/client';
 import GlobalErrorBoundary from './components/GlobalErrorBoundary';
-import notifee from '@notifee/react-native';
+import notifee, { EventDetail, EventType } from '@notifee/react-native';
 import notificationService from './lib/services/Notification';
 import Suggestion from './screens/Suggestion';
 import { OneSignal } from 'react-native-onesignal';
-import { checkNotifications, openSettings, RESULTS } from 'react-native-permissions';
+import { checkNotifications, openSettings, RESULTS, check, request, PERMISSIONS } from 'react-native-permissions';
+import { MaterialIcons } from '@expo/vector-icons';
+import { View, Text, Modal } from 'react-native';
 // Lazy-load Firebase modules so app runs without google-services files
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 
@@ -58,6 +60,46 @@ enableScreens(true);
 enableFreeze(true);
 
 const isLargeScreen = Dimensions.get('window').width > 768;
+
+// Notification permission modal component
+const NotificationPromptModal = ({ isVisible, onClose, onAllow }: { isVisible: boolean, onClose: () => void, onAllow: () => void }) => {
+  return (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={isVisible}
+      onRequestClose={onClose}>
+      <View className="flex-1 justify-center items-center bg-black/50">
+        <View className="bg-[#1A1A1A] rounded-2xl w-80 p-6 items-center">
+          <MaterialIcons
+            name="notifications-active"
+            size={40}
+            color="#6B7280"
+          />
+          <Text className="text-white text-xl font-bold mt-4 text-center">
+            Allow DoodleMovies to send you notifications?
+          </Text>
+          <View className="mt-6 w-full">
+            <TouchableOpacity
+              onPress={onAllow}
+              className="bg-[#262626] rounded-xl py-3 px-4 mb-2">
+              <Text className="text-white text-lg text-center font-semibold">
+                Allow
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onClose}
+              className="bg-transparent rounded-xl py-3 px-4">
+              <Text className="text-gray-400 text-lg text-center font-semibold">
+                Don't allow
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -176,9 +218,30 @@ const App = () => {
   const { primary } = useThemeStore(state => state);
   const hasFirebase = Boolean(Constants?.expoConfig?.extra?.hasFirebase);
 
+  const [showNotificationModal, setShowNotificationModal] = React.useState(false);
   const showTabBarLables = settingsStorage.showTabBarLabels();
 
   SystemUI.setBackgroundColorAsync('black');
+
+  // Notification Permission Logic
+  useEffect(() => {
+    const checkNotificationPermission = async () => {
+      const status = await check(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
+      if (status === RESULTS.DENIED) {
+        setShowNotificationModal(true);
+      }
+    };
+    checkNotificationPermission();
+  }, []);
+
+  const handleAllowNotifications = async () => {
+    const result = await request(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
+    if (result === RESULTS.GRANTED) {
+      setShowNotificationModal(false);
+    } else {
+      setShowNotificationModal(false);
+    }
+  };
 
   useEffect(() => {
     // Apply telemetry preference before using analytics
@@ -186,33 +249,33 @@ const App = () => {
     if (hasFirebase) {
 
       try {
-        const analytics = getAnalytics();
-        analytics && analytics().setAnalyticsCollectionEnabled(optIn);
+        // const analytics = getAnalytics();
+        // analytics && analytics().setAnalyticsCollectionEnabled(optIn);
       } catch { }
       try {
-        const analytics = getAnalytics();
-        analytics &&
-          analytics().setConsent({
-            analytics_storage: optIn,
-            ad_storage: optIn,
-            ad_user_data: optIn,
-            ad_personalization: optIn,
-          });
+        // const analytics = getAnalytics();
+        // analytics &&
+        //   analytics().setConsent({
+        //     analytics_storage: optIn,
+        //     ad_storage: optIn,
+        //     ad_user_data: optIn,
+        //     ad_personalization: optIn,
+        //   });
       } catch { }
 
       // Mark app open
       try {
-        const analytics = getAnalytics();
-        analytics && analytics().logAppOpen();
+        // const analytics = getAnalytics();
+        // analytics && analytics().logAppOpen();
       } catch { }
       // Example user property: theme
       try {
-        const analytics = getAnalytics();
-        analytics &&
-          analytics().setUserProperty(
-            'theme_preference',
-            primary ? 'custom' : 'default',
-          );
+        // const analytics = getAnalytics();
+        // analytics &&
+        //   analytics().setUserProperty(
+        //     'theme_preference',
+        //     primary ? 'custom' : 'default',
+        //   );
       } catch { }
 
 
@@ -255,14 +318,14 @@ const App = () => {
       });
 
       // When a notification is received in foreground
-      OneSignal.Notifications.addEventListener('foregroundWillDisplay', event => {
+      OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event: any) => {
         const notif = event.getNotification();
         console.log('OneSignal foreground notification:', notif);
         // By default v5 shows notification in foreground, no need to complete()
       });
 
       // When a notification is opened by the user
-      OneSignal.Notifications.addEventListener('click', event => {
+      OneSignal.Notifications.addEventListener('click', (event: any) => {
         console.log('OneSignal notification opened:', event);
         // You can navigate to specific screens based on notification data here
       });
@@ -558,12 +621,12 @@ const App = () => {
                   try {
                     const route = navigationRef.getCurrentRoute();
                     if (route?.name) {
-                      const analytics = getAnalytics();
-                      analytics &&
-                        (await analytics().logScreenView({
-                          screen_name: route.name,
-                          screen_class: 'Navigation',
-                        }));
+                      // const analytics = getAnalytics();
+                      // analytics &&
+                      //   (await analytics().logScreenView({
+                      //     screen_name: route.name,
+                      //     screen_class: 'Navigation',
+                      //   }));
                     }
                   } catch { }
                 }
@@ -573,12 +636,12 @@ const App = () => {
                   try {
                     const route = navigationRef.getCurrentRoute();
                     if (route?.name) {
-                      const analytics = getAnalytics();
-                      analytics &&
-                        (await analytics().logScreenView({
-                          screen_name: route.name,
-                          screen_class: 'Navigation',
-                        }));
+                      // const analytics = getAnalytics();
+                      // analytics &&
+                      //   (await analytics().logScreenView({
+                      //     screen_name: route.name,
+                      //     screen_class: 'Navigation',
+                      //   }));
                     }
                   } catch { }
                 }
@@ -631,6 +694,11 @@ const App = () => {
           </SafeAreaView>
         </QueryClientProvider>
       </SafeAreaProvider>
+      <NotificationPromptModal
+        isVisible={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        onAllow={handleAllowNotifications}
+      />
     </GlobalErrorBoundary>
   );
 };
