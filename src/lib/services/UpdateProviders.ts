@@ -1,8 +1,8 @@
-import {AndroidImportance} from '@notifee/react-native';
-import {extensionStorage, ProviderExtension} from '../storage/extensionStorage';
-import {extensionManager} from './ExtensionManager';
-import {settingsStorage} from '../storage';
-import {notificationService} from './Notification';
+import { AndroidImportance } from '@notifee/react-native';
+import { extensionStorage, ProviderExtension } from '../storage/extensionStorage';
+import { extensionManager } from './ExtensionManager';
+import { settingsStorage } from '../storage';
+import { notificationService } from './Notification';
 
 export interface UpdateInfo {
   provider: ProviderExtension;
@@ -83,7 +83,7 @@ class UpdateProvidersService {
     failed: ProviderExtension[];
   }> {
     if (this.isUpdating || providers.length === 0) {
-      return {updated: [], failed: []};
+      return { updated: [], failed: [] };
     }
 
     this.isUpdating = true;
@@ -106,7 +106,7 @@ class UpdateProvidersService {
       // Show completion notification
       await this.showUpdateCompleteNotification(updated, failed);
 
-      return {updated, failed};
+      return { updated, failed };
     } finally {
       this.isUpdating = false;
     }
@@ -117,10 +117,7 @@ class UpdateProvidersService {
   async checkForUpdatesAndAutoUpdate(): Promise<UpdateInfo[]> {
     const updateInfos = await this.checkForUpdates();
     const availableUpdates = updateInfos.filter(info => info.hasUpdate);
-    if (
-      availableUpdates.length > 0 &&
-      settingsStorage.isNotificationsEnabled()
-    ) {
+    if (availableUpdates.length > 0 && settingsStorage.isNotificationsEnabled()) {
       // Automatically start updating instead of just showing notification
       const providersToUpdate = availableUpdates.map(update => update.provider);
       // Don't await here to avoid blocking - let it run in background
@@ -195,8 +192,7 @@ class UpdateProvidersService {
   ): Promise<void> {
     await notificationService.showUpdateProgress(
       'Updating Providers',
-      `Updating ${providers.length} provider${
-        providers.length > 1 ? 's' : ''
+      `Updating ${providers.length} provider${providers.length > 1 ? 's' : ''
       }...`,
       {
         max: 100,
@@ -224,17 +220,15 @@ class UpdateProvidersService {
 
     if (updated.length > 0 && failed.length === 0) {
       title = 'Providers Updated Successfully';
-      body = `${updated.length} provider${
-        updated.length > 1 ? 's' : ''
-      } updated: ${updated.map(p => p.display_name).join(', ')}`;
+      body = `${updated.length} provider${updated.length > 1 ? 's' : ''
+        } updated: ${updated.map(p => p.display_name).join(', ')}`;
     } else if (updated.length > 0 && failed.length > 0) {
       title = 'Providers Update Complete';
       body = `${updated.length} updated, ${failed.length} failed`;
     } else {
       title = 'Provider Update Failed';
-      body = `Failed to update ${failed.length} provider${
-        failed.length > 1 ? 's' : ''
-      }`;
+      body = `Failed to update ${failed.length} provider${failed.length > 1 ? 's' : ''
+        }`;
     }
 
     await notificationService.displayUpdateNotification({
