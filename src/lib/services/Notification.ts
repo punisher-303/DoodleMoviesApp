@@ -3,10 +3,10 @@ import notifee, {
   EventDetail,
   EventType,
 } from '@notifee/react-native';
-import {settingsStorage} from '../storage';
+import { settingsStorage } from '../storage';
 import * as RNFS from '@dr.pogodin/react-native-fs';
-import {downloadFolder} from '../constants';
-import {cancelHlsDownload} from '../hlsDownloader2';
+import { downloadFolder } from '../constants';
+import { cancelHlsDownload } from '../hlsDownloader2';
 import RNApkInstaller from '@himanshu8443/react-native-apk-installer';
 
 export interface NotificationOptions {
@@ -196,7 +196,7 @@ class NotificationService {
       id: fileName,
       title: title,
       body: progressText,
-      data: {jobId, fileName},
+      data: { jobId, fileName },
       progress: {
         max: 100,
         current: Math.min(Math.max(progress * 100, 0), 100),
@@ -244,7 +244,7 @@ class NotificationService {
   async showUpdateAvailable(
     title: string,
     body: string,
-    actions?: Array<{title: string; pressAction: {id: string}}>,
+    actions?: Array<{ title: string; pressAction: { id: string } }>,
   ): Promise<void> {
     await this.displayUpdateNotification({
       id: 'updateAvailable',
@@ -254,7 +254,7 @@ class NotificationService {
     });
   }
 
-  async actionHandler({type, detail}: {type: EventType; detail: EventDetail}) {
+  async actionHandler({ type, detail }: { type: EventType; detail: EventDetail }) {
     console.log('Notification action', type, detail);
     console.log('EventType.PRESS:', EventType.PRESS);
     console.log('EventType.ACTION_PRESS:', EventType.ACTION_PRESS);
@@ -322,7 +322,7 @@ class NotificationService {
   async showUpdateProgress(
     title: string,
     body: string,
-    progress?: {max: number; current: number; indeterminate?: boolean},
+    progress?: { max: number; current: number; indeterminate?: boolean },
   ): Promise<void> {
     await this.displayUpdateNotification({
       id: 'updateProgress',

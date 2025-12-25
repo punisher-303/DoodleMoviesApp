@@ -166,7 +166,7 @@ class UpdateProvidersService {
    */
   private isNewerVersion(newVersion: string, currentVersion: string): boolean {
     const parseVersion = (version: string) => {
-      return String(version || '0').split('.').map(part => parseInt(part, 10) || 0);
+      return version.split('.').map(part => parseInt(part, 10) || 0);
     };
 
     const newParts = parseVersion(newVersion);
