@@ -8,17 +8,18 @@ import {
   Switch,
 } from 'react-native';
 // import pkg from '../../../package.json';
-import React, {useState} from 'react';
-import {Feather} from '@expo/vector-icons';
-import {settingsStorage} from '../../lib/storage';
+import React, { useState } from 'react';
+import { Feather } from '@expo/vector-icons';
+import { settingsStorage } from '../../lib/storage';
 import * as RNFS from '@dr.pogodin/react-native-fs';
-import {MaterialCommunityIcons} from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import useThemeStore from '../../lib/zustand/themeStore';
 import * as Application from 'expo-application';
-import {notificationService} from '../../lib/services/Notification';
+import { notificationService } from '../../lib/services/Notification';
+import IOSModal from '../../components/IOSModal';
 
 // download update
-const downloadUpdate = async (url: string, name: string) => {
+export const downloadUpdate = async (url: string, name: string) => {
   console.log('downloading', url, name);
   await notificationService.requestPermission();
 
@@ -28,12 +29,12 @@ const downloadUpdate = async (url: string, name: string) => {
         id: 'downloadComplete',
         title: 'Download Completed',
         body: 'Tap to install',
-        data: {name: `${name}`, action: 'install'},
+        data: { name: `${name}`, action: 'install' },
       });
       return;
     }
-  } catch (error) {}
-  const {promise} = RNFS.downloadFile({
+  } catch (error) { }
+  const { promise } = RNFS.downloadFile({
     fromUrl: url,
     background: true,
     progressInterval: 1000,
@@ -62,18 +63,18 @@ const downloadUpdate = async (url: string, name: string) => {
         id: 'downloadComplete',
         title: 'Download Complete',
         body: 'Tap to install',
-        data: {name, action: 'install'},
+        data: { name, action: 'install' },
       });
     }
   });
 };
 
 // handle check for update
+// handle check for update
 export const checkForUpdate = async (
   setUpdateLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  autoDownload: boolean,
   showToast: boolean = true,
-) => {
+): Promise<any | null> => {
   setUpdateLoading(true);
   try {
     // First get the dynamic Play Store URL
@@ -85,56 +86,32 @@ export const checkForUpdate = async (
       'https://api.github.com/repos/punisher-303/Doodle-Movie-App/releases/latest',
     );
     const data = await res.json();
-   const localVersion = Application.nativeApplicationVersion;
+    const localVersion = Application.nativeApplicationVersion;
     const remoteVersion = Number(
       data.tag_name.replace('v', '')?.split('.').join(''),
     );
+
     if (compareVersions(localVersion || '', data.tag_name.replace('v', ''))) {
-      ToastAndroid.show('New update available', ToastAndroid.SHORT);
-      Alert.alert(`Update v${localVersion} -> ${data.tag_name}`, data.body, [
-        {text: 'Cancel'},
-        /*{
-          text: 'Update',
-          onPress: () => {
-            const downloadUrl = 'https://doodlemovies.vercel.app'; // ✅ Your custom download URL
-            Linking.openURL(downloadUrl);
-          },
-        },*/        
-        {
-          text: 'Update',
-          onPress: () =>
-            autoDownload
-              ? downloadUpdate(
-                  data?.assets?.[2]?.browser_download_url,
-                  data.assets?.[2]?.name,
-                )
-              : Linking.openURL(play_store_url),
-        },
-      ]);
-      console.log(
-        'local version',
-        localVersion,
-        'remote version',
-        remoteVersion,
-      );
+      if (showToast) ToastAndroid.show('New update available', ToastAndroid.SHORT);
+      console.log('local', localVersion, 'remote', remoteVersion);
+      setUpdateLoading(false);
+
+      // Return the update data including the play_store_url we fetched
+      return { ...data, play_store_url };
     } else {
       showToast && ToastAndroid.show('App is up to date', ToastAndroid.SHORT);
-      console.log(
-        'local version',
-        localVersion,
-        'remote version',
-        remoteVersion,
-      );
+      console.log('App is up to date', localVersion, remoteVersion);
     }
   } catch (error) {
-    ToastAndroid.show('Failed to check for update', ToastAndroid.SHORT);
+    if (showToast) ToastAndroid.show('Failed to check for update', ToastAndroid.SHORT);
     console.log('Update error', error);
   }
   setUpdateLoading(false);
+  return null;
 };
 
 const About = () => {
-  const {primary} = useThemeStore(state => state);
+  const { primary } = useThemeStore(state => state);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [autoDownload, setAutoDownload] = useState(
     settingsStorage.isAutoDownloadEnabled(),
@@ -142,6 +119,30 @@ const About = () => {
   const [autoCheckUpdate, setAutoCheckUpdate] = useState<boolean>(
     settingsStorage.isAutoCheckUpdateEnabled(),
   );
+
+  const [updateData, setUpdateData] = useState<any>(null);
+
+  const handleManualCheck = async () => {
+    const data = await checkForUpdate(setUpdateLoading, true);
+    if (data) {
+      setUpdateData(data);
+    }
+  };
+
+  const performUpdate = () => {
+    if (!updateData) return;
+
+    setUpdateData(null); // Close modal
+
+    if (autoDownload) {
+      downloadUpdate(
+        updateData?.assets?.[2]?.browser_download_url,
+        updateData.assets?.[2]?.name,
+      );
+    } else {
+      Linking.openURL(updateData.play_store_url || 'https://doodlemovies.vercel.app');
+    }
+  };
 
   return (
     <View className="flex-1 bg-black mt-8">
@@ -194,7 +195,7 @@ const About = () => {
 
         {/* Check Updates Button */}
         <TouchableNativeFeedback
-          onPress={() => checkForUpdate(setUpdateLoading, autoDownload, true)}
+          onPress={handleManualCheck}
           disabled={updateLoading}
           background={TouchableNativeFeedback.Ripple('#ffffff20', false)}>
           <View className="bg-white/10 p-4 rounded-lg flex-row justify-between items-center mt-4">
@@ -206,6 +207,17 @@ const About = () => {
           </View>
         </TouchableNativeFeedback>
       </View>
+
+      <IOSModal
+        visible={!!updateData}
+        title={`Update Available: ${updateData?.tag_name}`}
+        message={updateData?.body || 'A new version of the app is available.'}
+        actions={[
+          { text: "Update Now", onPress: performUpdate },
+          { text: "Cancel", style: 'cancel', onPress: () => setUpdateData(null) }
+        ]}
+        onClose={() => setUpdateData(null)}
+      />
     </View>
   );
 };

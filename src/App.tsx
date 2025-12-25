@@ -20,17 +20,18 @@ import WebView from './screens/WebView';
 import SearchResults from './screens/SearchResults';
 import * as SystemUI from 'expo-system-ui';
 // import DisableProviders from './screens/settings/DisableProviders';
-import About, { checkForUpdate } from './screens/settings/About';
+import About, { checkForUpdate, downloadUpdate } from './screens/settings/About';
 import BootSplash from 'react-native-bootsplash';
 import { enableFreeze, enableScreens } from 'react-native-screens';
 import Preferences from './screens/settings/Preference';
 import Production from './screens/settings/Production';
 import useThemeStore from './lib/zustand/themeStore';
-import { Dimensions, LogBox, ViewStyle, AppState, Linking, Alert } from 'react-native';
+import { Dimensions, LogBox, ViewStyle, AppState, Linking, Alert, View, Text, Modal, TouchableOpacity, Image, Platform, StatusBar } from 'react-native';
+import IOSModal from './components/IOSModal';
 import { EpisodeLink } from './lib/providers/types';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import TabBarBackgound from './components/TabBarBackgound';
-import { TouchableOpacity } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StyleProp } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -51,7 +52,7 @@ import Suggestion from './screens/Suggestion';
 import { OneSignal } from 'react-native-onesignal';
 import { checkNotifications, openSettings, RESULTS, check, request, PERMISSIONS } from 'react-native-permissions';
 import { MaterialIcons } from '@expo/vector-icons';
-import { View, Text, Modal } from 'react-native';
+
 // Lazy-load Firebase modules so app runs without google-services files
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 
@@ -61,45 +62,7 @@ enableFreeze(true);
 
 const isLargeScreen = Dimensions.get('window').width > 768;
 
-// Notification permission modal component
-const NotificationPromptModal = ({ isVisible, onClose, onAllow }: { isVisible: boolean, onClose: () => void, onAllow: () => void }) => {
-  return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={isVisible}
-      onRequestClose={onClose}>
-      <View className="flex-1 justify-center items-center bg-black/50">
-        <View className="bg-[#1A1A1A] rounded-2xl w-80 p-6 items-center">
-          <MaterialIcons
-            name="notifications-active"
-            size={40}
-            color="#6B7280"
-          />
-          <Text className="text-white text-xl font-bold mt-4 text-center">
-            Allow DoodleMovies to send you notifications?
-          </Text>
-          <View className="mt-6 w-full">
-            <TouchableOpacity
-              onPress={onAllow}
-              className="bg-[#262626] rounded-xl py-3 px-4 mb-2">
-              <Text className="text-white text-lg text-center font-semibold">
-                Allow
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={onClose}
-              className="bg-transparent rounded-xl py-3 px-4">
-              <Text className="text-gray-400 text-lg text-center font-semibold">
-                Don't allow
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-};
+
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -219,6 +182,24 @@ const App = () => {
   const hasFirebase = Boolean(Constants?.expoConfig?.extra?.hasFirebase);
 
   const [showNotificationModal, setShowNotificationModal] = React.useState(false);
+  const [updateData, setUpdateData] = React.useState<any>(null);
+
+  const performUpdate = () => {
+    if (!updateData) return;
+
+    setUpdateData(null); // Close modal
+
+    const autoDownload = settingsStorage.isAutoDownloadEnabled();
+
+    if (autoDownload) {
+      downloadUpdate(
+        updateData?.assets?.[2]?.browser_download_url,
+        updateData.assets?.[2]?.name,
+      );
+    } else {
+      Linking.openURL(updateData.play_store_url || 'https://doodlemovies.vercel.app');
+    }
+  };
   const showTabBarLables = settingsStorage.showTabBarLabels();
 
   SystemUI.setBackgroundColorAsync('black');
@@ -593,7 +574,11 @@ const App = () => {
 
   useEffect(() => {
     if (settingsStorage.isAutoCheckUpdateEnabled()) {
-      checkForUpdate(() => { }, settingsStorage.isAutoDownloadEnabled(), false);
+      checkForUpdate((loading) => { }, false).then((data) => {
+        if (data) {
+          setUpdateData(data);
+        }
+      });
     }
   }, []);
 
@@ -693,10 +678,27 @@ const App = () => {
           </SafeAreaView>
         </QueryClientProvider>
       </SafeAreaProvider>
-      <NotificationPromptModal
-        isVisible={showNotificationModal}
+      <IOSModal
+        visible={showNotificationModal}
+        title='"DoodleMovies" Would Like to Send You Notifications'
+        message="Notifications may include alerts, sounds, and icon badges. These can be configured in Settings."
+        actions={[
+          { text: "Allow", onPress: handleAllowNotifications },
+          { text: "Don't Allow", style: 'cancel', onPress: () => setShowNotificationModal(false) }
+        ]}
         onClose={() => setShowNotificationModal(false)}
-        onAllow={handleAllowNotifications}
+      />
+
+      {/* App Update Modal */}
+      <IOSModal
+        visible={!!updateData}
+        title={`Update Available: ${updateData?.tag_name}`}
+        message={updateData?.body || 'A new version of the app is available.'}
+        actions={[
+          { text: "Update Now", onPress: performUpdate },
+          { text: "Later", style: 'cancel', onPress: () => setUpdateData(null) }
+        ]}
+        onClose={() => setUpdateData(null)}
       />
     </GlobalErrorBoundary>
   );
