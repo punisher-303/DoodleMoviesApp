@@ -293,7 +293,6 @@ const App = () => {
   useEffect(() => {
     try {
       // Replace with your own OneSignal App ID
-      // Current ID from VegaNext: 'fc34c762-8fbb-45c8-aeb6-b04afbe7c930'
       const ONESIGNAL_APP_ID = '33555240-9f97-4e91-8543-bbdd2f15fe38';
 
       if (!OneSignal) {
