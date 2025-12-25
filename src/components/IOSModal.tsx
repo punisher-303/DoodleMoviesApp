@@ -36,9 +36,9 @@ const IOSModal: React.FC<IOSModalProps> = ({ visible, title, message, actions, o
             <View className="flex-1 justify-center items-center bg-black/50 pb-0 px-4">
                 {/* Main Content Block */}
                 <BlurView
-                    intensity={40}
+                    intensity={90}
                     tint="systemMaterialDark"
-                    className="w-full max-w-[400px] rounded-xl overflow-hidden bg-zinc-900/80 mb-2"
+                    className="w-full max-w-[400px] rounded-xl overflow-hidden bg-zinc-900/95 mb-2"
                     style={{ overflow: 'hidden' }}
                 >
                     <View className="items-center py-4 px-4 border-b border-white/10">
@@ -80,9 +80,9 @@ const IOSModal: React.FC<IOSModalProps> = ({ visible, title, message, actions, o
                         className="w-full max-w-[400px] rounded-xl overflow-hidden mt-1"
                     >
                         <BlurView
-                            intensity={40}
+                            intensity={90}
                             tint="systemMaterialDark"
-                            className="w-full py-4 items-center justify-center bg-zinc-800/80"
+                            className="w-full py-4 items-center justify-center bg-zinc-800/95"
                         >
                             <Text
                                 className="text-[20px] font-semibold"

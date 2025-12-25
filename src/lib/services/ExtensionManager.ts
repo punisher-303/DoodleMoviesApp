@@ -22,7 +22,7 @@ export class ExtensionManager {
   private testModuleCacheExpiry = 200000;
   private testModuleCache = new Map<
     string,
-    {module: ProviderModule; cachedAt: number}
+    { module: ProviderModule; cachedAt: number }
   >();
 
   static getInstance(): ExtensionManager {
