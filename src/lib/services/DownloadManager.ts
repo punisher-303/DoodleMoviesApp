@@ -1,6 +1,6 @@
-import {downloadFolder} from '../constants';
-import {downloadsStorage} from '../storage';
-import {DownloadPayload} from '../storage/DownloadsStorage';
+import { downloadFolder } from '../constants';
+import { downloadsStorage } from '../storage';
+import { DownloadPayload } from '../storage/DownloadsStorage';
 import * as RNFS from '@dr.pogodin/react-native-fs';
 
 export class DownloadManager {
