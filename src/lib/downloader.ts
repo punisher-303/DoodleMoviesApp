@@ -138,6 +138,53 @@ export const downloadManager = async ({
   };
   setDownloadId(0);
   await saveTaskState(task);
+
+  const ret = RNFS.downloadFile({
+    fromUrl: url,
+    toFile: downloadPath,
+    headers: headers || {},
+    background: true,
+    progressInterval: 1000,
+    begin: res => {
+      task.jobId = res.jobId;
+      activeDownloads.set(res.jobId, task);
+      showDownloadNotification(task);
+    },
+    progress: async res => {
+      task.downloadedBytes = res.bytesWritten;
+      task.totalBytes = res.contentLength;
+      await saveTaskState(task);
+      showDownloadNotification(task);
+    },
+  });
+
+  ret.promise.then(async () => {
+    activeDownloads.delete(task.jobId);
+    setAlreadyDownloaded(true);
+    setDownloadActive(false);
+    await removeTaskState(task.fileName);
+    notifee.displayNotification({
+      id: `complete_${fileName}`,
+      title: 'Download Complete',
+      body: fileName,
+      android: { channelId: 'download', smallIcon: 'ic_notification', color: '#00C853' },
+    });
+  }).catch(async err => {
+    activeDownloads.delete(task.jobId);
+    task.canceled = true;
+    await saveTaskState(task);
+    setAlreadyDownloaded(false);
+    setDownloadActive(false);
+    Alert.alert('Download failed', err.message || 'Failed to download');
+    notifee.displayNotification({
+      id: `failed_${fileName}`,
+      title: 'Download Failed',
+      body: fileName,
+      android: { channelId: 'download', smallIcon: 'ic_notification', color: '#D50000' },
+    });
+  });
+
+  return ret.jobId;
 };
 
 // 📱 Notification setup
