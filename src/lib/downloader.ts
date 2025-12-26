@@ -169,8 +169,6 @@ async function showDownloadNotification(task: DownloadTask) {
         { title: 'Cancel', pressAction: { id: `cancel_${task.fileName}` } },
       ],
       onlyAlertOnce: true,
-      asForegroundService: true,
-      ongoing: true,
     },
   });
 }
@@ -294,4 +292,4 @@ async function resumeDownload(task: DownloadTask) {
 
 
 // Export the new functions your friend added
-export { togglePauseResume, cancelDownload, loadPreviousDownloads };
+export { togglePauseResume, cancelDownload };

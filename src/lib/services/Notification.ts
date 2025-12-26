@@ -1,13 +1,7 @@
-import notifee, {
-  AndroidImportance,
-  EventDetail,
-  EventType,
-} from '@notifee/react-native';
+import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 import { settingsStorage } from '../storage';
 import * as RNFS from '@dr.pogodin/react-native-fs';
-import { downloadFolder } from '../constants';
-import { cancelHlsDownload } from '../hlsDownloader2';
-import RNApkInstaller from '@himanshu8443/react-native-apk-installer';
+import { ToastAndroid, Linking, Platform } from 'react-native';
 
 export interface NotificationOptions {
   id: string;
@@ -44,6 +38,7 @@ class NotificationService {
   constructor() {
     this.initialize();
   }
+
   private async initialize() {
     if (this.initialized) {
       return;
@@ -126,7 +121,6 @@ class NotificationService {
         pressAction: {
           id: 'default',
         },
-
         progress: options.progress,
         actions: options.actions,
         onlyAlertOnce: options.onlyAlertOnce || false,
@@ -164,6 +158,53 @@ class NotificationService {
   async cancelAllNotifications(): Promise<void> {
     await this.ensureInitialized();
     await notifee.cancelAllNotifications();
+  }
+
+  /**
+   * Set up event handlers for notification actions
+   */
+  setupEventHandlers() {
+    // Foreground event handler
+    notifee.onForegroundEvent(({ type, detail }) => {
+      if (type === EventType.ACTION_PRESS) {
+        if (detail.pressAction.id === 'install') {
+          this.installUpdate(detail.notification.data?.name);
+        }
+      }
+    });
+
+    // Background event handler
+    notifee.onBackgroundEvent(async ({ type, detail }) => {
+      if (type === EventType.ACTION_PRESS) {
+        if (detail.pressAction.id === 'install') {
+          this.installUpdate(detail.notification.data?.name);
+        }
+      }
+    });
+  }
+
+  /**
+   * Installs an update from a file
+   */
+  async installUpdate(fileName: string): Promise<void> {
+    try {
+      const filePath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+      if (Platform.OS === 'android') {
+        const fileExists = await RNFS.exists(filePath);
+        if (fileExists) {
+          ToastAndroid.show('Installing update...', ToastAndroid.LONG);
+          await RNFS.installApk(filePath);
+        } else {
+          ToastAndroid.show('Update file not found!', ToastAndroid.LONG);
+        }
+      } else {
+        // Handle iOS install logic if needed
+        ToastAndroid.show('Update install not supported on iOS', ToastAndroid.LONG);
+      }
+    } catch (error: any) {
+      ToastAndroid.show(`Failed to install update: ${error.message}`, ToastAndroid.LONG);
+      console.error('Install update error:', error);
+    }
   }
 
   /**
@@ -252,68 +293,6 @@ class NotificationService {
       body: body,
       actions: actions,
     });
-  }
-
-  async actionHandler({ type, detail }: { type: EventType; detail: EventDetail }) {
-    console.log('Notification action', type, detail);
-    console.log('EventType.PRESS:', EventType.PRESS);
-    console.log('EventType.ACTION_PRESS:', EventType.ACTION_PRESS);
-    console.log('Actual type received:', type);
-    console.log('pressAction:', detail.pressAction);
-
-    // Handle download cancellation
-    if (
-      type === EventType.ACTION_PRESS &&
-      detail.pressAction?.id === detail.notification?.data?.fileName
-    ) {
-      // console.log('Cancel download');
-      RNFS.stopDownload(Number(detail.notification?.data?.jobId));
-      cancelHlsDownload(detail.notification?.data?.fileName!);
-      // FFMPEGKIT CANCEL
-      // FFmpegKit.cancel(Number(detail.notification?.data?.jobId));
-
-      // setAlreadyDownloaded(false);
-      try {
-        const files = await RNFS.readDir(downloadFolder);
-        // Find a file with the given name (without extension)
-        const foundFile = files.find(fileItem => {
-          const nameWithoutExtension = fileItem.name
-            .split('.')
-            .slice(0, -1)
-            .join('.');
-          return nameWithoutExtension === detail.notification?.data?.fileName;
-        });
-        if (foundFile) {
-          await RNFS.unlink(foundFile.path);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    // Handle app update installation - check for both PRESS and ACTION_PRESS
-    if (
-      (type === EventType.PRESS || type === EventType.ACTION_PRESS) &&
-      (detail.pressAction?.id === 'install' ||
-        detail.notification?.data?.action === 'install')
-    ) {
-      console.log('Install action pressed');
-      const apkPath = `${RNFS.DownloadDirectoryPath}/${detail.notification?.data?.name}`;
-      console.log('APK path:', apkPath);
-      const res = await RNFS.exists(apkPath);
-      console.log('APK exists:', res);
-      if (res) {
-        console.log('Starting APK installation...');
-        try {
-          await RNApkInstaller.install(apkPath);
-          console.log('APK installation initiated successfully');
-        } catch (error) {
-          console.error('APK installation error:', error);
-        }
-      } else {
-        console.error('APK file not found at path:', apkPath);
-      }
-    }
   }
 
   /**
