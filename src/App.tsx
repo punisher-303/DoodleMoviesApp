@@ -9,6 +9,7 @@ import ScrollList from './screens/ScrollList';
 import {
   NavigationContainer,
   createNavigationContainerRef,
+  NavigatorScreenParams
 } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -52,6 +53,8 @@ import Suggestion from './screens/Suggestion';
 import { OneSignal } from 'react-native-onesignal';
 import { checkNotifications, openSettings, RESULTS, check, request, PERMISSIONS } from 'react-native-permissions';
 import { MaterialIcons } from '@expo/vector-icons';
+import useAppModeStore from './lib/zustand/appModeStore';
+import DoodleTVStack from './navigation/DoodleTVStack';
 
 // Lazy-load Firebase modules so app runs without google-services files
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -113,6 +116,16 @@ export type RootStackParamList = {
   };
 };
 
+export type DoodleTVStackParamList = {
+  LiveTVScreen: undefined;
+  TVPlayerScreen: { streamUrl: string };
+  DoodleTVSettingsScreen: undefined;
+};
+
+export type DoodleTVRootStackParamList = {
+  DoodleTVStack: NavigatorScreenParams<DoodleTVStackParamList>;
+};
+
 export type SearchStackParamList = {
   Search: undefined;
   ScrollList: {
@@ -165,6 +178,8 @@ export type TabStackParamList = {
   SettingsStack: undefined;
 };
 const Tab = createBottomTabNavigator<TabStackParamList>();
+const DoodleTVRootStack = createNativeStackNavigator<DoodleTVRootStackParamList>();
+
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 const App = () => {
   LogBox.ignoreLogs([
@@ -179,6 +194,7 @@ const App = () => {
   const WatchHistoryStack =
     createNativeStackNavigator<WatchHistoryStackParamList>();
   const { primary } = useThemeStore(state => state);
+  const { appMode } = useAppModeStore(state => state);
   const hasFirebase = Boolean(Constants?.expoConfig?.extra?.hasFirebase);
 
   const [showNotificationModal, setShowNotificationModal] = React.useState(false);
@@ -585,6 +601,44 @@ const App = () => {
     }
   }, []);
 
+  function DoodleTVRootStackScreen() {
+    return (
+      <DoodleTVRootStack.Navigator
+        screenOptions={{
+          headerShown: false,
+          animation: 'ios_from_right',
+          animationDuration: 200,
+          freezeOnBlur: true,
+          contentStyle: { backgroundColor: 'transparent' },
+        }}>
+        <DoodleTVRootStack.Screen
+          name="DoodleTVStack"
+          component={DoodleTVStack}
+        />
+      </DoodleTVRootStack.Navigator>
+    );
+  }
+
+  function VideoRootStackScreen() {
+    return (
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          animation: 'ios_from_right',
+          animationDuration: 200,
+          freezeOnBlur: true,
+          contentStyle: { backgroundColor: 'transparent' },
+        }}>
+        <Stack.Screen name="TabStack" component={TabStack} />
+        <Stack.Screen
+          name="Player"
+          component={Player}
+          options={{ orientation: 'landscape' }}
+        />
+      </Stack.Navigator>
+    );
+  }
+
   return (
     <GlobalErrorBoundary>
       <SafeAreaProvider>
@@ -662,21 +716,11 @@ const App = () => {
                   notification: primary,
                 },
               }}>
-              <Stack.Navigator
-                screenOptions={{
-                  headerShown: false,
-                  animation: 'ios_from_right',
-                  animationDuration: 200,
-                  freezeOnBlur: true,
-                  contentStyle: { backgroundColor: 'transparent' },
-                }}>
-                <Stack.Screen name="TabStack" component={TabStack} />
-                <Stack.Screen
-                  name="Player"
-                  component={Player}
-                  options={{ orientation: 'landscape' }}
-                />
-              </Stack.Navigator>
+              {appMode === 'doodleTv' ? (
+                <DoodleTVRootStackScreen />
+              ) : (
+                <VideoRootStackScreen />
+              )}
             </NavigationContainer>
           </SafeAreaView>
         </QueryClientProvider>

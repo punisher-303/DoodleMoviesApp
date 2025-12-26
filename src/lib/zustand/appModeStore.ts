@@ -1,5 +1,5 @@
-import {create} from 'zustand';
-import {createJSONStorage, persist} from 'zustand/middleware';
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { MMKV } from 'react-native-mmkv'; // Import MMKV directly
 
 // Initialize MMKV storage specifically for app mode
@@ -21,7 +21,7 @@ const zustandStorage = {
   },
 };
 
-type AppMode = 'video';
+type AppMode = 'video' | 'doodleTv';
 
 interface AppModeState {
   appMode: AppMode;
@@ -32,7 +32,7 @@ const useAppModeStore = create<AppModeState>()(
   persist(
     set => ({
       appMode: 'video', // Default app mode is 'video'
-      setAppMode: (mode: AppMode) => set({appMode: mode}),
+      setAppMode: (mode: AppMode) => set({ appMode: mode }),
     }),
     {
       name: 'app-mode-storage', // unique name for the persisted state

@@ -11,7 +11,7 @@ import {
   Clipboard,
   ToastAndroid,
 } from 'react-native';
-import React, {useCallback, useMemo, useEffect, useState} from 'react';
+import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import {
   settingsStorage,
   cacheStorageService,
@@ -19,7 +19,7 @@ import {
 } from '../../lib/storage';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
-import {socialLinks} from '../../lib/constants';
+import { socialLinks } from '../../lib/constants';
 import {
   NativeStackScreenProps,
   NativeStackNavigationProp,
@@ -36,9 +36,10 @@ import {
   MaterialIcons,
 } from '@expo/vector-icons';
 import useThemeStore from '../../lib/zustand/themeStore';
+import useAppModeStore from '../../lib/zustand/appModeStore';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
-import Animated, {FadeInDown, FadeInUp, Layout} from 'react-native-reanimated';
-import {useNavigation} from '@react-navigation/native';
+import Animated, { FadeInDown, FadeInUp, Layout } from 'react-native-reanimated';
+import { useNavigation } from '@react-navigation/native';
 import RenderProviderFlagIcon from '../../components/RenderProviderFLagIcon';
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
@@ -81,11 +82,10 @@ const InternalOptionRow = React.memo(
       onPress={onPress}
       background={TouchableNativeFeedback.Ripple('#333333', false)}>
       <View
-        className={`flex-row items-center justify-between p-4 ${
-          !isLast ? 'border-b border-[#262626]' : ''
-        }`}>
+        className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#262626]' : ''
+          }`}>
         <View className="flex-row items-center">
-          {React.cloneElement(icon, {size: 22, color: primaryColor})}
+          {React.cloneElement(icon, { size: 22, color: primaryColor })}
           <Text className="text-white ml-3 text-base">{text}</Text>
         </View>
         <Feather name="chevron-right" size={20} color="gray" />
@@ -113,11 +113,10 @@ const ExternalLinkRow = React.memo(
       onPress={() => Linking.openURL(url)}
       background={TouchableNativeFeedback.Ripple('#333333', false)}>
       <View
-        className={`flex-row items-center justify-between p-4 ${
-          !isLast ? 'border-b border-[#262626]' : ''
-        }`}>
+        className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#262626]' : ''
+          }`}>
         <View className="flex-row items-center">
-          {React.cloneElement(icon, {size: 22, color: iconColor})}
+          {React.cloneElement(icon, { size: 22, color: iconColor })}
           <Text className="text-white ml-3 text-base">{text}</Text>
         </View>
         <Feather name="external-link" size={20} color="gray" />
@@ -126,23 +125,24 @@ const ExternalLinkRow = React.memo(
   ),
 );
 
-const Settings = ({navigation}: Props) => {
+const Settings = ({ navigation }: Props) => {
   const tabNavigation =
     useNavigation<NativeStackNavigationProp<TabStackParamList>>();
   const rootNavigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const {primary} = useThemeStore(state => state);
-  const {provider, setProvider, installedProviders} = useContentStore(
+  const { primary } = useThemeStore(state => state);
+  const { provider, setProvider, installedProviders } = useContentStore(
     state => state,
   );
-  const {clearHistory} = useWatchHistoryStore(state => state);
-  
+  const { clearHistory } = useWatchHistoryStore(state => state);
+  const { appMode, setAppMode } = useAppModeStore(state => state);
+
   const [watchTogetherMode, setWatchTogetherMode] = useState(
     getWatchTogetherMode(),
   );
   const [syncLink, setSyncLink] = useState('');
   // ---------------------------------
-  
+
   const handleProviderSelect = useCallback(
     (item: ProviderExtension) => {
       setProvider(item);
@@ -164,9 +164,8 @@ const Settings = ({navigation}: Props) => {
       <TouchableOpacity
         key={item.value}
         onPress={() => handleProviderSelect(item)}
-        className={`mr-3 rounded-lg ${
-          isSelected ? 'bg-[#333333]' : 'bg-[#262626]'
-        }`}
+        className={`mr-3 rounded-lg ${isSelected ? 'bg-[#333333]' : 'bg-[#262626]'
+          }`}
         style={{
           width: Dimensions.get('window').width * 0.3, // Shows 2.5 items
           height: 65, // Increased height
@@ -180,8 +179,8 @@ const Settings = ({navigation}: Props) => {
             className="text-white text-xs font-medium text-center mt-2">
             {item.display_name}
           </Text>
-        {isSelected && (
-            <Text style={{position: 'absolute', top: 6, right: 6}}>
+          {isSelected && (
+            <Text style={{ position: 'absolute', top: 6, right: 6 }}>
               <MaterialIcons name="check-circle" size={16} color={primary} />
             </Text>
           )}
@@ -286,10 +285,10 @@ const Settings = ({navigation}: Props) => {
         primaryTitle: parsedData.primaryTitle,
         title: parsedData.primaryTitle,
         link: parsedData.videoId,
-        poster: {logo: 'mock_poster_url'},
+        poster: { logo: 'mock_poster_url' },
         linkIndex: 0,
         episodeList: [
-          {link: parsedData.videoId, title: parsedData.primaryTitle},
+          { link: parsedData.videoId, title: parsedData.primaryTitle },
         ],
 
         // CRITICAL: Pass the provider value from the link so Player uses the correct extractor
@@ -314,7 +313,7 @@ const Settings = ({navigation}: Props) => {
       };
 
       try {
-        rootNavigation.navigate('Player' as never, mockPlayerParams as never);
+        rootNavigation.navigate('Player' as any, mockPlayerParams as any);
 
         setSyncLink('');
         ToastAndroid.show(
@@ -401,12 +400,12 @@ const Settings = ({navigation}: Props) => {
             {/* Extensions */}
             <View className="bg-[#1A1A1A] rounded-xl overflow-hidden mb-3">
               <InternalOptionRow
-                  icon={<MaterialCommunityIcons name="puzzle" />}
-                  text="Provider Manager"
+                icon={<MaterialCommunityIcons name="puzzle" />}
+                text="Provider Manager"
                 onPress={() => navigation.navigate('Extensions')}
                 primaryColor={primary}
-                  isLast={true}
-                />
+                isLast={true}
+              />
             </View>
 
             {/* Our Productions */}
@@ -427,6 +426,42 @@ const Settings = ({navigation}: Props) => {
           </View>
         </AnimatedSection>
 
+        {/* App Mode */}
+        <AnimatedSection delay={50}>
+          <View className="mb-6 flex-col gap-3">
+            <Text className="text-gray-400 text-sm mb-1">App Mode</Text>
+            <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+              <View className="flex-row items-center justify-between p-4">
+                <View className="flex-row items-center">
+                  <MaterialCommunityIcons
+                    name="television-play"
+                    size={22}
+                    color={primary}
+                  />
+                  <Text className="text-white ml-3 text-base">
+                    Doodle-TV Mode
+                  </Text>
+                </View>
+                <Switch
+                  trackColor={{ false: '#767577', true: primary }}
+                  thumbColor={appMode === 'doodleTv' ? '#f4f3f4' : '#f4f3f4'}
+                  ios_backgroundColor="#3e3e3e"
+                  onValueChange={() => {
+                    setAppMode('doodleTv');
+                    if (settingsStorage.isHapticFeedbackEnabled()) {
+                      ReactNativeHapticFeedback.trigger('impactLight', {
+                        enableVibrateFallback: true,
+                        ignoreAndroidSystemSettings: false,
+                      });
+                    }
+                  }}
+                  value={appMode === 'doodleTv'}
+                />
+              </View>
+            </View>
+          </View>
+        </AnimatedSection>
+
         {/* Watch Together Section */}
         <AnimatedSection delay={200}>
           <View className="mb-6 flex-col gap-3">
@@ -439,8 +474,8 @@ const Settings = ({navigation}: Props) => {
                     Enable Watch Together Mode
                   </Text>
                 </View>
-              <Switch
-                  trackColor={{false: '#767577', true: primary}}
+                <Switch
+                  trackColor={{ false: '#767577', true: primary }}
                   thumbColor={watchTogetherMode ? '#f4f3f4' : '#f4f3f4'}
                   ios_backgroundColor="#3e3e3e"
                   onValueChange={toggleWatchTogether}
@@ -590,7 +625,7 @@ const Settings = ({navigation}: Props) => {
                 onPress={() => navigation.navigate('About')}
                 primaryColor={primary}
               />
-              
+
               {/* GitHub */}
               <ExternalLinkRow
                 icon={<AntDesign name="github" />}

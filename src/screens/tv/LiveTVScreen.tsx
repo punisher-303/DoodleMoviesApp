@@ -1,6 +1,4 @@
-// File: src/screens/tv/LiveTVScreen.tsx
-
-import React, {useState, useEffect, useCallback, useMemo} from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,13 +11,12 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {DoodleTVStackParamList} from '../../App';
-import {useNavigation} from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { DoodleTVStackParamList } from '../../App';
+import { useNavigation } from '@react-navigation/native';
 import useThemeStore from '../../lib/zustand/themeStore';
-import {MaterialCommunityIcons} from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-// Define the type for a single TV channel
 interface TVChannel {
   id: string;
   name: string;
@@ -29,7 +26,6 @@ interface TVChannel {
   country?: string;
 }
 
-// Helper function to parse M3U playlist content
 const parseM3U = (m3uContent: string): TVChannel[] => {
   const channels: TVChannel[] = [];
   const lines = m3uContent.split('\n');
@@ -58,7 +54,6 @@ const parseM3U = (m3uContent: string): TVChannel[] => {
     } else if (line.startsWith('http')) {
       if (currentChannel.name) {
         currentChannel.streamUrl = line.trim();
-        // Use the stream URL as the unique ID to prevent key duplication warnings
         currentChannel.id = currentChannel.streamUrl;
         channels.push(currentChannel as TVChannel);
         currentChannel = {};
@@ -68,7 +63,6 @@ const parseM3U = (m3uContent: string): TVChannel[] => {
   return channels;
 };
 
-// New function to parse JSON data from the API endpoint
 const parseJsonChannels = (jsonContent: any): TVChannel[] => {
   if (Array.isArray(jsonContent)) {
     return jsonContent.map((item: any) => ({
@@ -77,14 +71,14 @@ const parseJsonChannels = (jsonContent: any): TVChannel[] => {
       logo: item.logo_url || 'https://via.placeholder.com/150',
       streamUrl: item.stream_url,
       groupTitle: item.group || 'Uncategorized',
-      country: 'India', // Set country to 'India' as requested
+      country: 'India',
     }));
   }
   return [];
 };
 
 const LiveTVScreen: React.FC = () => {
-  const {primary} = useThemeStore(state => state);
+  const { primary } = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<DoodleTVStackParamList>>();
   const [channels, setChannels] = useState<TVChannel[]>([]);
@@ -98,7 +92,7 @@ const LiveTVScreen: React.FC = () => {
   const [tempFilters, setTempFilters] = useState<{
     country: string;
     genre: string;
-  }>({country: '', genre: ''});
+  }>({ country: '', genre: '' });
   const [heroChannel, setHeroChannel] = useState<TVChannel | null>(null);
 
   useEffect(() => {
@@ -123,11 +117,8 @@ const LiveTVScreen: React.FC = () => {
           jsonPromise,
         ]);
 
-        // This is the key change: update the state as each data source is processed
-        // to make the initial load feel faster.
         const uniqueChannelUrls = new Set<string>();
 
-        // Process M3U responses first
         if (m3uResponses.status === 'fulfilled') {
           for (const response of m3uResponses.value) {
             if (response.status === 'fulfilled' && response.value.ok) {
@@ -141,20 +132,10 @@ const LiveTVScreen: React.FC = () => {
                 }
               }
               setChannels(prevChannels => [...prevChannels, ...newChannels]);
-            } else if (response.status === 'rejected') {
-              console.error('Failed to fetch M3U source:', response.reason);
-            } else {
-              console.error(
-                'Failed to fetch M3U source:',
-                response.value.status,
-              );
             }
           }
-        } else {
-          console.error('Failed to fetch M3U sources:', m3uResponses.reason);
         }
 
-        // Process JSON response
         if (jsonResponse.status === 'fulfilled' && jsonResponse.value.ok) {
           const jsonContent = await jsonResponse.value.json();
           const parsedChannels = parseJsonChannels(jsonContent);
@@ -166,13 +147,6 @@ const LiveTVScreen: React.FC = () => {
             }
           }
           setChannels(prevChannels => [...prevChannels, ...newChannels]);
-        } else if (jsonResponse.status === 'rejected') {
-          console.error('Failed to fetch JSON source:', jsonResponse.reason);
-        } else {
-          console.error(
-            'Failed to fetch JSON source:',
-            jsonResponse.value.status,
-          );
         }
       } catch (error) {
         console.error('Failed to fetch or parse channels:', error);
@@ -242,7 +216,7 @@ const LiveTVScreen: React.FC = () => {
   }, [tempFilters]);
 
   const handleClearModalFilters = useCallback(() => {
-    setTempFilters({country: '', genre: ''});
+    setTempFilters({ country: '', genre: '' });
     setCountrySearchText('');
     setGenreSearchText('');
   }, []);
@@ -296,7 +270,7 @@ const LiveTVScreen: React.FC = () => {
             {filteredCountries.length > 0 ? (
               <FlatList
                 data={filteredCountries}
-                renderItem={({item}) => (
+                renderItem={({ item }) => (
                   <TouchableOpacity
                     style={[
                       styles.filterListItem,
@@ -305,7 +279,7 @@ const LiveTVScreen: React.FC = () => {
                       },
                     ]}
                     onPress={() =>
-                      setTempFilters(prev => ({...prev, country: item}))
+                      setTempFilters(prev => ({ ...prev, country: item }))
                     }>
                     <Text style={styles.filterListItemText}>{item}</Text>
                   </TouchableOpacity>
@@ -332,14 +306,14 @@ const LiveTVScreen: React.FC = () => {
             {filteredGenres.length > 0 ? (
               <FlatList
                 data={filteredGenres}
-                renderItem={({item}) => (
+                renderItem={({ item }) => (
                   <TouchableOpacity
                     style={[
                       styles.filterListItem,
-                      tempFilters.genre === item && {backgroundColor: primary},
+                      tempFilters.genre === item && { backgroundColor: primary },
                     ]}
                     onPress={() =>
-                      setTempFilters(prev => ({...prev, genre: item}))
+                      setTempFilters(prev => ({ ...prev, genre: item }))
                     }>
                     <Text style={styles.filterListItemText}>{item}</Text>
                   </TouchableOpacity>
@@ -355,7 +329,7 @@ const LiveTVScreen: React.FC = () => {
           </View>
 
           <TouchableOpacity
-            style={[styles.doneButton, {backgroundColor: primary}]}
+            style={[styles.doneButton, { backgroundColor: primary }]}
             onPress={handleApplyFilters}>
             <Text style={styles.doneButtonText}>Done</Text>
           </TouchableOpacity>
@@ -363,7 +337,7 @@ const LiveTVScreen: React.FC = () => {
       ) : (
         <>
           <View style={styles.headerContainer}>
-            <Text style={styles.header}>Live TV Channels</Text>
+            <Text style={styles.header}>Doodle-TV Mode</Text>
             <TouchableOpacity
               onPress={handleSettings}
               style={styles.settingsIcon}>
@@ -376,7 +350,7 @@ const LiveTVScreen: React.FC = () => {
               onPress={handleHeroChannelPress}
               style={styles.heroContainer}>
               <Image
-                source={{uri: heroChannel.logo}}
+                source={{ uri: heroChannel.logo }}
                 style={styles.heroLogo}
                 resizeMode="cover"
               />
@@ -425,7 +399,7 @@ const LiveTVScreen: React.FC = () => {
 
           <FlatList
             data={filteredChannels}
-            renderItem={({item}) => {
+            renderItem={({ item }) => {
               return (
                 <TouchableOpacity
                   onPress={() =>
@@ -434,7 +408,7 @@ const LiveTVScreen: React.FC = () => {
                     })
                   }
                   style={styles.channelItem}>
-                  <Image source={{uri: item.logo}} style={styles.channelLogo} />
+                  <Image source={{ uri: item.logo }} style={styles.channelLogo} />
                   <Text style={styles.channelName} numberOfLines={1}>
                     {item.name}
                   </Text>
@@ -544,7 +518,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 2,
   },
-  // Hero Section Styles
   heroContainer: {
     height: 180,
     borderRadius: 15,
@@ -586,7 +559,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  // Modal-specific styles
   modalContainer: {
     flex: 1,
     backgroundColor: 'black',
