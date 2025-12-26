@@ -117,12 +117,14 @@ class UpdateProvidersService {
   async checkForUpdatesAndAutoUpdate(): Promise<UpdateInfo[]> {
     const updateInfos = await this.checkForUpdates();
     const availableUpdates = updateInfos.filter(info => info.hasUpdate);
+
     if (availableUpdates.length > 0 && settingsStorage.isNotificationsEnabled()) {
       // Automatically start updating instead of just showing notification
       const providersToUpdate = availableUpdates.map(update => update.provider);
       // Don't await here to avoid blocking - let it run in background
       this.updateProviders(providersToUpdate);
     }
+
     return updateInfos;
   }
 

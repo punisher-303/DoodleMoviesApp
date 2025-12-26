@@ -87,7 +87,7 @@ export class SettingsStorage {
 
   isNotificationsEnabled(): boolean {
     return mainStorage.getBool(SettingsKeys.NOTIFICATIONS_ENABLED) === null
-      ? false
+      ? true
       : mainStorage.getBool(SettingsKeys.NOTIFICATIONS_ENABLED);
   }
 
