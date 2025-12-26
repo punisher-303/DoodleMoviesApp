@@ -19,6 +19,7 @@
     "expo-font": "13.0.4"
   },
   "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
     "@8man/react-native-media-console": "2.2.4-alpha.31",
     "@dr.pogodin/react-native-fs": "^2.34.0",
     "@expo/config-plugins": "~9.0.0",
