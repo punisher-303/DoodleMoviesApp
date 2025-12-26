@@ -319,7 +319,6 @@ const App = () => {
   useEffect(() => {
     // Start automatic update checking at app startup
     updateProvidersService.startAutomaticUpdateCheck();
-    initDownloadChannel();
 
     // Cleanup on unmount
     return () => {
