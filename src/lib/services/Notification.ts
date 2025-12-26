@@ -192,8 +192,11 @@ class NotificationService {
       if (Platform.OS === 'android') {
         const fileExists = await RNFS.exists(filePath);
         if (fileExists) {
-          ToastAndroid.show('Installing update...', ToastAndroid.LONG);
-          await RNFS.installApk(filePath);
+          ToastAndroid.show('Opening update file...', ToastAndroid.LONG);
+          // Fallback to simple intent since we removed REQUEST_INSTALL_PACKAGES
+          Linking.openURL(`file://${filePath}`).catch(err =>
+            ToastAndroid.show('Cannot open APK automatically. Please install manually from Downloads.', ToastAndroid.LONG)
+          );
         } else {
           ToastAndroid.show('Update file not found!', ToastAndroid.LONG);
         }
@@ -335,6 +338,67 @@ class NotificationService {
   private async ensureInitialized(): Promise<void> {
     if (!this.initialized) {
       await this.initialize();
+    }
+  }
+  async actionHandler({ type, detail }: { type: EventType; detail: EventDetail }) {
+    // console.log('Notification action', type, detail);
+
+    // Handle download cancellation
+    if (
+      type === EventType.ACTION_PRESS &&
+      detail.pressAction?.id === detail.notification?.data?.fileName
+    ) {
+      // console.log('Cancel download');
+      RNFS.stopDownload(Number(detail.notification?.data?.jobId));
+      try {
+        const { cancelHlsDownload } = require('../hlsDownloader2');
+        cancelHlsDownload(detail.notification?.data?.fileName!);
+      } catch (e) {
+        console.warn('HLS cancel not imported', e);
+      }
+
+      try {
+        const files = await RNFS.readDir(RNFS.DownloadDirectoryPath); // Use standard path
+        // Find a file with the given name (without extension)
+        const foundFile = files.find(fileItem => {
+          const nameWithoutExtension = fileItem.name
+            .split('.')
+            .slice(0, -1)
+            .join('.');
+          return nameWithoutExtension === detail.notification?.data?.fileName;
+        });
+        if (foundFile) {
+          await RNFS.unlink(foundFile.path);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    // Handle app update installation - check for both PRESS and ACTION_PRESS
+    if (
+      (type === EventType.PRESS || type === EventType.ACTION_PRESS) &&
+      (detail.pressAction?.id === 'install' ||
+        detail.notification?.data?.action === 'install')
+    ) {
+      // console.log('Install action pressed');
+      const apkPath = `${RNFS.DownloadDirectoryPath}/${detail.notification?.data?.name}`;
+
+      const res = await RNFS.exists(apkPath);
+      if (res) {
+        try {
+          // Fallback to simple intent since we removed REQUEST_INSTALL_PACKAGES
+          // This will open the file and let Android handle "Open with..."
+          Linking.openURL(`file://${apkPath}`).catch(err =>
+            ToastAndroid.show('Cannot open APK automatically. Please install manually from Downloads.', ToastAndroid.LONG)
+          );
+        } catch (error) {
+          console.error('APK open error:', error);
+        }
+      } else {
+        console.error('APK file not found at path:', apkPath);
+        ToastAndroid.show('Update file not found!', ToastAndroid.LONG);
+      }
     }
   }
 }

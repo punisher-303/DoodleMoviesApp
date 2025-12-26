@@ -204,7 +204,6 @@ const App = () => {
 
   SystemUI.setBackgroundColorAsync('black');
 
-  // Notification Permission Logic
   useEffect(() => {
     const checkNotificationPermission = async () => {
       const status = await check(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
@@ -216,58 +215,12 @@ const App = () => {
   }, []);
 
   const handleAllowNotifications = async () => {
-    // requesting via OneSignal ensures the SDK is aware of the change
-    const result = await OneSignal.Notifications.requestPermission(true);
-    // On Android, result is boolean or has specific properties. The SDK handles the system prompt.
-    setShowNotificationModal(false);
-    settingsStorage.setNotificationsEnabled(true);
-  };
-
-  useEffect(() => {
-    // Apply telemetry preference before using analytics
-    const optIn = settingsStorage.isTelemetryOptIn();
-    if (hasFirebase) {
-
-      try {
-        // const analytics = getAnalytics();
-        // analytics && analytics().setAnalyticsCollectionEnabled(optIn);
-      } catch { }
-      try {
-        // const analytics = getAnalytics();
-        // analytics &&
-        //   analytics().setConsent({
-        //     analytics_storage: optIn,
-        //     ad_storage: optIn,
-        //     ad_user_data: optIn,
-        //     ad_personalization: optIn,
-        //   });
-      } catch { }
-
-      // Mark app open
-      try {
-        // const analytics = getAnalytics();
-        // analytics && analytics().logAppOpen();
-      } catch { }
-      // Example user property: theme
-      try {
-        // const analytics = getAnalytics();
-        // analytics &&
-        //   analytics().setUserProperty(
-        //     'theme_preference',
-        //     primary ? 'custom' : 'default',
-        //   );
-      } catch { }
-
-
+    const result = await request(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
+    if (result === RESULTS.GRANTED) {
+      setShowNotificationModal(false);
+      settingsStorage.setNotificationsEnabled(true);
     }
-
-    const unsubscribe = notifee.onForegroundEvent(({ type, detail }) => {
-      notificationService.actionHandler({ type, detail });
-    });
-    return () => {
-      unsubscribe();
-    };
-  }, []);
+  };
 
   // OneSignal initialization for push notifications
   useEffect(() => {
@@ -275,20 +228,10 @@ const App = () => {
       // Replace with your own OneSignal App ID
       const ONESIGNAL_APP_ID = '33555240-9f97-4e91-8543-bbdd2f15fe38';
 
-      if (!OneSignal) {
-        console.warn(
-          'OneSignal is undefined. Make sure react-native-onesignal is installed and linked.',
-        );
-        return;
-      }
-
       // Initialize OneSignal
       OneSignal.initialize(ONESIGNAL_APP_ID);
 
-      // Request permission
-      // OneSignal.Notifications.requestPermission(false);
-
-      // 🔴 FIX: Explicitly opt-in to ensure "Unsubscribed" status is cleared
+      // Explicitly opt-in to ensure "Unsubscribed" status is cleared
       OneSignal.User.pushSubscription.optIn();
 
       // Debug: Log subscription state changes
@@ -299,14 +242,20 @@ const App = () => {
       // When a notification is received in foreground
       OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event: any) => {
         const notif = event.getNotification();
+
+        // Android small icon override (Match VegaNext logic)
+        if (Platform.OS === 'android') {
+          if (notif.android) {
+            notif.android.smallIcon = 'ic_stat_onesignal_default';
+          }
+        }
+
         console.log('OneSignal foreground notification:', notif);
-        // By default v5 shows notification in foreground, no need to complete()
       });
 
       // When a notification is opened by the user
       OneSignal.Notifications.addEventListener('click', (event: any) => {
         console.log('OneSignal notification opened:', event);
-        // You can navigate to specific screens based on notification data here
       });
 
       console.log('OneSignal initialized with app id:', ONESIGNAL_APP_ID);
@@ -314,6 +263,61 @@ const App = () => {
       console.error('OneSignal init error:', err);
     }
   }, []); // runs once only
+
+  /* ----------------- UUID & user ping ----------------- */
+  const generateUUID = () => {
+    const S4 = () =>
+      (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+    return (
+      S4() +
+      S4() +
+      '-' +
+      S4() +
+      '-' +
+      S4() +
+      '-' +
+      S4() +
+      '-' +
+      S4() +
+      S4() +
+      S4()
+    );
+  };
+
+  const sendUserPing = async () => {
+    const API_URL = 'http://10.0.2.2:3000/api/user-ping';
+    try {
+      let userId = null;
+      // Note: Application.androidId might need different import or Expo equivalent
+      // VegaNext uses expo-application, assuming we have it.
+      if (Platform.OS === 'android') {
+        userId = Constants.installationId; // Use Expo constants as fallback or Application.androidId if available
+      } else if (Platform.OS === 'ios') {
+        userId = await Constants.getWebViewUserAgentAsync(); // Placeholder, normally Application.getIosIdForVendorAsync()
+      }
+
+      if (!userId) userId = generateUUID();
+
+      const pingData = { userId, platform: Platform.OS };
+
+      // Ensure fetch doesn't crash if no server
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pingData),
+      }).catch(e => console.log("User ping failed (expected if no local server)", e.message));
+
+      console.log('User activity logged successfully.');
+    } catch (error) {
+      console.error('Failed to log user activity:', error);
+    }
+  };
+
+  useEffect(() => {
+    try {
+      sendUserPing();
+    } catch (e) { }
+  }, []);
 
   // Initialize update service
   useEffect(() => {
