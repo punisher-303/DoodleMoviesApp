@@ -53,6 +53,7 @@ import {
 import * as NavigationBar from 'expo-navigation-bar';
 import FullScreenChz from 'react-native-fullscreen-chz';
 
+
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
 const goFullScreen = () => {
@@ -62,6 +63,16 @@ const goFullScreen = () => {
     // Make it "sticky immersive" (appears on swipe, then hides again)
     NavigationBar.setBehaviorAsync('overlay-swipe');
     StatusBar.setHidden(true, 'slide');
+  }
+};
+
+const exitFullScreen = () => {
+  if (Platform.OS === 'android') {
+    // Show the navigation bar
+    NavigationBar.setVisibilityAsync('visible');
+    // Reset behavior
+    NavigationBar.setBehaviorAsync('overlay-swipe');
+    StatusBar.setHidden(false, 'slide');
   }
 };
 
@@ -158,15 +169,7 @@ const base64Encode = (input: string): string => {
   return output;
 };
 
-const exitFullScreen = () => {
-  if (Platform.OS === 'android') {
-    // Show the navigation bar
-    NavigationBar.setVisibilityAsync('visible');
-    // Reset behavior
-    NavigationBar.setBehaviorAsync('overlay-swipe');
-    StatusBar.setHidden(false, 'slide');
-  }
-};
+
 const base64Decode = (input: string): string | null => {
   try {
     if (typeof global.atob === 'function') {
@@ -1374,6 +1377,8 @@ const Player = ({ route }: Props): React.JSX.Element => {
     });
     return unsubscribe;
   }, [navigation]);
+
+
 
   useEffect(() => {
     if (Platform.OS !== 'android') return;
