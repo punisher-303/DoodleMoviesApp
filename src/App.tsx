@@ -286,7 +286,7 @@ const App = () => {
       OneSignal.initialize(ONESIGNAL_APP_ID);
 
       // Request permission
-      OneSignal.Notifications.requestPermission(false);
+      // OneSignal.Notifications.requestPermission(false);
 
       // 🔴 FIX: Explicitly opt-in to ensure "Unsubscribed" status is cleared
       OneSignal.User.pushSubscription.optIn();
