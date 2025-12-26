@@ -20,6 +20,8 @@ export interface NotificationOptions {
     };
   }>;
   onlyAlertOnce?: boolean;
+  asForegroundService?: boolean;
+  ongoing?: boolean;
 }
 
 export interface ChannelOptions {
@@ -124,6 +126,8 @@ class NotificationService {
         progress: options.progress,
         actions: options.actions,
         onlyAlertOnce: options.onlyAlertOnce || false,
+        asForegroundService: options.asForegroundService || false,
+        ongoing: options.ongoing || false,
       },
     });
   }
@@ -255,6 +259,8 @@ class NotificationService {
         },
       ],
       onlyAlertOnce: true,
+      asForegroundService: true,
+      ongoing: true,
     });
   }
 

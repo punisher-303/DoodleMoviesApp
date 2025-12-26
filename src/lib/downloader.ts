@@ -170,12 +170,19 @@ export const downloadManager = async ({
       android: { channelId: 'download', smallIcon: 'ic_notification', color: '#00C853' },
     });
   }).catch(async err => {
+    // If paused, do not treat as error
+    if (task.paused) {
+      return;
+    }
+
     activeDownloads.delete(task.jobId);
     task.canceled = true;
     await saveTaskState(task);
     setAlreadyDownloaded(false);
     setDownloadActive(false);
-    Alert.alert('Download failed', err.message || 'Failed to download');
+    if (err.message !== 'Download has been aborted') {
+      Alert.alert('Download failed', err.message || 'Failed to download');
+    }
     notifee.displayNotification({
       id: `failed_${fileName}`,
       title: 'Download Failed',
@@ -215,6 +222,8 @@ async function showDownloadNotification(task: DownloadTask) {
         { title: task.paused ? 'Resume' : 'Pause', pressAction: { id: `toggle_${task.fileName}` } },
         { title: 'Cancel', pressAction: { id: `cancel_${task.fileName}` } },
       ],
+      asForegroundService: true,
+      ongoing: true,
       onlyAlertOnce: true,
     },
   });
@@ -248,7 +257,7 @@ async function togglePauseResume(fileName: string) {
       });
       task.paused = false;
     } else {
-      cancelHlsDownload(task.jobId);
+      cancelHlsDownload(task.jobId, true);
       task.paused = true;
     }
   } else {
@@ -325,6 +334,10 @@ async function resumeDownload(task: DownloadTask) {
       android: { channelId: 'download', smallIcon: 'ic_notification', color: '#00C853' },
     });
   }).catch(async err => {
+    // If paused, do not treat as error
+    if (task.paused) {
+      return;
+    }
     activeDownloads.delete(task.jobId);
     await saveTaskState(task);
     notifee.displayNotification({

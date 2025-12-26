@@ -1,6 +1,6 @@
 import * as RNFS from '@dr.pogodin/react-native-fs';
 import axios from 'axios';
-import {notificationService} from './services/Notification';
+import { notificationService } from './services/Notification';
 
 interface SegmentInfo {
   duration: number;
@@ -15,6 +15,7 @@ interface M3U8Data {
 }
 
 let downloadCancelled = false;
+let downloadPaused = false; // New flag for pause state
 let currentDownloadId: string | null = null;
 
 // Map to store the relationship between numeric IDs and fileName for HLS downloads
@@ -221,6 +222,7 @@ export const hlsDownloader2 = async ({
   headers?: any;
 }) => {
   downloadCancelled = false;
+  downloadPaused = false;
   currentDownloadId = fileName;
 
   // Generate a unique numeric ID for this HLS download
@@ -271,8 +273,7 @@ export const hlsDownloader2 = async ({
             (downloadedSegments / m3u8Data.segments.length) * 100;
 
           console.log(
-            `Downloaded segment ${segment.index + 1}/${
-              m3u8Data.segments.length
+            `Downloaded segment ${segment.index + 1}/${m3u8Data.segments.length
             } (${progress.toFixed(1)}%)`,
           );
           await notificationService.showDownloadProgress(
@@ -347,12 +348,14 @@ export const hlsDownloader2 = async ({
     }
 
     const errorMessage = downloadCancelled
-      ? 'Download cancelled'
+      ? (downloadPaused ? 'Download paused' : 'Download cancelled')
       : `Failed to download ${title}`;
     console.error(errorMessage);
 
     if (downloadCancelled) {
-      await notificationService.cancelNotification(fileName);
+      if (!downloadPaused) {
+        await notificationService.cancelNotification(fileName);
+      }
     } else {
       await notificationService.showDownloadFailed(title, fileName);
     }
@@ -364,7 +367,7 @@ export const hlsDownloader2 = async ({
 };
 
 // Function to cancel ongoing download
-export const cancelHlsDownload = (downloadId: number | string) => {
+export const cancelHlsDownload = (downloadId: number | string, isPause: boolean = false) => {
   // Handle both numeric HLS job IDs and string fileName
   let targetFileName: string | null = null;
 
@@ -378,7 +381,8 @@ export const cancelHlsDownload = (downloadId: number | string) => {
 
   if (currentDownloadId === targetFileName) {
     downloadCancelled = true;
-    console.log(`Cancelling HLS download: ${targetFileName}`);
+    downloadPaused = isPause;
+    console.log(`Cancelling HLS download: ${targetFileName} (Paused: ${isPause})`);
   }
 };
 
