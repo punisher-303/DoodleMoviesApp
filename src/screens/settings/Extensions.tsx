@@ -467,8 +467,8 @@ const Extensions = ({ navigation }: Props) => {
 
     return (
       <View
-        className="bg-tertiary rounded-2xl p-5 py-3 mb-4 mx-4 shadow-lg border border-quaternary"
-        style={{ elevation: 4 }}>
+        className="bg-tertiary rounded-xl p-3 py-2 mb-2 mx-4 shadow-sm border border-quaternary"
+        style={{ elevation: 2 }}>
         <View className="flex-row items-center mb-4 gap-4 justify-between">
           {/* Left: Icon */}
           {item.icon ? (
@@ -498,18 +498,23 @@ const Extensions = ({ navigation }: Props) => {
                 </View>
               )}
             </View>
-            <View className="flex-row items-baseline gap-2 mt-1">
-              <Text className="text-gray-400 text-sm ">
-                v{item.version || '0.0'} • {item.type?.toUpperCase() || 'GLOBAL'}
+            <View className="flex-row items-center flex-wrap gap-2 mt-0.5">
+              <Text className="text-gray-400 text-xs font-medium">
+                v{item.version || '0.0'}
               </Text>
+              <View className="w-1 h-1 rounded-full bg-gray-600" />
+              <Text className="text-gray-300 text-xs font-bold tracking-wider">
+                {item.type?.toUpperCase() || 'GLOBAL'}
+              </Text>
+              <View className="w-1 h-1 rounded-full bg-gray-600" />
+              <View className="bg-[#333333] px-1.5 py-0.5 rounded border border-gray-600">
+                <Text className="text-gray-300 text-[10px] font-medium uppercase tracking-wider">
+                  {item.category || 'MOVIE/TVSHOW'}
+                </Text>
+              </View>
             </View>
 
-            {/* Added Category Box */}
-            <View className="bg-[#333333] px-2 py-1 rounded-md mt-1 self-start border border-gray-600">
-              <Text className="text-white text-[10px] font-thin uppercase tracking-wider">
-                {item.category || 'MOVIE/TVSHOW'}
-              </Text>
-            </View>
+
 
           </View>
           {/* Right: Buttons */}
@@ -655,11 +660,11 @@ const Extensions = ({ navigation }: Props) => {
       </View>
 
       {/* Search Bar */}
-      <View className="mx-4 mt-4">
-        <View className="flex-row items-center bg-[#1A1A1A] rounded-xl px-4 py-3 border border-[#333333]">
-          <Feather name="search" size={20} color="gray" />
+      <View className="mx-4 mt-2">
+        <View className="flex-row items-center bg-[#1A1A1A] rounded-xl px-3 py-2 border border-[#333333]">
+          <Feather name="search" size={18} color="gray" />
           <TextInput
-            className="flex-1 text-white ml-3 text-base"
+            className="flex-1 text-white ml-2 text-sm"
             placeholder="Search provider name or type..."
             placeholderTextColor="#666666"
             value={searchQuery}
