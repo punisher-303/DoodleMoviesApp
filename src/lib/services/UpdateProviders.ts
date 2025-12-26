@@ -118,7 +118,7 @@ class UpdateProvidersService {
     const updateInfos = await this.checkForUpdates();
     const availableUpdates = updateInfos.filter(info => info.hasUpdate);
 
-    if (availableUpdates.length > 0 && settingsStorage.isNotificationsEnabled()) {
+    if (availableUpdates.length > 0) {
       // Automatically start updating instead of just showing notification
       const providersToUpdate = availableUpdates.map(update => update.provider);
       // Don't await here to avoid blocking - let it run in background
