@@ -9,7 +9,7 @@ export interface ProviderExtension {
   version: string;
   icon: string;
   disabled: boolean;
-  type: 'global' | 'english' | 'india' | 'italy' | 'anime' | 'drama';
+  type: string;
   category?: string;
   installed: boolean;
   installedAt?: number;

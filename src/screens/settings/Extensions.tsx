@@ -506,12 +506,12 @@ const Extensions = ({ navigation }: Props) => {
                 v{item.version || '0.0'}
               </Text>
               <View className="w-1 h-1 rounded-full bg-gray-600" />
-              <Text className="text-gray-300 text-xs font-bold tracking-wider">
+              <Text className="text-gray-300 text-[10px] font-bold tracking-wider">
                 {item.type?.toUpperCase() || 'GLOBAL'}
               </Text>
               <View className="w-1 h-1 rounded-full bg-gray-600" />
               <View className="bg-[#333333] px-1.5 py-0.5 rounded border border-gray-600">
-                <Text className="text-gray-300 text-[10px] font-medium uppercase tracking-wider">
+                <Text className="text-gray-300 text-[8px] font-medium uppercase tracking-wider">
                   {item.category || 'MOVIE/TVSHOW'}
                 </Text>
               </View>
@@ -682,45 +682,50 @@ const Extensions = ({ navigation }: Props) => {
       </View>
 
       {/* Filter Section */}
-      <View className="flex-row items-center mx-4 mt-4 mb-2">
+      {/* Filter Section */}
+      <View className="mx-4 mt-4 mb-2 gap-y-3">
         {/* Horizontal Type Filters */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="flex-1"
-          contentContainerStyle={{ paddingRight: 10 }}
-        >
-          {uniqueTypes.map((type, index) => (
-            <TouchableOpacity
-              key={`type-${index}`}
-              onPress={() => setSelectedType(type)}
-              className={`px-4 py-2 rounded-full mr-2 border ${selectedType === type
-                ? 'bg-' + primary
-                : 'bg-[#1A1A1A] border-[#333333]'
-                }`}
-              style={{
-                backgroundColor: selectedType === type ? primary : '#1A1A1A',
-                borderColor: selectedType === type ? primary : '#333333'
-              }}
-            >
-              <Text
-                className={`text-sm font-medium ${selectedType === type ? 'text-white' : 'text-gray-400'
+        <View className="flex-row">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="flex-1"
+            contentContainerStyle={{ paddingRight: 10 }}>
+            {uniqueTypes.map((type, index) => (
+              <TouchableOpacity
+                key={`type-${index}`}
+                onPress={() => setSelectedType(type)}
+                className={`px-4 py-2 rounded-full mr-2 border ${selectedType === type
+                  ? 'bg-' + primary
+                  : 'bg-[#1A1A1A] border-[#333333]'
                   }`}
-              >
-                {type === 'All' ? 'All' : type.toUpperCase()}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-        {/* Category Modal Button */}
+                style={{
+                  backgroundColor: selectedType === type ? primary : '#1A1A1A',
+                  borderColor: selectedType === type ? primary : '#333333',
+                }}>
+                <Text
+                  className={`text-sm font-medium ${selectedType === type ? 'text-white' : 'text-gray-400'
+                    }`}>
+                  {type === 'All' ? 'All' : type.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Category Dropdown - Full Width like Search Bar */}
         <TouchableOpacity
           onPress={() => setCategoryModalVisible(true)}
-          className="bg-[#1A1A1A] px-4 py-2 rounded-full border border-[#333333] flex-row items-center ml-2"
-        >
-          <Text className="text-gray-400 text-sm font-medium mr-1">
-            {selectedCategory === 'All' ? 'Category' : selectedCategory}
+          className="flex-row items-center justify-between bg-[#1A1A1A] rounded-xl px-3 py-3 border border-[#333333]">
+          <Text className="text-gray-300 text-sm font-medium ml-2">
+            {selectedCategory === 'All' ? 'Select Category' : selectedCategory}
           </Text>
-          <Feather name="chevron-down" size={16} color="gray" />
+          <View className="flex-row items-center">
+            <Text className="text-gray-500 text-xs mr-2">
+              {selectedCategory === 'All' ? 'All' : ''}
+            </Text>
+            <Feather name="chevron-down" size={20} color="gray" />
+          </View>
         </TouchableOpacity>
       </View>
 
