@@ -6,19 +6,21 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useEffect, useState } from 'react';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
-import {FlashList} from '@shopify/flash-list';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {WatchHistoryStackParamList} from '../App';
+import { FlashList } from '@shopify/flash-list';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { WatchHistoryStackParamList } from '../App';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import useThemeStore from '../lib/zustand/themeStore';
-import {mainStorage} from '../lib/storage';
+import { mainStorage } from '../lib/storage';
 
 type Props = NativeStackScreenProps<WatchHistoryStackParamList, 'WatchHistory'>;
-const WatchHistory = ({navigation}: Props) => {
-  const {primary} = useThemeStore(state => state);
-  const {history, clearHistory} = useWatchHistoryStore(state => state);
+const WatchHistory = ({ navigation }: Props) => {
+  const insets = useSafeAreaInsets();
+  const { primary } = useThemeStore(state => state);
+  const { history, clearHistory } = useWatchHistoryStore(state => state);
   const [progressData, setProgressData] = useState<Record<string, number>>({});
 
   // Filter out duplicates by link, keeping only the most recent entry
@@ -150,7 +152,7 @@ const WatchHistory = ({navigation}: Props) => {
       <View
         className="w-full bg-black"
         style={{
-          paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+          paddingTop: insets.top,
         }}
       />
 
@@ -177,7 +179,7 @@ const WatchHistory = ({navigation}: Props) => {
             </Text>
           </View>
         )}
-        renderItem={({item}) => {
+        renderItem={({ item }) => {
           // Get the progress for this item
           const progress = progressData[item.link] || 0;
 
@@ -188,7 +190,7 @@ const WatchHistory = ({navigation}: Props) => {
                 activeOpacity={0.8}>
                 <View className="relative overflow-hidden">
                   <Image
-                    source={{uri: item.image}}
+                    source={{ uri: item.poster }}
                     className="w-full aspect-[2/3] rounded-lg"
                   />
 
@@ -210,7 +212,7 @@ const WatchHistory = ({navigation}: Props) => {
                         backgroundColor: primary,
                         zIndex: 20,
                         shadowColor: primary,
-                        shadowOffset: {width: 0, height: 0},
+                        shadowOffset: { width: 0, height: 0 },
                         shadowOpacity: 0.5,
                         shadowRadius: 3,
                         elevation: 5,
@@ -266,7 +268,7 @@ const WatchHistory = ({navigation}: Props) => {
                           style={{
                             textShadowColor: 'rgba(0,0,0,0.9)',
                             textShadowRadius: 3,
-                            textShadowOffset: {width: 0, height: 0},
+                            textShadowOffset: { width: 0, height: 0 },
                             zIndex: 20, // Ensure text is on top
                           }}>
                           {Math.round(progress)}%

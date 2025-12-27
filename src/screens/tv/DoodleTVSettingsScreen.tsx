@@ -3,7 +3,10 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import useAppModeStore from '../../lib/zustand/appModeStore';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 const DoodleTVSettingsScreen: React.FC = () => {
+    const insets = useSafeAreaInsets();
     const { setAppMode } = useAppModeStore();
 
     const handleExitTVMode = () => {
@@ -11,7 +14,7 @@ const DoodleTVSettingsScreen: React.FC = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
             <Text style={styles.header}>Settings</Text>
             <TouchableOpacity style={styles.settingItem} onPress={handleExitTVMode}>
                 <MaterialCommunityIcons name="exit-to-app" size={24} color="white" />

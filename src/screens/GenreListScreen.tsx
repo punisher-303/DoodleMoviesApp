@@ -1,10 +1,11 @@
-import React, {useState, useEffect} from 'react';
-import {View, Text, FlatList, TouchableOpacity, StyleSheet} from 'react-native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SearchStackParamList} from './App';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SearchStackParamList } from '../App';
 import useThemeStore from '../lib/zustand/themeStore';
-import {Ionicons} from '@expo/vector-icons';
-import Animated, {FadeInDown, Layout} from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
 
 // Define the genres you want to display
 const genres = [
@@ -33,8 +34,9 @@ type GenreListScreenProps = {
   navigation: NativeStackNavigationProp<SearchStackParamList, 'GenreList'>;
 };
 
-const GenreListScreen: React.FC<GenreListScreenProps> = ({navigation}) => {
-  const {primary, text, secondary} = useThemeStore(state => state);
+const GenreListScreen: React.FC<GenreListScreenProps> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
+  const { primary } = useThemeStore(state => state);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
 
   // This useEffect will now navigate to the ScrollList screen whenever a genre is selected.
@@ -44,8 +46,9 @@ const GenreListScreen: React.FC<GenreListScreenProps> = ({navigation}) => {
       // FIX: Uncomment and use the correct navigation call to the 'ScrollList' screen.
       // This will pass the selected genre to the ScrollList component.
       navigation.navigate('ScrollList', {
-        genre: selectedGenre,
+        filter: selectedGenre,
         title: selectedGenre,
+        isSearch: false,
       });
       // Reset the selected genre so the component can be used again.
       setSelectedGenre(null);
@@ -53,23 +56,23 @@ const GenreListScreen: React.FC<GenreListScreenProps> = ({navigation}) => {
   }, [selectedGenre, navigation]);
 
   return (
-    <View style={[styles.container, {backgroundColor: 'black'}]}>
+    <View style={[styles.container, { backgroundColor: 'black', paddingTop: insets.top }]}>
       <Animated.View
         entering={FadeInDown.duration(500)}
-        style={[styles.header, {backgroundColor: 'black'}]}>
+        style={[styles.header, { backgroundColor: 'black' }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={text} />
+          <Ionicons name="arrow-back" size={24} color={'white'} />
         </TouchableOpacity>
-        <Text style={[styles.title, {color: text}]}>Browse by Genre</Text>
+        <Text style={[styles.title, { color: 'white' }]}>Browse by Genre</Text>
       </Animated.View>
       <FlatList
         data={genres}
         keyExtractor={item => item}
         numColumns={3}
         contentContainerStyle={styles.listContainer}
-        renderItem={({item}) => (
+        renderItem={({ item }) => (
           <Animated.View
             layout={Layout}
             entering={FadeInDown.delay(genres.indexOf(item) * 50).duration(300)}
@@ -77,7 +80,7 @@ const GenreListScreen: React.FC<GenreListScreenProps> = ({navigation}) => {
             <TouchableOpacity
               style={[
                 styles.genreCard,
-                {backgroundColor: secondary, borderColor: primary},
+                { backgroundColor: '#1A1A1A', borderColor: primary },
                 // FIX: Use the primary color from the theme for the selected card border.
                 selectedGenre === item && {
                   ...styles.selectedGenreCard,
@@ -85,7 +88,7 @@ const GenreListScreen: React.FC<GenreListScreenProps> = ({navigation}) => {
                 },
               ]}
               onPress={() => setSelectedGenre(item)}>
-              <Text style={[styles.genreText, {color: text}]}>{item}</Text>
+              <Text style={[styles.genreText, { color: 'white' }]}>{item}</Text>
             </TouchableOpacity>
           </Animated.View>
         )}
@@ -126,7 +129,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     elevation: 5,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },

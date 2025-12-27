@@ -7,6 +7,7 @@ import {
   ToastAndroid,
   StatusBar,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
 import { settingsStorage } from '../../lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -22,6 +23,7 @@ import Constants from 'expo-constants';
 
 
 const Preferences = () => {
+  const insets = useSafeAreaInsets();
   const hasFirebase = Boolean(Constants?.expoConfig?.extra?.hasFirebase);
   const { primary, setPrimary, isCustom, setCustom } = useThemeStore(
     state => state,
@@ -85,7 +87,7 @@ const Preferences = () => {
     <ScrollView
       className="w-full h-full bg-black"
       contentContainerStyle={{
-        paddingTop: StatusBar.currentHeight || 0,
+        paddingTop: insets.top,
       }}>
       <View className="p-5">
         <Text className="text-2xl font-bold text-white mb-6">Preferences</Text>

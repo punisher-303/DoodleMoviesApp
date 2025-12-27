@@ -7,6 +7,7 @@ import {
   Alert,
   Switch,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // import pkg from '../../../package.json';
 import React, { useState } from 'react';
 import { Feather } from '@expo/vector-icons';
@@ -111,6 +112,7 @@ export const checkForUpdate = async (
 };
 
 const About = () => {
+  const insets = useSafeAreaInsets();
   const { primary } = useThemeStore(state => state);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [autoDownload, setAutoDownload] = useState(
@@ -145,7 +147,7 @@ const About = () => {
   };
 
   return (
-    <View className="flex-1 bg-black mt-8">
+    <View className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
       <View className="px-4 py-3 border-b border-white/10">
         <Text className="text-2xl font-bold text-white">About</Text>
         <Text className="text-gray-400 mt-1 text-sm">

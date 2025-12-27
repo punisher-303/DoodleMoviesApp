@@ -6,14 +6,18 @@ import {
   Switch,
   TouchableOpacity,
 } from 'react-native';
-import React, {useState} from 'react';
-import {providersStorage} from '../../lib/storage';
-import {providersList} from '../../lib/constants';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { providersStorage } from '../../lib/storage';
+// import {providersList} from '../../lib/constants';
+import useContentStore from '../../lib/zustand/contentStore';
 import useThemeStore from '../../lib/zustand/themeStore';
-import {SvgUri} from 'react-native-svg';
+import { SvgUri } from 'react-native-svg';
 
 const DisableProviders = () => {
-  const {primary} = useThemeStore(state => state);
+  const insets = useSafeAreaInsets();
+  const { primary } = useThemeStore(state => state);
+  const { installedProviders } = useContentStore(state => state);
   const [disabledProviders, setDisabledProviders] = useState<string[]>(
     providersStorage.getDisabledProviders(),
   );
@@ -32,7 +36,7 @@ const DisableProviders = () => {
     <ScrollView
       className="w-full h-full bg-black"
       contentContainerStyle={{
-        paddingTop: StatusBar.currentHeight || 0,
+        paddingTop: insets.top,
       }}>
       <View className="p-5">
         <View className="flex-row items-center justify-between mb-6">
@@ -51,20 +55,19 @@ const DisableProviders = () => {
         </Text>
 
         <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-          {providersList.map((provider, index) => (
+          {installedProviders?.map((provider, index) => (
             <View
               key={provider.value}
-              className={`flex-row items-center justify-between p-4 ${
-                index !== providersList.length - 1
-                  ? 'border-b border-[#262626]'
-                  : ''
-              }`}>
+              className={`flex-row items-center justify-between p-4 ${index !== installedProviders.length - 1
+                ? 'border-b border-[#262626]'
+                : ''
+                }`}>
               <View className="flex-row items-center">
                 <View className="bg-[#262626] p-2 rounded-lg mr-3">
-                  <SvgUri width={24} height={24} uri={provider.flag} />
+                  <SvgUri width={24} height={24} uri={provider.icon} />
                 </View>
                 <View>
-                  <Text className="text-white text-base">{provider.name}</Text>
+                  <Text className="text-white text-base">{provider.display_name}</Text>
                   <Text className="text-gray-400 text-xs">
                     {provider.type || 'Content Provider'}
                   </Text>

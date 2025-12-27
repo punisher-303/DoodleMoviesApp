@@ -5,14 +5,16 @@ import {
   TouchableOpacity,
   TouchableNativeFeedback,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React from 'react';
-import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
-import {ScrollView} from 'moti';
-import {settingsStorage} from '../../lib/storage';
+import { startActivityAsync, ActivityAction } from 'expo-intent-launcher';
+import { ScrollView } from 'moti';
+import { settingsStorage } from '../../lib/storage';
 import useThemeStore from '../../lib/zustand/themeStore';
-import {Feather, Entypo} from '@expo/vector-icons';
+import { Feather, Entypo } from '@expo/vector-icons';
 
 const SubtitlePreference = () => {
+  const insets = useSafeAreaInsets();
   const [fontSize, setFontSize] = React.useState(
     settingsStorage.getSubtitleFontSize(),
   );
@@ -22,7 +24,7 @@ const SubtitlePreference = () => {
   const [bottomElevation, setBottomElevation] = React.useState(
     settingsStorage.getSubtitleBottomPadding(),
   );
-  const {primary} = useThemeStore();
+  const { primary } = useThemeStore();
 
   const handleSubtitleSize = (action: 'increase' | 'decrease') => {
     if (fontSize < 5 || fontSize > 30) return;
@@ -69,7 +71,7 @@ const SubtitlePreference = () => {
     <ScrollView
       className="w-full h-full bg-black"
       contentContainerStyle={{
-        paddingTop: StatusBar.currentHeight || 0,
+        paddingTop: insets.top,
       }}>
       <View className="p-5">
         <Text className="text-2xl font-bold text-white mb-6">

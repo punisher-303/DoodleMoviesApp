@@ -6,14 +6,16 @@ import {
   Linking,
   ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React from 'react';
-import {Feather} from '@expo/vector-icons'; // Import Feather icons
+import { Feather } from '@expo/vector-icons'; // Import Feather icons
 import useThemeStore from '../../lib/zustand/themeStore';
-import {productionApps} from '../../lib/constants';
-import Animated, {FadeInDown} from 'react-native-reanimated';
+import { productionApps } from '../../lib/constants';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 const Production = () => {
-  const {primary} = useThemeStore(state => state);
+  const insets = useSafeAreaInsets();
+  const { primary } = useThemeStore(state => state);
 
   const AnimatedSection = ({
     delay,
@@ -29,7 +31,7 @@ const Production = () => {
   );
 
   return (
-    <View className="flex-1 bg-black mt-8">
+    <View className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
       <View className="px-4 py-3 border-b border-white/10">
         <Text className="text-2xl font-bold text-white">Our Productions</Text>
         <Text className="text-gray-400 mt-1 text-sm">
@@ -37,10 +39,10 @@ const Production = () => {
         </Text>
       </View>
 
-      <ScrollView 
+      <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{paddingBottom: 24}}
+        contentContainerStyle={{ paddingBottom: 24 }}
       >
         <View className="p-4">
           {/* Echo Pulse Music */}
@@ -113,7 +115,7 @@ const Production = () => {
                 About Our Apps
               </Text>
               <Text className="text-gray-400 text-sm">
-                We create high-quality mobile applications with great user experiences. 
+                We create high-quality mobile applications with great user experiences.
                 Each app is designed to make your daily tasks easier and more enjoyable.
               </Text>
             </View>

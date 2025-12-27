@@ -1,19 +1,21 @@
-import {View, Text, Platform, Image, Dimensions, FlatList} from 'react-native';
+import { View, Text, Platform, Image, Dimensions, FlatList } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React from 'react';
-import {useNavigation} from '@react-navigation/native';
-import {WatchListStackParamList} from '../App';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {TouchableOpacity} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { WatchListStackParamList } from '../App';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { TouchableOpacity } from 'react-native';
 import useThemeStore from '../lib/zustand/themeStore';
 import useWatchListStore from '../lib/zustand/watchListStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import {StatusBar} from 'expo-status-bar';
+import { StatusBar } from 'expo-status-bar';
 
 const WatchList = () => {
-  const {primary} = useThemeStore(state => state);
+  const { primary } = useThemeStore(state => state);
+  const insets = useSafeAreaInsets();
   const navigation =
     useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
-  const {watchList} = useWatchListStore(state => state);
+  const { watchList } = useWatchListStore(state => state);
 
   // Calculate how many items can fit per row
   const screenWidth = Dimensions.get('window').width;
@@ -33,7 +35,7 @@ const WatchList = () => {
     (availableWidth - itemSpacing * (numColumns - 1)) / numColumns;
 
   // Render each grid item
-  const renderItem = ({item, index}: {item: any; index: number}) => (
+  const renderItem = ({ item, index }: { item: any; index: number }) => (
     <TouchableOpacity
       key={item.link + index}
       onPress={() =>
@@ -56,11 +58,11 @@ const WatchList = () => {
             height: 155,
             borderRadius: 10,
           }}
-          source={{uri: item.poster}}
+          source={{ uri: item.poster }}
         />
         <Text
           className="text-white text-xs truncate text-center mt-1"
-          style={{maxWidth: itemWidth}}
+          style={{ maxWidth: itemWidth }}
           numberOfLines={1}>
           {item.title}
         </Text>
@@ -75,14 +77,14 @@ const WatchList = () => {
       <View
         className="w-full bg-black"
         style={{
-          paddingTop: Platform.OS === 'android' ? 15 : 0, // Adjust for Android status bar height
+          paddingTop: insets.top, // Dynamic safe area top padding
         }}
       />
 
       <View className="flex-1 w-full px-3">
         <Text
           className="text-2xl text-center font-bold mb-6 mt-4"
-          style={{color: primary}}>
+          style={{ color: primary }}>
           Watchlist
         </Text>
 

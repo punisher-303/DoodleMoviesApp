@@ -1,18 +1,19 @@
-import {View, Text, Image, Platform, TouchableOpacity} from 'react-native';
+import { View, Text, Image, Platform, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import requestStoragePermission from '../../lib/file/getStoragePermission';
 import * as FileSystem from 'expo-file-system';
-import {downloadFolder} from '../../lib/constants';
+import { downloadFolder } from '../../lib/constants';
 import * as VideoThumbnails from 'expo-video-thumbnails';
-import React, {useState, useEffect, useCallback, useMemo} from 'react';
-import {settingsStorage, downloadsStorage} from '../../lib/entstore';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { settingsStorage, downloadsStorage } from '../../lib/entstore';
 import useThemeStore from '../../lib/zustand/themeStore';
 import * as RNFS from '@dr.pogodin/react-native-fs';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import {useNavigation, useFocusEffect} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {RootStackParamList} from '../../App';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../App';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import {FlashList} from '@shopify/flash-list';
+import { FlashList } from '@shopify/flash-list';
 import * as DocumentPicker from 'expo-document-picker';
 
 // Define supported video extensions
@@ -56,29 +57,30 @@ const getReadableTitle = (fileName: string): string => {
 // Function to get episode/season information
 const getEpisodeInfo = (
   fileName: string,
-): {season: number; episode: number} => {
+): { season: number; episode: number } => {
   // Try SxxExx
   let match = fileName.match(/s(\d{1,3})e(\d{1,3})/i);
   if (match) {
-    return {season: parseInt(match[1], 10), episode: parseInt(match[2], 10)};
+    return { season: parseInt(match[1], 10), episode: parseInt(match[2], 10) };
   } // Try "Episode Y" or "Ep Y"
 
   match = fileName.match(/(?:episode|ep)[\s._-]*(\d{1,3})/i);
   if (match) {
     let seasonMatch = fileName.match(/season[\s._-]*(\d{1,3})/i);
     const season = seasonMatch ? parseInt(seasonMatch[1], 10) : 1;
-    return {season, episode: parseInt(match[1], 10)};
+    return { season, episode: parseInt(match[1], 10) };
   } // Try finding a number at the end, often used for single-digit episode
 
   match = fileName.match(/[\s._-](\d{1,3})[\s._-]*$/);
   if (match) {
-    return {season: 1, episode: parseInt(match[1], 10)};
+    return { season: 1, episode: parseInt(match[1], 10) };
   } // Default case
 
-  return {season: 0, episode: 0}; // Use 0 for "not an episode"
+  return { season: 0, episode: 0 }; // Use 0 for "not an episode"
 };
 
 const Downloads = () => {
+  const insets = useSafeAreaInsets();
   // Existing state for app-managed download files
   const [downloadFiles, setDownloadFiles] = useState<MediaItem[]>([]);
   // State for externally selected files (multiple selection support)
@@ -89,7 +91,7 @@ const Downloads = () => {
   // NEW: State to manage the visual dimming effect during deletion
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const {primary} = useThemeStore(state => state);
+  const { primary } = useThemeStore(state => state);
   // groupSelected now tracks selected individual file URIs (can include external URIs)
 
   const [groupSelected, setGroupSelected] = useState<string[]>([]);
@@ -183,7 +185,7 @@ const Downloads = () => {
         return null;
       }
 
-      const {uri} = await VideoThumbnails.getThumbnailAsync(fileUri, {
+      const { uri } = await VideoThumbnails.getThumbnailAsync(fileUri, {
         time: 100000,
       });
       return uri;
@@ -208,12 +210,12 @@ const Downloads = () => {
       try {
         const thumbnailPromises = filesToProcess.map(async file => {
           const thumbnail = await getThumbnail(file.uri);
-          return thumbnail ? {[file.uri]: thumbnail} : null;
+          return thumbnail ? { [file.uri]: thumbnail } : null;
         });
 
         const thumbnailResults = await Promise.all(thumbnailPromises);
         const newThumbnails = thumbnailResults.reduce((acc, curr) => {
-          return curr ? {...acc, ...curr} : acc;
+          return curr ? { ...acc, ...curr } : acc;
         }, cachedThumbnails);
 
         downloadsStorage.saveThumbnails(newThumbnails);
@@ -339,7 +341,7 @@ const Downloads = () => {
       }
 
       // 5. Update thumbnails
-      const newThumbnails = {...thumbnails};
+      const newThumbnails = { ...thumbnails };
       managedUrisToDelete.forEach(uri => delete newThumbnails[uri]);
       setThumbnails(newThumbnails);
       downloadsStorage.saveThumbnails(newThumbnails);
@@ -359,9 +361,9 @@ const Downloads = () => {
   // Combined list for rendering (Downloads + External Selections)
   const allMediaItems: MediaItem[] = useMemo(() => {
     // Ensure external files are marked correctly
-    const external = externalFiles.map(f => ({...f, isManagedDownload: false}));
+    const external = externalFiles.map(f => ({ ...f, isManagedDownload: false }));
     // Ensure download files are marked correctly
-    const downloads = downloadFiles.map(f => ({...f, isManagedDownload: true}));
+    const downloads = downloadFiles.map(f => ({ ...f, isManagedDownload: true }));
     // Display downloads first, then external files
     return [...downloads, ...external];
   }, [downloadFiles, externalFiles]);
@@ -398,19 +400,19 @@ const Downloads = () => {
           : `file://${item.uri}`;
 
       navigation.navigate('Player', {
-        episodeList: [{title: item.title, link: directUrl}],
+        episodeList: [{ title: item.title, link: directUrl }],
         linkIndex: 0,
         type: 'download',
         directUrl: directUrl,
         primaryTitle: item.title,
-        poster: thumbnails[item.uri] ? {uri: thumbnails[item.uri]} : {},
+        poster: thumbnails[item.uri] ? { poster: thumbnails[item.uri] } : {},
         providerValue: 'doodle',
       });
     }
   };
 
   return (
-    <View className="mt-14 px-2 w-full h-full bg-black">
+    <View className="px-2 w-full h-full bg-black" style={{ paddingTop: insets.top + 10 }}>
       <View className="flex-row justify-between items-center mb-4">
         <Text className="text-2xl text-white">Downloads</Text>
         <View className="flex-row gap-x-7 items-center">
@@ -461,7 +463,7 @@ const Downloads = () => {
             </View>
           )
         }
-        renderItem={({item}) => {
+        renderItem={({ item }) => {
           const isSelected = isSelecting && groupSelected.includes(item.uri);
           // NEW: Check if this item is selected AND we are in the deletion phase
           const isDimmingForDeletion = isDeleting && isSelected;
@@ -476,14 +478,13 @@ const Downloads = () => {
               key={item.uri}
               // Use an array for style to combine dynamic border and the new opacity effect
               style={[
-                {borderColor: isSelected ? primary : 'transparent'},
-                isDimmingForDeletion && {opacity: 0.3}, // Dim selected items briefly during delete action
+                { borderColor: isSelected ? primary : 'transparent' },
+                isDimmingForDeletion && { opacity: 0.3 }, // Dim selected items briefly during delete action
               ]}
-              className={`flex-1 m-0.5 rounded-lg overflow-hidden border-2 ${
-                isSelected
-                  ? 'bg-quaternary/50'
-                  : 'border-transparent bg-tertiary'
-              }`}
+              className={`flex-1 m-0.5 rounded-lg overflow-hidden border-2 ${isSelected
+                ? 'bg-quaternary/50'
+                : 'border-transparent bg-tertiary'
+                }`}
               onLongPress={() => {
                 if (!isSelecting) {
                   RNReactNativeHapticFeedback.trigger('impactHeavy');
@@ -497,7 +498,7 @@ const Downloads = () => {
                 {thumbnails[item.uri] ? (
                   /* Display generated thumbnail */
                   <Image
-                    source={{uri: thumbnails[item.uri]}}
+                    source={{ uri: thumbnails[item.uri] }}
                     className="w-full h-full rounded-lg"
                     resizeMode="cover"
                   />
@@ -517,7 +518,7 @@ const Downloads = () => {
                 {isEpisode && (
                   <View
                     // FIX: Using 'style' for the dynamic border color
-                    style={{borderColor: primary}}
+                    style={{ borderColor: primary }}
                     className={`absolute top-1 left-1 bg-black/70 rounded-full w-8 h-8 justify-center items-center border`}>
                     <Text className="text-white text-xs font-bold">
                       {episodeLabel}

@@ -1,32 +1,34 @@
-import {View, Text, TouchableOpacity} from 'react-native';
-import React, {useEffect, useState, useRef, ReactElement} from 'react';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {HomeStackParamList, SearchStackParamList} from '../App';
-import {Post} from '../lib/providers/types';
-import {Image} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useEffect, useState, useRef, ReactElement } from 'react';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { HomeStackParamList, SearchStackParamList } from '../App';
+import { Post } from '../lib/providers/types';
+import { Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import useContentStore from '../lib/zustand/contentStore';
-import {MaterialIcons} from '@expo/vector-icons';
-import {settingsStorage} from '../lib/storage';
-import {FlashList} from '@shopify/flash-list';
+import { MaterialIcons } from '@expo/vector-icons';
+import { settingsStorage } from '../lib/storage';
+import { FlashList } from '@shopify/flash-list';
 import SkeletonLoader from '../components/Skeleton';
 import useThemeStore from '../lib/zustand/themeStore';
-import {providerManager} from '../lib/services/ProviderManager';
+import { providerManager } from '../lib/services/ProviderManager';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
 
-const ScrollList = ({route}: Props): ReactElement => {
-  const {primary} = useThemeStore(state => state);
+const ScrollList = ({ route }: Props): ReactElement => {
+  const insets = useSafeAreaInsets();
+  const { primary } = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
   const [posts, setPosts] = useState<Post[]>([]);
   // Fix: Safely destructure route.params with a default empty object to prevent crashes
-  const {filter, providerValue} = route.params || {};
+  const { filter, providerValue } = route.params || {};
   const [page, setPage] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEnd, setIsEnd] = useState<boolean>(false);
-  const {provider} = useContentStore(state => state);
+  const { provider } = useContentStore(state => state);
   const [viewType, setViewType] = useState<number>(
     settingsStorage.getListViewType(),
   );
@@ -76,17 +78,17 @@ const ScrollList = ({route}: Props): ReactElement => {
         // Use optional chaining for safe access to route.params properties
         const getNewPosts = route.params?.isSearch
           ? providerManager.getSearchPosts({
-              searchQuery: filter,
-              page,
-              providerValue: providerValue || provider.value,
-              signal,
-            })
+            searchQuery: filter,
+            page,
+            providerValue: providerValue || provider.value,
+            signal,
+          })
           : providerManager.getPosts({
-              filter,
-              page,
-              providerValue: providerValue || provider.value,
-              signal,
-            });
+            filter,
+            page,
+            providerValue: providerValue || provider.value,
+            signal,
+          });
 
         const newPosts = await getNewPosts;
 
@@ -129,7 +131,7 @@ const ScrollList = ({route}: Props): ReactElement => {
   // Limit the number of skeletons to prevent unnecessary renders
   const renderSkeletons = () => {
     const skeletonCount = viewType === 1 ? 6 : 3;
-    return Array.from({length: skeletonCount}).map((_, i) => (
+    return Array.from({ length: skeletonCount }).map((_, i) => (
       <View
         className="mx-3 gap-0 flex mb-3 justify-center items-center"
         key={i}>
@@ -140,9 +142,9 @@ const ScrollList = ({route}: Props): ReactElement => {
   };
 
   return (
-    <View className="h-full w-full bg-black items-center p-4">
+    <View className="h-full w-full bg-black items-center p-4" style={{ paddingTop: insets.top }}>
       <View className="w-full px-4 font-semibold my-6 flex-row justify-between items-center">
-        <Text className="text-2xl font-bold" style={{color: primary}}>
+        <Text className="text-2xl font-bold" style={{ color: primary }}>
           {route.params?.title}
         </Text>
         <TouchableOpacity
@@ -165,9 +167,8 @@ const ScrollList = ({route}: Props): ReactElement => {
             <>
               {isLoading && (
                 <View
-                  className={`flex ${
-                    viewType === 1 ? 'flex-row flex-wrap' : 'flex-col'
-                  } gap-1 justify-center items-center mb-16`}>
+                  className={`flex ${viewType === 1 ? 'flex-row flex-wrap' : 'flex-col'
+                    } gap-1 justify-center items-center mb-16`}>
                   {renderSkeletons()}
                 </View>
               )}
@@ -177,9 +178,9 @@ const ScrollList = ({route}: Props): ReactElement => {
           data={posts}
           numColumns={viewType === 1 ? 3 : 1}
           key={`view-type-${viewType}`}
-          contentContainerStyle={{paddingBottom: 80}}
+          contentContainerStyle={{ paddingBottom: 80 }}
           keyExtractor={(item, i) => `${item.title}-${i}`}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <TouchableOpacity
               className={
                 viewType === 1
@@ -202,8 +203,8 @@ const ScrollList = ({route}: Props): ReactElement => {
                 }}
                 style={
                   viewType === 1
-                    ? {width: 100, height: 150}
-                    : {width: 70, height: 100}
+                    ? { width: 100, height: 150 }
+                    : { width: 70, height: 100 }
                 }
               />
               <Text

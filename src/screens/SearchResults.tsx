@@ -6,12 +6,13 @@ import {
   FlatList,
   ListRenderItem,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '../components/Slider';
-import React, {useEffect, useState, useRef, useCallback, useMemo} from 'react';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {SearchStackParamList} from '../App';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { SearchStackParamList } from '../App';
 import useThemeStore from '../lib/zustand/themeStore';
-import {providerManager} from '../lib/services/ProviderManager';
+import { providerManager } from '../lib/services/ProviderManager';
 import useContentStore from '../lib/zustand/contentStore';
 
 type Props = NativeStackScreenProps<SearchStackParamList, 'SearchResults'>;
@@ -39,7 +40,7 @@ const SearchHeader = React.memo(
     <View className="mt-14 px-4 flex flex-row justify-between items-center gap-x-3 mb-4">
       <Text className="text-white text-2xl font-semibold ">
         {isAllLoaded ? 'Searched for' : 'Searching for'}{' '}
-        <Text style={{color: primary}}>"{filter}"</Text>
+        <Text style={{ color: primary }}>"{filter}"</Text>
       </Text>
       {!isAllLoaded && (
         <View className="flex justify-center items-center h-10">
@@ -50,9 +51,10 @@ const SearchHeader = React.memo(
   ),
 );
 
-const SearchResults = ({route}: Props): React.ReactElement => {
-  const {primary} = useThemeStore(state => state);
-  const {installedProviders} = useContentStore(state => state);
+const SearchResults = ({ route }: Props): React.ReactElement => {
+  const insets = useSafeAreaInsets();
+  const { primary } = useThemeStore(state => state);
+  const { installedProviders } = useContentStore(state => state);
   const [searchData, setSearchData] = useState<SearchPageData[]>([]);
 
   // Using a Set or Map for loading states is faster than array.find(),
@@ -138,7 +140,7 @@ const SearchResults = ({route}: Props): React.ReactElement => {
   }, [route.params.filter, installedProviders]);
 
   const renderItem: ListRenderItem<SearchPageData> = useCallback(
-    ({item}) => {
+    ({ item }) => {
       // Logic Fix: No need to search 'searchData' or 'loading' arrays here.
       // 'item' already contains the Posts.
       // We pass specific loading state if needed, or just false since we only render results when data exists.
@@ -163,7 +165,7 @@ const SearchResults = ({route}: Props): React.ReactElement => {
   const isAllLoaded = loadingProviders.size === 0;
 
   return (
-    <SafeAreaView className="bg-black h-full w-full">
+    <View className="bg-black h-full w-full" style={{ paddingTop: insets.top }}>
       <FlatList
         data={searchData}
         renderItem={renderItem}
@@ -179,14 +181,14 @@ const SearchResults = ({route}: Props): React.ReactElement => {
         }
         // Padding for the bottom
         ListFooterComponent={<View className="h-16" />}
-        contentContainerStyle={{paddingHorizontal: 16}}
+        contentContainerStyle={{ paddingHorizontal: 16 }}
         // Performance settings for FlatList
         initialNumToRender={3}
         maxToRenderPerBatch={5}
         windowSize={5}
         removeClippedSubviews={true}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

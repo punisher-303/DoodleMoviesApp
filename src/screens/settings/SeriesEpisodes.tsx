@@ -1,19 +1,21 @@
 import React from 'react';
-import {View, Text, Image, TouchableOpacity} from 'react-native';
-import {FlashList} from '@shopify/flash-list';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FlashList } from '@shopify/flash-list';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 // import * as FileSystem from 'expo-file-system';
-import {RootStackParamList} from '../../App';
+import { RootStackParamList } from '../../App';
 
 type SeriesEpisodesRouteProp = NativeStackScreenProps<
   RootStackParamList,
   'SeriesEpisodes'
 >;
 
-const SeriesEpisodes = ({navigation, route}: SeriesEpisodesRouteProp) => {
+const SeriesEpisodes = ({ navigation, route }: SeriesEpisodesRouteProp) => {
+  const insets = useSafeAreaInsets();
   // const {primary} = useThemeStore(state => state);
-  const {series, episodes, thumbnails} = route.params;
+  const { series, episodes, thumbnails } = route.params;
 
   // Function to extract episode number from filename
   const getEpisodeNumber = (filename: string): number => {
@@ -40,7 +42,7 @@ const SeriesEpisodes = ({navigation, route}: SeriesEpisodesRouteProp) => {
   return (
     <View className="w-full h-full bg-black">
       {/* Simple Header */}
-      <View className="bg-tertiary px-4 pt-14 pb-4">
+      <View className="bg-tertiary px-4 pb-4" style={{ paddingTop: insets.top + 10 }}>
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -66,7 +68,7 @@ const SeriesEpisodes = ({navigation, route}: SeriesEpisodesRouteProp) => {
         <FlashList
           data={sortedEpisodes}
           estimatedItemSize={100}
-          renderItem={({item}) => {
+          renderItem={({ item }) => {
             const fileName = item.uri.split('/').pop() || '';
             const episodeNumber = getEpisodeNumber(fileName);
 
@@ -75,7 +77,7 @@ const SeriesEpisodes = ({navigation, route}: SeriesEpisodesRouteProp) => {
                 className="flex-row bg-tertiary rounded-lg overflow-hidden mb-2 h-24"
                 onPress={() => {
                   navigation.navigate('Player', {
-                    episodeList: [{title: fileName || '', link: item.uri}],
+                    episodeList: [{ title: fileName || '', link: item.uri }],
                     linkIndex: 0,
                     type: '',
                     directUrl: item.uri,
@@ -87,7 +89,7 @@ const SeriesEpisodes = ({navigation, route}: SeriesEpisodesRouteProp) => {
                 <View className="w-32 h-full relative">
                   {thumbnails[item.uri] ? (
                     <Image
-                      source={{uri: thumbnails[item.uri]}}
+                      source={{ uri: thumbnails[item.uri] }}
                       className="w-full h-full rounded-t-lg"
                       resizeMode="cover"
                     />

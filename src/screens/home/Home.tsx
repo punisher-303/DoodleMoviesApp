@@ -1,14 +1,15 @@
 import {
-  SafeAreaView,
   ScrollView,
   RefreshControl,
   View,
   Text,
+  StatusBar as RNStatusBar,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '../../components/Slider';
-import React, {useCallback, useMemo, useRef, useState} from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import HeroOptimized from '../../components/Hero';
-import {mainStorage} from '../../lib/storage';
+import { mainStorage } from '../../lib/storage';
 import useContentStore from '../../lib/zustand/contentStore';
 import useHeroStore from '../../lib/zustand/herostore';
 import {
@@ -17,20 +18,20 @@ import {
 } from '../../lib/hooks/useHomePageData';
 import useThemeStore from '../../lib/zustand/themeStore';
 import ProviderDrawer from '../../components/ProviderDrawer';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {HomeStackParamList} from '../../App';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { HomeStackParamList } from '../../App';
 import DrawerLayout from 'react-native-gesture-handler/DrawerLayout';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ContinueWatching from '../../components/ContinueWatching';
-import {providerManager} from '../../lib/services/ProviderManager';
+import { providerManager } from '../../lib/services/ProviderManager';
 import Tutorial from '../../components/Touturial';
-import {QueryErrorBoundary} from '../../components/ErrorBoundary';
-import {StatusBar} from 'expo-status-bar';
+import { QueryErrorBoundary } from '../../components/ErrorBoundary';
+import { StatusBar } from 'expo-status-bar';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 
-const Home = ({}: Props) => {
-  const {primary} = useThemeStore(state => state);
+const Home = ({ }: Props) => {
+  const { primary } = useThemeStore(state => state);
   const [backgroundColor, setBackgroundColor] = useState('transparent');
   const drawer = useRef<DrawerLayout>(null);
   const [isDrawerOpen] = useState(false);
@@ -41,8 +42,8 @@ const Home = ({}: Props) => {
     [],
   );
 
-  const {provider, installedProviders} = useContentStore(state => state);
-  const {setHero} = useHeroStore(state => state);
+  const { provider, installedProviders } = useContentStore(state => state);
+  const { setHero } = useHeroStore(state => state);
 
   // React Query for home page data with better error handling
   const {
@@ -77,7 +78,7 @@ const Home = ({}: Props) => {
     if (heroPost) {
       setHero(heroPost);
     } else {
-      setHero({link: '', image: '', title: ''});
+      setHero({ link: '', image: '', title: '' });
     }
   }, [heroPost, setHero]);
 
@@ -97,7 +98,7 @@ const Home = ({}: Props) => {
     }
 
     return providerManager
-      .getCatalog({providerValue: provider.value})
+      .getCatalog({ providerValue: provider.value })
       .map((item, index) => (
         <Slider
           isLoading={true}
@@ -151,7 +152,7 @@ const Home = ({}: Props) => {
 
   return (
     <QueryErrorBoundary>
-      <GestureHandlerRootView style={{flex: 1}}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaView className="bg-black flex-1">
           <DrawerLayout
             drawerPosition="left"

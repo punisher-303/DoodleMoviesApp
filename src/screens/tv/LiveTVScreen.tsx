@@ -16,6 +16,7 @@ import { DoodleTVStackParamList } from '../../App';
 import { useNavigation } from '@react-navigation/native';
 import useThemeStore from '../../lib/zustand/themeStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface TVChannel {
   id: string;
@@ -247,8 +248,11 @@ const LiveTVScreen: React.FC = () => {
     );
   }
 
+
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {showFilterModal ? (
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
