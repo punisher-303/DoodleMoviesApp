@@ -256,6 +256,9 @@ const Extensions = ({ navigation }: Props) => {
                   type: '',
                   version: '',
                   category: '',
+                  icon: '',
+                  disabled: false,
+                  installed: false,
                 } as ProviderExtension,
               );
             }
@@ -498,7 +501,7 @@ const Extensions = ({ navigation }: Props) => {
                 </View>
               )}
             </View>
-            <View className="flex-row items-center flex-wrap gap-2 mt-0.5">
+            <View className="flex-row items-center gap-2 mt-0.5">
               <Text className="text-gray-400 text-xs font-medium">
                 v{item.version || '0.0'}
               </Text>
