@@ -1,5 +1,6 @@
-import {Image, MotiView, View} from 'moti';
-import React, {memo, useState, useCallback} from 'react';
+import { Image, MotiView, View } from 'moti';
+import React, { memo, useState, useCallback } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Keyboard,
   Pressable,
@@ -9,27 +10,27 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome';
-import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {HomeStackParamList, SearchStackParamList} from '../App';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { HomeStackParamList, SearchStackParamList } from '../App';
 import useContentStore from '../lib/zustand/contentStore';
 import useHeroStore from '../lib/zustand/herostore';
-import {Skeleton} from 'moti/skeleton';
-import {settingsStorage} from '../lib/storage';
-import {Feather} from '@expo/vector-icons';
+import { Skeleton } from 'moti/skeleton';
+import { settingsStorage } from '../lib/storage';
+import { Feather } from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import {DrawerLayout} from 'react-native-gesture-handler';
-import {useHeroMetadata} from '../lib/hooks/useHomePageData';
+import { DrawerLayout } from 'react-native-gesture-handler';
+import { useHeroMetadata } from '../lib/hooks/useHomePageData';
 
 interface HeroProps {
   isDrawerOpen: boolean;
   drawerRef: React.RefObject<DrawerLayout>;
 }
 
-const Hero = memo(({isDrawerOpen, drawerRef}: HeroProps) => {
+const Hero = memo(({ isDrawerOpen, drawerRef }: HeroProps) => {
   const [searchActive, setSearchActive] = useState(false);
-  const {provider} = useContentStore(state => state);
-  const {hero} = useHeroStore(state => state);
+  const { provider } = useContentStore(state => state);
+  const { hero } = useHeroStore(state => state);
 
   // Memoize settings to prevent re-renders
   const [showHamburgerMenu] = useState(() =>
@@ -69,7 +70,7 @@ const Hero = memo(({isDrawerOpen, drawerRef}: HeroProps) => {
   const handleSearchSubmit = useCallback(
     (text: string) => {
       if (text.startsWith('https://')) {
-        navigation.navigate('Info', {link: text});
+        navigation.navigate('Info', { link: text });
       } else {
         searchNavigation.navigate('ScrollList', {
           providerValue: provider.value,
@@ -102,7 +103,7 @@ const Hero = memo(({isDrawerOpen, drawerRef}: HeroProps) => {
     const fallbackImage =
       'https://placehold.jp/24/363636/ffffff/500x500.png?text=Doodle';
     if (!heroData) {
-      return {uri: fallbackImage};
+      return { uri: fallbackImage };
     }
 
     return {
@@ -126,17 +127,21 @@ const Hero = memo(({isDrawerOpen, drawerRef}: HeroProps) => {
     console.error('Hero metadata error:', error);
   }
 
+  const insets = useSafeAreaInsets();
+
   return (
     <View className="relative h-[55vh]">
       {/* Header Controls */}
-      <View className="absolute pt-3 w-full top-6 px-3 mt-2 z-30 flex-row justify-between items-center">
+      <View
+        className="absolute w-full px-3 z-30 flex-row justify-between items-center"
+        style={{ top: insets.top + 10 }}
+      >
         {!searchActive && (
           <View
-            className={`${
-              showHamburgerMenu && !isDrawerDisabled
-                ? 'opacity-100'
-                : 'opacity-0'
-            }`}>
+            className={`${showHamburgerMenu && !isDrawerDisabled
+              ? 'opacity-100'
+              : 'opacity-0'
+              }`}>
             <Pressable
               className={`${isDrawerOpen ? 'opacity-0' : 'opacity-100'}`}
               onPress={() => drawerRef.current?.openDrawer()}>
@@ -147,10 +152,10 @@ const Hero = memo(({isDrawerOpen, drawerRef}: HeroProps) => {
 
         {searchActive && (
           <MotiView
-            from={{opacity: 0, scale: 0.5}}
-            animate={{opacity: 1, scale: 1}}
+            from={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
             //@ts-ignore
-            transition={{type: 'timing', duration: 300}}
+            transition={{ type: 'timing', duration: 300 }}
             className="w-full items-center justify-center">
             <TextInput
               onBlur={() => setSearchActive(false)}
@@ -176,7 +181,7 @@ const Hero = memo(({isDrawerOpen, drawerRef}: HeroProps) => {
           source={imageSource}
           onError={handleImageError}
           className="h-full w-full"
-          style={{resizeMode: 'cover'}}
+          style={{ resizeMode: 'cover' }}
         />
       </Skeleton>
 
@@ -187,7 +192,7 @@ const Hero = memo(({isDrawerOpen, drawerRef}: HeroProps) => {
             {/* Title/Logo */}
             {heroData.logo ? (
               <Image
-                source={{uri: heroData.logo}}
+                source={{ uri: heroData.logo }}
                 style={{
                   width: 200,
                   height: 100,

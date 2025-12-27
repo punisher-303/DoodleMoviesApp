@@ -153,7 +153,7 @@ const Home = ({ }: Props) => {
   return (
     <QueryErrorBoundary>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaView className="bg-black flex-1">
+        <View className="bg-black flex-1">
           <DrawerLayout
             drawerPosition="left"
             drawerWidth={200}
@@ -199,7 +199,7 @@ const Home = ({ }: Props) => {
               <View className="h-16" />
             </ScrollView>
           </DrawerLayout>
-        </SafeAreaView>
+        </View>
       </GestureHandlerRootView>
     </QueryErrorBoundary>
   );

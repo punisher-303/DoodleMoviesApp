@@ -1,38 +1,38 @@
-import {View, Text, FlatList, Image} from 'react-native';
-import React, {useState, useEffect, useCallback} from 'react';
-import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SearchStackParamList} from '../App';
-import {MaterialIcons, MaterialCommunityIcons, Ionicons, Feather} from '@expo/vector-icons';
-import {TextInput} from 'react-native';
-import {TouchableOpacity} from 'react-native';
+import { View, Text, FlatList, Image } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SearchStackParamList } from '../App';
+import { MaterialIcons, MaterialCommunityIcons, Ionicons, Feather } from '@expo/vector-icons';
+import { TextInput } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import useThemeStore from '../lib/zustand/themeStore';
-import {MMKV} from '../lib/Mmkv';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import { MMKV } from '../lib/Mmkv';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   FadeInDown,
   SlideInRight,
   Layout,
 } from 'react-native-reanimated';
 import debounce from 'lodash/debounce';
-import {searchOMDB} from '../lib/services/omdb';
-import {OMDBResult} from '../types/omdb';
+import { searchOMDB } from '../lib/services/omdb';
+import { OMDBResult } from '../types/omdb';
 
 const MAX_VISIBLE_RESULTS = 15;
 const MAX_HISTORY_ITEMS = 30;
 
 // Hardcoded list of genres with icons
 const GENRES = [
-  {id: '1', name: 'Action', icon: 'flash-outline'},
-  {id: '2', name: 'Comedy', icon: 'happy-outline'},
-  {id: '3', name: 'Sci-Fi', icon: 'planet-outline'},
-  {id: '4', name: 'Fantasy', icon: 'sparkles-outline'},
-  {id: '5', name: 'Horror', icon: 'skull-outline'},
-  {id: '6', name: 'Romance', icon: 'heart-outline'},
-  {id: '7', name: 'Drama', icon: 'theater-outline'},
-  {id: '8', name: 'Thriller', icon: 'eye-outline'},
-  {id: '9', name: 'Animation', icon: 'film-outline'},
-  {id: '10', name: 'Adventure', icon: 'compass-outline'},
+  { id: '1', name: 'Action', icon: 'flash-outline' },
+  { id: '2', name: 'Comedy', icon: 'happy-outline' },
+  { id: '3', name: 'Sci-Fi', icon: 'planet-outline' },
+  { id: '4', name: 'Fantasy', icon: 'sparkles-outline' },
+  { id: '5', name: 'Horror', icon: 'skull-outline' },
+  { id: '6', name: 'Romance', icon: 'heart-outline' },
+  { id: '7', name: 'Drama', icon: 'theater-outline' },
+  { id: '8', name: 'Thriller', icon: 'eye-outline' },
+  { id: '9', name: 'Animation', icon: 'film-outline' },
+  { id: '10', name: 'Adventure', icon: 'compass-outline' },
 ];
 
 // Define a type for IMDB search results from the suggestion API
@@ -58,17 +58,17 @@ const GENRE_MOVIES = {
       imdbID: 'tt4154796',
       Type: 'movie',
     },
-    {Title: 'Loki', Year: '2021–', imdbID: 'tt9208882', Type: 'series'},
+    { Title: 'Loki', Year: '2021–', imdbID: 'tt9208882', Type: 'series' },
     {
       Title: 'Terminator 2: Judgment Day',
       Year: '1991',
       imdbID: 'tt0103064',
       Type: 'movie',
     },
-    {Title: 'The Matrix', Year: '1999', imdbID: 'tt0133093', Type: 'movie'},
+    { Title: 'The Matrix', Year: '1999', imdbID: 'tt0133093', Type: 'movie' },
   ],
   action: [
-    {Title: 'Die Hard', Year: '1988', imdbID: 'tt0095016', Type: 'movie'},
+    { Title: 'Die Hard', Year: '1988', imdbID: 'tt0095016', Type: 'movie' },
     {
       Title: 'Mad Max: Fury Road',
       Year: '2015',
@@ -95,7 +95,7 @@ const GENRE_MOVIES = {
       imdbID: 'tt0109686',
       Type: 'movie',
     },
-    {Title: 'Superbad', Year: '2007', imdbID: 'tt0829482', Type: 'movie'},
+    { Title: 'Superbad', Year: '2007', imdbID: 'tt0829482', Type: 'movie' },
     {
       Title: 'The Office',
       Year: '2005–2013',
@@ -104,13 +104,13 @@ const GENRE_MOVIES = {
     },
   ],
   horror: [
-    {Title: 'The Conjuring', Year: '2013', imdbID: 'tt1457767', Type: 'movie'},
-    {Title: 'Hereditary', Year: '2018', imdbID: 'tt7784604', Type: 'movie'},
+    { Title: 'The Conjuring', Year: '2013', imdbID: 'tt1457767', Type: 'movie' },
+    { Title: 'Hereditary', Year: '2018', imdbID: 'tt7784604', Type: 'movie' },
   ], // Add other genres as needed
 };
 
 // Helper components for a cleaner render function
-const RenderHeader = ({title, index}: {title: string; index: number}) => (
+const RenderHeader = ({ title, index }: { title: string; index: number }) => (
   <Animated.View
     entering={FadeInDown.delay(index * 50)}
     layout={Layout.springify()}
@@ -119,7 +119,7 @@ const RenderHeader = ({title, index}: {title: string; index: number}) => (
   </Animated.View>
 );
 
-const RenderGenreItem = ({item, index, primary, handleSearch}: any) => (
+const RenderGenreItem = ({ item, index, primary, handleSearch }: any) => (
   <Animated.View
     entering={FadeInDown.delay(index * 50)}
     layout={Layout.springify()}>
@@ -132,7 +132,7 @@ const RenderGenreItem = ({item, index, primary, handleSearch}: any) => (
             name={item.icon}
             size={20}
             color={primary}
-            style={{marginRight: 12}}
+            style={{ marginRight: 12 }}
           />
           <Text className="text-white text-base">{item.name}</Text>
         </View>
@@ -141,7 +141,7 @@ const RenderGenreItem = ({item, index, primary, handleSearch}: any) => (
   </Animated.View>
 );
 
-const RenderMovieItem = ({item, index, primary, handleSearch}: any) => (
+const RenderMovieItem = ({ item, index, primary, handleSearch }: any) => (
   <Animated.View
     entering={FadeInDown.delay(index * 50)}
     layout={Layout.springify()}>
@@ -154,7 +154,7 @@ const RenderMovieItem = ({item, index, primary, handleSearch}: any) => (
             name={item.type === 'genre-movie' ? 'star-outline' : 'film-outline'}
             size={20}
             color={primary}
-            style={{marginRight: 12}}
+            style={{ marginRight: 12 }}
           />
           <View>
             <Text className="text-white text-base">{item.Title || item.l}</Text>
@@ -174,7 +174,7 @@ const RenderMovieItem = ({item, index, primary, handleSearch}: any) => (
 );
 
 const Search = () => {
-  const {primary} = useThemeStore(state => state);
+  const { primary } = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
   const [searchText, setSearchText] = useState('');
@@ -320,30 +320,30 @@ const Search = () => {
   const combinedData = [
     // Add a header for Genre suggestions if there are any
     ...(genreSuggestions.length > 0
-      ? [{id: 'genre-header', type: 'header', title: 'Genres'}]
+      ? [{ id: 'genre-header', type: 'header', title: 'Genres' }]
       : []),
-    ...genreSuggestions.map(item => ({...item, type: 'genre'})),
+    ...genreSuggestions.map(item => ({ ...item, type: 'genre' })),
     ...(genreMovieSuggestions.length > 0
       ? [
-          {
-            id: 'genre-movie-header',
-            type: 'header',
-            title: 'Top Rated in Genre',
-          },
-        ]
+        {
+          id: 'genre-movie-header',
+          type: 'header',
+          title: 'Top Rated in Genre',
+        },
+      ]
       : []),
-    ...genreMovieSuggestions.map(item => ({...item, type: 'genre-movie'})),
+    ...genreMovieSuggestions.map(item => ({ ...item, type: 'genre-movie' })),
     ...(imdbSuggestions.length > 0
-      ? [{id: 'imdb-header', type: 'header', title: 'Suggestions (IMDb)'}]
+      ? [{ id: 'imdb-header', type: 'header', title: 'Suggestions (IMDb)' }]
       : []),
-    ...imdbSuggestions.map(item => ({...item, type: 'imdb'})),
+    ...imdbSuggestions.map(item => ({ ...item, type: 'imdb' })),
     ...(omdbResults.length > 0
-      ? [{id: 'omdb-header', type: 'header', title: 'Search Results (OMDB)'}]
+      ? [{ id: 'omdb-header', type: 'header', title: 'Search Results (OMDB)' }]
       : []),
-    ...omdbResults.map(item => ({...item, type: 'omdb'})),
+    ...omdbResults.map(item => ({ ...item, type: 'omdb' })),
   ];
 
-  const renderItem = ({item, index}: {item: any; index: number}) => {
+  const renderItem = ({ item, index }: { item: any; index: number }) => {
     if (item.type === 'header') {
       return <RenderHeader title={item.title} index={index} />;
     }
@@ -402,7 +402,7 @@ const Search = () => {
           `${item.type}-${item.id || item.imdbID || item.l}-${index}`
         }
         renderItem={renderItem}
-        contentContainerStyle={{paddingTop: 4}}
+        contentContainerStyle={{ paddingTop: 4 }}
         showsVerticalScrollIndicator={false}
       />
     );
@@ -426,8 +426,8 @@ const Search = () => {
           data={searchHistory}
           keyExtractor={(item, index) => `history-${index}`}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{paddingBottom: 20}}
-          renderItem={({item: search}) => (
+          contentContainerStyle={{ paddingBottom: 20 }}
+          renderItem={({ item: search }) => (
             <View className="bg-[#141414] rounded-lg p-3 mb-2 flex-row justify-between items-center border border-white/5">
               <TouchableOpacity
                 onPress={() => handleSearch(search)}
@@ -464,13 +464,16 @@ const Search = () => {
     );
   }
 
+  const insets = useSafeAreaInsets();
+
   return (
-    <SafeAreaView className="flex-1 bg-black">
+    <View className="flex-1 bg-black">
       {/* Title Section */}
       <AnimatedContainer
         entering={FadeInDown.springify()}
         layout={Layout.springify()}
-        className="px-4 pt-4">
+        className="px-4 pb-0"
+        style={{ paddingTop: insets.top + 16 }}>
         <View className="flex-row justify-between items-center mb-3">
           <Text className="text-white text-xl font-bold">Search</Text>
           <TouchableOpacity
@@ -521,12 +524,12 @@ const Search = () => {
           showResultsAndSuggestions
             ? 'results'
             : showHistory
-            ? 'history'
-            : 'empty'
+              ? 'history'
+              : 'empty'
         }>
         {contentToRender}
       </AnimatedContainer>
-    </SafeAreaView>
+    </View>
   );
 };
 
