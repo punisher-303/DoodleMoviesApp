@@ -8,7 +8,7 @@ import { TextInput } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import useThemeStore from '../lib/zustand/themeStore';
 import { MMKV } from '../lib/Mmkv';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   FadeInDown,
   SlideInRight,

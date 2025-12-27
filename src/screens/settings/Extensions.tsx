@@ -683,49 +683,50 @@ const Extensions = ({ navigation }: Props) => {
 
       {/* Filter Section */}
       {/* Filter Section */}
-      <View className="mx-4 mt-4 mb-2 gap-y-3">
-        {/* Horizontal Type Filters */}
-        <View className="flex-row">
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="flex-1"
-            contentContainerStyle={{ paddingRight: 10 }}>
-            {uniqueTypes.map((type, index) => (
-              <TouchableOpacity
-                key={`type-${index}`}
-                onPress={() => setSelectedType(type)}
-                className={`px-4 py-2 rounded-full mr-2 border ${selectedType === type
-                  ? 'bg-' + primary
-                  : 'bg-[#1A1A1A] border-[#333333]'
-                  }`}
-                style={{
-                  backgroundColor: selectedType === type ? primary : '#1A1A1A',
-                  borderColor: selectedType === type ? primary : '#333333',
-                }}>
-                <Text
-                  className={`text-sm font-medium ${selectedType === type ? 'text-white' : 'text-gray-400'
-                    }`}>
-                  {type === 'All' ? 'All' : type.toUpperCase()}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+      <View className="mx-4 mt-4 mb-2 flex-row items-center gap-x-2">
+        {/* Horizontal Type Filters - Grows to fill space */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="flex-1"
+          contentContainerStyle={{ paddingRight: 10 }}>
+          {uniqueTypes.map((type, index) => (
+            <TouchableOpacity
+              key={`type-${index}`}
+              onPress={() => setSelectedType(type)}
+              className={`px-3 py-1.5 rounded-full mr-2 border ${selectedType === type
+                ? 'bg-' + primary
+                : 'bg-[#1A1A1A] border-[#333333]'
+                }`}
+              style={{
+                backgroundColor: selectedType === type ? primary : '#1A1A1A',
+                borderColor: selectedType === type ? primary : '#333333',
+              }}>
+              <Text
+                className={`text-xs font-medium ${selectedType === type ? 'text-white' : 'text-gray-400'
+                  }`}>
+                {type === 'All' ? 'All' : type.toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
-        {/* Category Dropdown - Full Width like Search Bar */}
+        {/* Category Filter Icon Button */}
         <TouchableOpacity
           onPress={() => setCategoryModalVisible(true)}
-          className="flex-row items-center justify-between bg-[#1A1A1A] rounded-xl px-3 py-3 border border-[#333333]">
-          <Text className="text-gray-300 text-sm font-medium ml-2">
-            {selectedCategory === 'All' ? 'Select Category' : selectedCategory}
-          </Text>
-          <View className="flex-row items-center">
-            <Text className="text-gray-500 text-xs mr-2">
-              {selectedCategory === 'All' ? 'All' : ''}
-            </Text>
-            <Feather name="chevron-down" size={20} color="gray" />
-          </View>
+          className={`h-8 w-8 items-center justify-center rounded-full border ${selectedCategory !== 'All'
+              ? 'bg-' + primary + ' border-' + primary
+              : 'bg-[#1A1A1A] border-[#333333]'
+            }`}
+          style={{
+            backgroundColor: selectedCategory !== 'All' ? primary : '#1A1A1A',
+            borderColor: selectedCategory !== 'All' ? primary : '#333333',
+          }}>
+          <Feather
+            name="filter"
+            size={14}
+            color={selectedCategory !== 'All' ? 'white' : 'gray'}
+          />
         </TouchableOpacity>
       </View>
 
@@ -753,14 +754,18 @@ const Extensions = ({ navigation }: Props) => {
               color="gray"
             />
             <Text className="text-gray-400 text-lg mt-4">
-              {searchQuery || selectedType !== 'All' || selectedCategory !== 'All'
+              {searchQuery ||
+                selectedType !== 'All' ||
+                selectedCategory !== 'All'
                 ? 'No matching providers found'
                 : activeTab === 'installed'
                   ? 'No providers installed'
                   : 'No providers available'}
             </Text>
             <Text className="text-gray-500 text-sm mt-2 text-center px-8">
-              {searchQuery || selectedType !== 'All' || selectedCategory !== 'All'
+              {searchQuery ||
+                selectedType !== 'All' ||
+                selectedCategory !== 'All'
                 ? 'Try adjusting your filters'
                 : activeTab === 'installed'
                   ? 'Install providers from the Available tab to get started'
@@ -775,28 +780,32 @@ const Extensions = ({ navigation }: Props) => {
         visible={isCategoryModalVisible}
         transparent={true}
         animationType="slide"
-        onRequestClose={() => setCategoryModalVisible(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setCategoryModalVisible(false)}>
+        onRequestClose={() => setCategoryModalVisible(false)}>
+        <TouchableWithoutFeedback
+          onPress={() => setCategoryModalVisible(false)}>
           <View className="flex-1 justify-end bg-black/50">
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View className="bg-[#1A1A1A] rounded-t-3xl h-[50%] w-full"
+            <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+              <View
+                className="bg-[#1A1A1A] rounded-t-3xl h-[50%] w-full"
                 style={{
                   borderTopLeftRadius: 24,
                   borderTopRightRadius: 24,
                   overflow: 'hidden',
-                  backgroundColor: '#1A1A1A'
-                }}
-              >
+                  backgroundColor: '#1A1A1A',
+                }}>
                 {/* Modal Header */}
                 <View className="flex-row items-center justify-between p-4 border-b border-[#333333]">
-                  <Text className="text-white text-xl font-bold">Select Category</Text>
-                  <TouchableOpacity onPress={() => setCategoryModalVisible(false)}>
+                  <Text className="text-white text-lg font-bold">
+                    Select Category
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setCategoryModalVisible(false)}>
                     <Feather name="x" size={24} color="gray" />
                   </TouchableOpacity>
                 </View>
                 {/* Modal Content */}
-                <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+                <ScrollView
+                  contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
                   {uniqueCategories.map((item, index) => (
                     <TouchableOpacity
                       key={`modal-cat-${index}`}
@@ -804,16 +813,17 @@ const Extensions = ({ navigation }: Props) => {
                         setSelectedCategory(item);
                         setCategoryModalVisible(false);
                       }}
-                      className="py-4 border-b border-[#333333]"
-                    >
+                      className="py-3 border-b border-[#333333]">
                       <View className="flex-row items-center justify-between">
                         <Text
-                          className={`text-base font-medium ${selectedCategory === item ? 'text-white' : 'text-gray-400'}`}
-                        >
+                          className={`text-sm font-medium ${selectedCategory === item
+                            ? 'text-white'
+                            : 'text-gray-400'
+                            }`}>
                           {item.toUpperCase()}
                         </Text>
                         {selectedCategory === item && (
-                          <Feather name="check" size={20} color={primary} />
+                          <Feather name="check" size={18} color={primary} />
                         )}
                       </View>
                     </TouchableOpacity>
