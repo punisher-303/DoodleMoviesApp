@@ -118,7 +118,12 @@ export type RootStackParamList = {
 
 export type DoodleTVStackParamList = {
   LiveTVScreen: undefined;
-  TVPlayerScreen: { streamUrl: string };
+  TVPlayerScreen: {
+    streamUrl: string;
+    poster: string;
+    title: string;
+    subtitle?: string;
+  };
   DoodleTVSettingsScreen: undefined;
 };
 

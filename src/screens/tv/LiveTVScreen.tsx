@@ -1,3 +1,5 @@
+// File: src/screens/tv/LiveTVScreen.tsx
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
@@ -18,6 +20,7 @@ import useThemeStore from '../../lib/zustand/themeStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+// Define the type for a single TV channel
 interface TVChannel {
   id: string;
   name: string;
@@ -27,6 +30,7 @@ interface TVChannel {
   country?: string;
 }
 
+// Helper function to parse M3U playlist content
 const parseM3U = (m3uContent: string): TVChannel[] => {
   const channels: TVChannel[] = [];
   const lines = m3uContent.split('\n');
@@ -55,6 +59,7 @@ const parseM3U = (m3uContent: string): TVChannel[] => {
     } else if (line.startsWith('http')) {
       if (currentChannel.name) {
         currentChannel.streamUrl = line.trim();
+        // Use the stream URL as the unique ID to prevent key duplication warnings
         currentChannel.id = currentChannel.streamUrl;
         channels.push(currentChannel as TVChannel);
         currentChannel = {};
@@ -64,6 +69,7 @@ const parseM3U = (m3uContent: string): TVChannel[] => {
   return channels;
 };
 
+// New function to parse JSON data from the API endpoint
 const parseJsonChannels = (jsonContent: any): TVChannel[] => {
   if (Array.isArray(jsonContent)) {
     return jsonContent.map((item: any) => ({
@@ -72,7 +78,7 @@ const parseJsonChannels = (jsonContent: any): TVChannel[] => {
       logo: item.logo_url || 'https://via.placeholder.com/150',
       streamUrl: item.stream_url,
       groupTitle: item.group || 'Uncategorized',
-      country: 'India',
+      country: 'India', // Set country to 'India' as requested
     }));
   }
   return [];
@@ -95,6 +101,7 @@ const LiveTVScreen: React.FC = () => {
     genre: string;
   }>({ country: '', genre: '' });
   const [heroChannel, setHeroChannel] = useState<TVChannel | null>(null);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchChannels = async () => {
@@ -120,6 +127,7 @@ const LiveTVScreen: React.FC = () => {
 
         const uniqueChannelUrls = new Set<string>();
 
+        // Process M3U responses first
         if (m3uResponses.status === 'fulfilled') {
           for (const response of m3uResponses.value) {
             if (response.status === 'fulfilled' && response.value.ok) {
@@ -133,10 +141,20 @@ const LiveTVScreen: React.FC = () => {
                 }
               }
               setChannels(prevChannels => [...prevChannels, ...newChannels]);
+            } else if (response.status === 'rejected') {
+              console.error('Failed to fetch M3U source:', response.reason);
+            } else {
+              console.error(
+                'Failed to fetch M3U source:',
+                response.value.status,
+              );
             }
           }
+        } else {
+          console.error('Failed to fetch M3U sources:', m3uResponses.reason);
         }
 
+        // Process JSON response
         if (jsonResponse.status === 'fulfilled' && jsonResponse.value.ok) {
           const jsonContent = await jsonResponse.value.json();
           const parsedChannels = parseJsonChannels(jsonContent);
@@ -148,6 +166,13 @@ const LiveTVScreen: React.FC = () => {
             }
           }
           setChannels(prevChannels => [...prevChannels, ...newChannels]);
+        } else if (jsonResponse.status === 'rejected') {
+          console.error('Failed to fetch JSON source:', jsonResponse.reason);
+        } else {
+          console.error(
+            'Failed to fetch JSON source:',
+            jsonResponse.value.status,
+          );
         }
       } catch (error) {
         console.error('Failed to fetch or parse channels:', error);
@@ -236,6 +261,8 @@ const LiveTVScreen: React.FC = () => {
     if (heroChannel) {
       navigation.navigate('TVPlayerScreen', {
         streamUrl: heroChannel.streamUrl,
+        title: heroChannel.name,
+        poster: heroChannel.logo,
       });
     }
   }, [navigation, heroChannel]);
@@ -247,9 +274,6 @@ const LiveTVScreen: React.FC = () => {
       </View>
     );
   }
-
-
-  const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -341,7 +365,7 @@ const LiveTVScreen: React.FC = () => {
       ) : (
         <>
           <View style={styles.headerContainer}>
-            <Text style={styles.header}>Doodle-TV Mode</Text>
+            <Text style={styles.header}>Doodle TV Channels</Text>
             <TouchableOpacity
               onPress={handleSettings}
               style={styles.settingsIcon}>
@@ -409,6 +433,8 @@ const LiveTVScreen: React.FC = () => {
                   onPress={() =>
                     navigation.navigate('TVPlayerScreen', {
                       streamUrl: item.streamUrl,
+                      title: item.name,
+                      poster: item.logo,
                     })
                   }
                   style={styles.channelItem}>
@@ -522,6 +548,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 2,
   },
+  // Hero Section Styles
   heroContainer: {
     height: 180,
     borderRadius: 15,
@@ -563,6 +590,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
+  // Modal-specific styles
   modalContainer: {
     flex: 1,
     backgroundColor: 'black',
