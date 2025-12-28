@@ -1784,7 +1784,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
     return (
       <SafeAreaView className="bg-black flex-1 justify-center items-center">
         <StatusBar translucent={true} hidden={true} />
-        <OrientationLocker orientation={LANDSCAPE} />
+        {!isLargeScreen && <OrientationLocker orientation={LANDSCAPE} />}
         <Text className="text-red-500 text-lg text-center mb-4">
           Failed to load stream. Please try again.
         </Text>
@@ -1801,7 +1801,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
     return (
       <SafeAreaView className="bg-black flex-1 justify-center items-center">
         <StatusBar translucent={true} hidden={true} />
-        <OrientationLocker orientation={LANDSCAPE} />
+        {!isLargeScreen && <OrientationLocker orientation={LANDSCAPE} />}
         <Text className="text-red-500 text-lg text-center mb-4">
           Critical Error: Video link is missing. Cannot play content.
         </Text>

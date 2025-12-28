@@ -540,18 +540,30 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
   useEffect(() => {
     FullScreenChz.enable();
 
-    // Use a safe check and call the imperative method
-    if (OrientationLocker && OrientationLocker.lockToLandscape) {
-      OrientationLocker.lockToLandscape();
-    } else {
-      console.warn('OrientationLocker.lockToLandscape is not available.');
+    // Check for large screen (tablet/foldable) - considering width > 768 as large
+    const { width, height } = Dimensions.get('window');
+    const isLargeScreen = Math.min(width, height) >= 768;
+
+    if (!isLargeScreen) {
+      // Use a safe check and call the imperative method
+      if (OrientationLocker && OrientationLocker.lockToLandscape) {
+        OrientationLocker.lockToLandscape();
+      } else {
+        console.warn('OrientationLocker.lockToLandscape is not available.');
+      }
     }
 
     const unsubscribe = navigation.addListener('beforeRemove', () => {
       FullScreenChz.disable();
-      // Use a safe check and call the imperative method
-      if (OrientationLocker && OrientationLocker.lockToPortrait) {
-        OrientationLocker.lockToPortrait();
+      if (!isLargeScreen) {
+        // Use a safe check and call the imperative method
+        if (OrientationLocker && OrientationLocker.lockToPortrait) {
+          OrientationLocker.lockToPortrait();
+        }
+      } else {
+        if (OrientationLocker && OrientationLocker.unlockAllOrientations) {
+          OrientationLocker.unlockAllOrientations();
+        }
       }
     });
     return unsubscribe;
