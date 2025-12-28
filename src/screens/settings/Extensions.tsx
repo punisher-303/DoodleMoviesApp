@@ -715,8 +715,8 @@ const Extensions = ({ navigation }: Props) => {
         <TouchableOpacity
           onPress={() => setCategoryModalVisible(true)}
           className={`h-8 w-8 items-center justify-center rounded-full border ${selectedCategory !== 'All'
-              ? 'bg-' + primary + ' border-' + primary
-              : 'bg-[#1A1A1A] border-[#333333]'
+            ? 'bg-' + primary + ' border-' + primary
+            : 'bg-[#1A1A1A] border-[#333333]'
             }`}
           style={{
             backgroundColor: selectedCategory !== 'All' ? primary : '#1A1A1A',

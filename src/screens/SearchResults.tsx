@@ -32,12 +32,16 @@ const SearchHeader = React.memo(
     filter,
     isAllLoaded,
     primary,
+    topPadding,
   }: {
     filter: string;
     isAllLoaded: boolean;
     primary: string;
+    topPadding: number;
   }) => (
-    <View className="mt-14 px-4 flex flex-row justify-between items-center gap-x-3 mb-4">
+    <View
+      className="px-4 flex flex-row justify-between items-center gap-x-3 mb-4"
+      style={{ paddingTop: topPadding }}>
       <Text className="text-white text-2xl font-semibold ">
         {isAllLoaded ? 'Searched for' : 'Searching for'}{' '}
         <Text style={{ color: primary }}>"{filter}"</Text>
@@ -168,15 +172,18 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
     <View className="bg-black h-full w-full" style={{ paddingTop: insets.top }}>
       <FlatList
         data={searchData}
+        keyExtractor={(item, index) =>
+          `${item.providerValue}-${item.title}-${index}`
+        }
         renderItem={renderItem}
-        keyExtractor={item => item.value}
         showsVerticalScrollIndicator={false}
         // Header Component containing the title and global loader
         ListHeaderComponent={
           <SearchHeader
             filter={route.params.filter}
-            isAllLoaded={isAllLoaded}
+            isAllLoaded={loadingProviders.size === 0}
             primary={primary}
+            topPadding={insets.top + 16}
           />
         }
         // Padding for the bottom
