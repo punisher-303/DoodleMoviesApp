@@ -301,6 +301,7 @@ dependencies {
     implementation 'com.onesignal:OneSignal:5.1.13'
     // ADDED FOR BETTER NATIVE LIBRARY SUPPORT
     implementation "androidx.core:core-ktx:1.12.0"
+    implementation "androidx.activity:activity-ktx:1.9.3" // ADDED FOR EDGE-TO-EDGE SUPPORT
 }
 
 // ADDED POST-BUILD TASK FOR 16KB VERIFICATION

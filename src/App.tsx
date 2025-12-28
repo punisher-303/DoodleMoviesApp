@@ -647,6 +647,7 @@ const App = () => {
   return (
     <GlobalErrorBoundary>
       <SafeAreaProvider>
+        <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
         <QueryClientProvider client={queryClient}>
           <SafeAreaView
             edges={{
