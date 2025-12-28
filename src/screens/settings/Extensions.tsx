@@ -683,7 +683,7 @@ const Extensions = ({ navigation }: Props) => {
 
       {/* Filter Section */}
       {/* Filter Section */}
-      <View className="mx-4 mt-4 mb-2 flex-row items-center gap-x-2">
+      <View className="ml-4 mr-4 mt-4 mb-2 flex-row items-center gap-x-2">
         {/* Horizontal Type Filters - Grows to fill space */}
         <ScrollView
           horizontal
@@ -695,8 +695,8 @@ const Extensions = ({ navigation }: Props) => {
               key={`type-${index}`}
               onPress={() => setSelectedType(type)}
               className={`px-3 py-1.5 rounded-full mr-2 border ${selectedType === type
-                ? 'bg-' + primary
-                : 'bg-[#1A1A1A] border-[#333333]'
+                  ? 'bg-' + primary
+                  : 'bg-[#1A1A1A] border-[#333333]'
                 }`}
               style={{
                 backgroundColor: selectedType === type ? primary : '#1A1A1A',
@@ -715,8 +715,8 @@ const Extensions = ({ navigation }: Props) => {
         <TouchableOpacity
           onPress={() => setCategoryModalVisible(true)}
           className={`h-8 w-8 items-center justify-center rounded-full border ${selectedCategory !== 'All'
-            ? 'bg-' + primary + ' border-' + primary
-            : 'bg-[#1A1A1A] border-[#333333]'
+              ? 'bg-' + primary + ' border-' + primary
+              : 'bg-[#1A1A1A] border-[#333333]'
             }`}
           style={{
             backgroundColor: selectedCategory !== 'All' ? primary : '#1A1A1A',

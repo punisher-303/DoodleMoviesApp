@@ -40,9 +40,9 @@ const SearchHeader = React.memo(
     topPadding: number;
   }) => (
     <View
-      className="px-4 flex flex-row justify-between items-center gap-x-3 mb-4"
+      className="flex flex-row justify-between items-center gap-x-3 mb-4"
       style={{ paddingTop: topPadding }}>
-      <Text className="text-white text-2xl font-semibold ">
+      <Text className="text-white text-xl font-bold ">
         {isAllLoaded ? 'Searched for' : 'Searching for'}{' '}
         <Text style={{ color: primary }}>"{filter}"</Text>
       </Text>
@@ -169,7 +169,7 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
   const isAllLoaded = loadingProviders.size === 0;
 
   return (
-    <View className="bg-black h-full w-full" style={{ paddingTop: insets.top }}>
+    <View className="bg-black h-full w-full">
       <FlatList
         data={searchData}
         keyExtractor={(item, index) =>
