@@ -1,4 +1,5 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, GestureResponderEvent } from 'react-native';
+import TVFocusWrapper from '../components/TVFocusWrapper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useEffect, useState, useRef, ReactElement } from 'react';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -147,7 +148,7 @@ const ScrollList = ({ route }: Props): ReactElement => {
         <Text className="text-2xl font-bold" style={{ color: primary }}>
           {route.params?.title}
         </Text>
-        <TouchableOpacity
+        <TVFocusWrapper
           onPress={() => {
             const newViewType = viewType === 1 ? 2 : 1;
             setViewType(newViewType);
@@ -158,7 +159,7 @@ const ScrollList = ({ route }: Props): ReactElement => {
             size={27}
             color="white"
           />
-        </TouchableOpacity>
+        </TVFocusWrapper>
       </View>
       <View className="justify-center flex-row w-full flex-1">
         <FlashList
@@ -181,12 +182,12 @@ const ScrollList = ({ route }: Props): ReactElement => {
           contentContainerStyle={{ paddingBottom: 80 }}
           keyExtractor={(item, i) => `${item.title}-${i}`}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              className={
-                viewType === 1
-                  ? 'flex flex-col m-3'
-                  : 'flex-row m-3 items-center'
-              }
+            <TVFocusWrapper
+              style={{
+                flexDirection: viewType === 1 ? 'column' : 'row',
+                margin: 12,
+                alignItems: viewType === 1 ? 'stretch' : 'center',
+              }}
               onPress={() =>
                 navigation.navigate('Info', {
                   link: item.link,
@@ -217,7 +218,7 @@ const ScrollList = ({ route }: Props): ReactElement => {
                   ? item.title.slice(0, 24) + '...'
                   : item.title}
               </Text>
-            </TouchableOpacity>
+            </TVFocusWrapper>
           )}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}

@@ -1,15 +1,16 @@
-import {Image, Pressable, Text, TouchableOpacity, View} from 'react-native';
+import { Image, Pressable, Text, TouchableOpacity, View } from 'react-native';
 import React from 'react';
-import type {Post} from '../lib/providers/types';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {useNavigation} from '@react-navigation/native';
-import {HomeStackParamList} from '../App';
+import type { Post } from '../lib/providers/types';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import { HomeStackParamList } from '../App';
 import useContentStore from '../lib/zustand/contentStore';
-import {FlashList} from '@shopify/flash-list';
+import { FlashList } from '@shopify/flash-list';
 import SkeletonLoader from './Skeleton';
 
 // import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
+import TVFocusWrapper from './TVFocusWrapper';
 
 export default function Slider({
   isLoading,
@@ -26,8 +27,8 @@ export default function Slider({
   providerValue?: string;
   isSearch?: boolean;
 }): JSX.Element {
-  const {provider} = useContentStore(state => state);
-  const {primary} = useThemeStore(state => state);
+  const { provider } = useContentStore(state => state);
+  const { primary } = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const [isSelected, setSelected] = React.useState('');
@@ -36,11 +37,11 @@ export default function Slider({
   return (
     <Pressable onPress={() => setSelected('')} className="gap-3 mt-3 px-2">
       <View className="flex flex-row items-center justify-between">
-        <Text className="text-2xl font-semibold" style={{color: primary}}>
+        <Text className="text-2xl font-semibold" style={{ color: primary }}>
           {title}
         </Text>
         {filter !== 'recent' && (
-          <TouchableOpacity
+          <TVFocusWrapper
             onPress={() =>
               navigation.navigate('ScrollList', {
                 title: title,
@@ -50,12 +51,12 @@ export default function Slider({
               })
             }>
             <Text className="text-white text-sm">more</Text>
-          </TouchableOpacity>
+          </TVFocusWrapper>
         )}
       </View>
       {isLoading ? (
         <View className="flex flex-row gap-2 overflow-hidden">
-          {Array.from({length: 20}).map((_, index) => (
+          {Array.from({ length: 20 }).map((_, index) => (
             <View
               className="mx-3 gap-0 flex mb-3 justify-center items-center"
               key={index}>
@@ -71,10 +72,10 @@ export default function Slider({
           data={posts}
           extraData={isSelected}
           horizontal
-          contentContainerStyle={{paddingHorizontal: 3, paddingTop: 7}}
-          renderItem={({item}) => (
+          contentContainerStyle={{ paddingHorizontal: 3, paddingTop: 7 }}
+          renderItem={({ item }) => (
             <View className="flex flex-col mx-2">
-              <TouchableOpacity
+              <TVFocusWrapper
                 onLongPress={e => {
                   e.stopPropagation();
                   // if (filter === 'recent') {
@@ -87,7 +88,7 @@ export default function Slider({
                   // }
                 }}
                 onPress={e => {
-                  e.stopPropagation();
+                  e.stopPropagation && e.stopPropagation();
                   setSelected('');
                   navigation.navigate('Info', {
                     link: item.link,
@@ -102,7 +103,7 @@ export default function Slider({
                       item?.image ||
                       'https://placehold.jp/24/363636/ffffff/100x150.png?text=doodle',
                   }}
-                  style={{width: 100, height: 150}}
+                  style={{ width: 100, height: 150 }}
                 />
                 {/* {isSelected === item.link && (
                   <View className="absolute top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
@@ -118,7 +119,7 @@ export default function Slider({
                     />
                   </View>
                 )} */}
-              </TouchableOpacity>
+              </TVFocusWrapper>
               <Text className="text-white text-center truncate w-24 text-xs">
                 {item.title.length > 24
                   ? `${item.title.slice(0, 24)}...`

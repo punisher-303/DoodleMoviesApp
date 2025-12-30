@@ -1,22 +1,23 @@
-import {View, Text} from 'react-native';
+import { View, Text } from 'react-native';
 import React from 'react';
 import useContentStore from '../lib/zustand/contentStore';
-import {ScrollView} from 'moti';
+import { ScrollView } from 'moti';
 import useThemeStore from '../lib/zustand/themeStore';
-import {TouchableOpacity} from 'react-native';
-import {DrawerLayout} from 'react-native-gesture-handler';
-import {BlurView} from 'expo-blur';
-import {MaterialIcons} from '@expo/vector-icons';
+import { TouchableOpacity, GestureResponderEvent } from 'react-native';
+import { DrawerLayout } from 'react-native-gesture-handler';
+import { BlurView } from 'expo-blur';
+import { MaterialIcons } from '@expo/vector-icons';
+import TVFocusWrapper from './TVFocusWrapper';
 
 const ProviderDrawer = ({
   drawerRef,
 }: {
   drawerRef: React.RefObject<DrawerLayout>;
 }) => {
-  const {provider, setProvider, installedProviders} = useContentStore(
+  const { provider, setProvider, installedProviders } = useContentStore(
     state => state,
   );
-  const {primary} = useThemeStore(state => state);
+  const { primary } = useThemeStore(state => state);
 
   return (
     <BlurView
@@ -32,15 +33,26 @@ const ProviderDrawer = ({
 
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1 px-2">
         {installedProviders.map(item => (
-          <TouchableOpacity
+          <TVFocusWrapper
             key={item.value}
             onPress={() => {
               setProvider(item);
               drawerRef.current?.closeDrawer();
             }}
-            className={`flex-row items-center justify-between p-4 my-1 rounded-lg ${
-              provider.value === item.value ? 'bg-white/10' : 'bg-transparent'
-            }`}>
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: 16,
+              marginVertical: 4,
+              borderRadius: 8,
+              backgroundColor: provider.value === item.value ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+            }}
+            focusedStyle={{
+              borderColor: 'white',
+              borderWidth: 1,
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            }}>
             <View className="flex-row items-center">
               <MaterialIcons
                 name="movie"
@@ -48,18 +60,17 @@ const ProviderDrawer = ({
                 color={provider.value === item.value ? primary : '#888'}
               />
               <Text
-                className={`ml-3 text-base ${
-                  provider.value === item.value
+                className={`ml-3 text-base ${provider.value === item.value
                     ? 'text-white font-medium'
                     : 'text-gray-400'
-                }`}>
+                  }`}>
                 {item.display_name}
               </Text>
             </View>
             {provider.value === item.value && (
               <MaterialIcons name="check" size={20} color={primary} />
             )}
-          </TouchableOpacity>
+          </TVFocusWrapper>
         ))}
         <View className="h-16" />
       </ScrollView>

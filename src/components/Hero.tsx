@@ -7,7 +7,9 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  GestureResponderEvent,
 } from 'react-native';
+import TVFocusWrapper from './TVFocusWrapper';
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
@@ -142,11 +144,11 @@ const Hero = memo(({ isDrawerOpen, drawerRef }: HeroProps) => {
               ? 'opacity-100'
               : 'opacity-0'
               }`}>
-            <Pressable
-              className={`${isDrawerOpen ? 'opacity-0' : 'opacity-100'}`}
+            <TVFocusWrapper
+              style={{ opacity: isDrawerOpen ? 0 : 1 }}
               onPress={() => drawerRef.current?.openDrawer()}>
               <Ionicons name="menu-sharp" size={27} color="white" />
-            </Pressable>
+            </TVFocusWrapper>
           </View>
         )}
 
@@ -169,9 +171,9 @@ const Hero = memo(({ isDrawerOpen, drawerRef }: HeroProps) => {
         )}
 
         {!searchActive && (
-          <Pressable onPress={() => setSearchActive(true)}>
+          <TVFocusWrapper onPress={() => setSearchActive(true)}>
             <Feather name="search" size={24} color="white" />
-          </Pressable>
+          </TVFocusWrapper>
         )}
       </View>
 
@@ -222,13 +224,19 @@ const Hero = memo(({ isDrawerOpen, drawerRef }: HeroProps) => {
             {/* Play Button */}
             <View className="flex-1 items-center justify-center">
               {hero?.link && (
-                <TouchableOpacity
-                  className="bg-white px-10 py-2 rounded-lg flex-row items-center space-x-2"
-                  onPress={handlePlayPress}
-                  activeOpacity={0.8}>
-                  <FontAwesome6 name="play" size={20} color="black" />
+                <TVFocusWrapper
+                  style={{
+                    backgroundColor: 'white',
+                    paddingHorizontal: 40,
+                    paddingVertical: 8,
+                    borderRadius: 8,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                  onPress={handlePlayPress}>
+                  <FontAwesome6 name="play" size={20} color="black" style={{ marginRight: 8 }} />
                   <Text className="text-black font-bold text-lg">Play</Text>
-                </TouchableOpacity>
+                </TVFocusWrapper>
               )}
             </View>
           </View>
