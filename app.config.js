@@ -94,7 +94,7 @@ module.exports = () => {
       autolinking: { exclude: ['expo-splash-screen'] },
       plugins,
       slug: 'doodle-movies',
-      version: '9.9.9', // UPDATED VERSION TO MATCH GRADLE
+      version: '10.0.0', // UPDATED VERSION TO MATCH GRADLE
       sdkVersion: '52.0.0',
       userInterfaceStyle: 'dark',
       // NEW: EAS Update configuration
@@ -111,7 +111,7 @@ module.exports = () => {
         minSdkVersion: 24,
         edgeToEdgeEnabled: true,
         package: 'com.doodle.movies',
-        versionCode: 181, // UPDATED TO MATCH GRADLE
+        versionCode: 182, // UPDATED TO MATCH GRADLE
         permissions: [
           'FOREGROUND_SERVICE',
           'FOREGROUND_SERVICE_MEDIA_PLAYBACK',
