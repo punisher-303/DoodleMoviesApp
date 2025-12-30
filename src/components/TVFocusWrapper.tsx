@@ -4,6 +4,7 @@ import { TouchableOpacity, StyleProp, ViewStyle, Animated, GestureResponderEvent
 interface TVFocusWrapperProps extends TouchableOpacityProps {
     children: React.ReactNode;
     focusedStyle?: StyleProp<ViewStyle>;
+    containerStyle?: StyleProp<ViewStyle>;
     onFocus?: () => void;
     onBlur?: () => void;
 }
@@ -12,6 +13,7 @@ const TVFocusWrapper: React.FC<TVFocusWrapperProps> = ({
     children,
     style,
     focusedStyle,
+    containerStyle,
     onFocus,
     onBlur,
     ...props
@@ -51,7 +53,7 @@ const TVFocusWrapper: React.FC<TVFocusWrapperProps> = ({
     };
 
     return (
-        <Animated.View style={[{ transform: [{ scale }] }]}>
+        <Animated.View style={[{ transform: [{ scale }] }, containerStyle]}>
             <TouchableOpacity
                 onFocus={handleFocus}
                 onBlur={handleBlur}

@@ -438,6 +438,7 @@ const LiveTVScreen: React.FC = () => {
                       poster: item.logo,
                     })
                   }
+                  containerStyle={styles.channelItemContainer}
                   style={styles.channelItem}>
                   <Image source={{ uri: item.logo }} style={styles.channelLogo} />
                   <Text style={styles.channelName} numberOfLines={1}>
@@ -520,9 +521,11 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 20,
   },
-  channelItem: {
+  channelItemContainer: {
     flex: 1,
     margin: 5,
+  },
+  channelItem: {
     padding: 10,
     borderRadius: 10,
     alignItems: 'center',
