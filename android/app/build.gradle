@@ -187,6 +187,7 @@ if (keystorePropertiesFile.exists()) {
         
         // ADDED FOR BETTER NATIVE LIBRARY HANDLING
         resources {
+            excludes += ['**/libjsc.so']
             pickFirsts += ['**/libc++_shared.so']
         }
         
