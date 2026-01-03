@@ -55,6 +55,7 @@ import { checkNotifications, openSettings, RESULTS, check, request, PERMISSIONS 
 import { MaterialIcons } from '@expo/vector-icons';
 import useAppModeStore from './lib/zustand/appModeStore';
 import DoodleTVStack from './navigation/DoodleTVStack';
+import TVFocusWrapper from './components/TVFocusWrapper';
 
 // Lazy-load Firebase modules so app runs without google-services files
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -495,7 +496,7 @@ const App = () => {
           tabBarHideOnKeyboard: true,
           tabBarButton: props => {
             return (
-              <TouchableOpacity
+              <TVFocusWrapper
                 accessibilityRole="button"
                 accessibilityState={props.accessibilityState}
                 style={props.style as StyleProp<ViewStyle>}
@@ -512,7 +513,7 @@ const App = () => {
                   }
                 }}>
                 {props.children}
-              </TouchableOpacity>
+              </TVFocusWrapper>
             );
           },
         }}>
