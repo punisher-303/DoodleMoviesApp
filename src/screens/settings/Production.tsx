@@ -3,9 +3,6 @@ import {
   View,
   Text,
   TouchableNativeFeedback,
-  View,
-  Text,
-  TouchableNativeFeedback,
   Linking,
   ScrollView,
 } from 'react-native';
