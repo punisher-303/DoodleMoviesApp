@@ -4,11 +4,6 @@ import {
   TouchableOpacity,
   Image,
   StatusBar,
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  StatusBar,
   Platform,
 } from 'react-native';
 import TVFocusWrapper from '../components/TVFocusWrapper';

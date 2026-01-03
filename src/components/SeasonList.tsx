@@ -1,4 +1,5 @@
-View,
+import {
+  View,
   Text,
   TouchableOpacity,
   ToastAndroid,
