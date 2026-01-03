@@ -8,7 +8,7 @@ import {
   Dimensions,
   Switch,
   TextInput,
-  TextInput,
+
   Clipboard,
   ToastAndroid,
 } from 'react-native';
