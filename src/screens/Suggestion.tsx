@@ -300,7 +300,7 @@ const Suggestion = () => {
   const renderItem = ({ item, index }: { item: SuggestItem; index: number }) => (
     <Animated.View
       entering={FadeInDown.delay(index * 70)}
-      layout={Layout.springify()}
+      layout={Layout.springify()}>
       <View className="mb-3 px-4 flex-row items-center">
         <TVFocusWrapper
           className="flex-1 bg-[#141414] p-3 rounded-xl border border-white/10 flex-row items-center mr-2"
@@ -340,53 +340,53 @@ const Suggestion = () => {
     </Animated.View >
   );
 
-return (
-  <View className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
-    <View className="px-4 pt-4">
-      <Text className="text-white text-xl font-bold mb-1">
-        🍿 Recommendations
-      </Text>
-      <Text className="text-white/60 text-sm mb-4">
-        Based on your search & watch history
-      </Text>
+  return (
+    <View className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
+      <View className="px-4 pt-4">
+        <Text className="text-white text-xl font-bold mb-1">
+          🍿 Recommendations
+        </Text>
+        <Text className="text-white/60 text-sm mb-4">
+          Based on your search & watch history
+        </Text>
+      </View>
+      {isLoading ? (
+        <View className="flex-1 items-center justify-center">
+          <Animated.Text
+            entering={FadeInDown}
+            className="text-white/60 text-base">
+            Analyzing preferences...
+          </Animated.Text>
+        </View>
+      ) : filteredSuggestions.length > 0 ? (
+        <FlatList
+          data={filteredSuggestions}
+          keyExtractor={(item, idx) => `${item.imdbID || item.Title}-${idx}`}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        />
+      ) : suggestions.length > 0 ? (
+        // State for when all suggestions have been removed
+        <View className="flex-1 items-center justify-center px-6">
+          <Ionicons name="thumbs-up-outline" size={30} color={primary} />
+          <Text className="text-white/60 text-sm mt-2 text-center">
+            You've cleared all visible suggestions! Keep watching and searching
+            to get more.
+          </Text>
+        </View>
+      ) : (
+        // Original empty state
+        <View className="flex-1 items-center justify-center px-6">
+          <Ionicons name="sparkles-outline" size={30} color={primary} />
+          <Text className="text-white/60 text-sm mt-2 text-center">
+            No suggestions yet — start searching, watching, or marking your
+            favorites!
+          </Text>
+        </View>
+      )}
     </View>
-    {isLoading ? (
-      <View className="flex-1 items-center justify-center">
-        <Animated.Text
-          entering={FadeInDown}
-          className="text-white/60 text-base">
-          Analyzing preferences...
-        </Animated.Text>
-      </View>
-    ) : filteredSuggestions.length > 0 ? (
-      <FlatList
-        data={filteredSuggestions}
-        keyExtractor={(item, idx) => `${item.imdbID || item.Title}-${idx}`}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 20 }}
-      />
-    ) : suggestions.length > 0 ? (
-      // State for when all suggestions have been removed
-      <View className="flex-1 items-center justify-center px-6">
-        <Ionicons name="thumbs-up-outline" size={30} color={primary} />
-        <Text className="text-white/60 text-sm mt-2 text-center">
-          You've cleared all visible suggestions! Keep watching and searching
-          to get more.
-        </Text>
-      </View>
-    ) : (
-      // Original empty state
-      <View className="flex-1 items-center justify-center px-6">
-        <Ionicons name="sparkles-outline" size={30} color={primary} />
-        <Text className="text-white/60 text-sm mt-2 text-center">
-          No suggestions yet — start searching, watching, or marking your
-          favorites!
-        </Text>
-      </View>
-    )}
-  </View>
-);
+  );
 };
 
 export default Suggestion;
