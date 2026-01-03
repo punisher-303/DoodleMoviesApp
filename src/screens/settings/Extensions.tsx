@@ -639,6 +639,7 @@ const Extensions = ({ navigation }: Props) => {
         <TVFocusWrapper
           onPress={() => handleTabChange('installed')}
           className="flex-1 py-3 rounded-xl"
+          containerStyle={{ flex: 1 }}
           style={{
             backgroundColor:
               activeTab === 'installed' ? primary : 'transparent',
@@ -653,6 +654,7 @@ const Extensions = ({ navigation }: Props) => {
         <TVFocusWrapper
           onPress={() => handleTabChange('available')}
           className="flex-1 py-3 rounded-xl"
+          containerStyle={{ flex: 1 }}
           style={{
             backgroundColor:
               activeTab === 'available' ? primary : 'transparent',

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TouchableOpacity, StyleProp, ViewStyle, Animated, GestureResponderEvent, TouchableOpacityProps, Platform } from 'react-native';
+import useThemeStore from '../lib/zustand/themeStore';
 
 interface TVFocusWrapperProps extends TouchableOpacityProps {
     children: React.ReactNode;
@@ -45,17 +46,19 @@ const TVFocusWrapper: React.FC<TVFocusWrapperProps> = ({
         }
     };
 
+    const { primary } = useThemeStore(state => state);
+
     // Default focus style if none provided
     const defaultFocusStyle: StyleProp<ViewStyle> = {
-        borderColor: '#FF0000', // Red border for high contrast (matches logo)
-        borderWidth: 4, // Thicker border
-        backgroundColor: '#333333', // Lighter background to highlight
-        elevation: 10,
-        shadowColor: '#FF0000', // Colored shadow/glow
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.5,
-        shadowRadius: 5,
-        zIndex: 999, // Ensure it pops on top
+        borderColor: primary || '#ffffff', // Use primary color or white
+        borderWidth: 3,
+        borderRadius: 8, // Add some rounding
+        // backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle highlight
+        shadowColor: primary || '#ffffff',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        zIndex: 99,
     };
 
     return (
