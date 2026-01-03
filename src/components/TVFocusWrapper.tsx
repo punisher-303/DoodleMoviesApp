@@ -23,27 +23,23 @@ const TVFocusWrapper: React.FC<TVFocusWrapperProps> = ({
     const [scale] = useState(new Animated.Value(1));
 
     const handleFocus = () => {
-        if (Platform.isTV) {
-            setIsFocused(true);
-            Animated.spring(scale, {
-                toValue: 1.1, // Increased scale for better visibility
-                friction: 3,
-                useNativeDriver: true,
-            }).start();
-            if (onFocus) onFocus();
-        }
+        setIsFocused(true);
+        Animated.spring(scale, {
+            toValue: 1.1, // Increased scale for better visibility
+            friction: 3,
+            useNativeDriver: true,
+        }).start();
+        if (onFocus) onFocus();
     };
 
     const handleBlur = () => {
-        if (Platform.isTV) {
-            setIsFocused(false);
-            Animated.spring(scale, {
-                toValue: 1,
-                friction: 3,
-                useNativeDriver: true,
-            }).start();
-            if (onBlur) onBlur();
-        }
+        setIsFocused(false);
+        Animated.spring(scale, {
+            toValue: 1,
+            friction: 3,
+            useNativeDriver: true,
+        }).start();
+        if (onBlur) onBlur();
     };
 
     const { primary } = useThemeStore(state => state);
@@ -67,8 +63,8 @@ const TVFocusWrapper: React.FC<TVFocusWrapperProps> = ({
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 activeOpacity={0.7}
-                focusable={true} // Ensure it's focusable on Android TV
                 {...props}
+                focusable={true} // Ensure it's focusable on Android TV
                 style={[
                     style,
                     isFocused && (focusedStyle || defaultFocusStyle),
