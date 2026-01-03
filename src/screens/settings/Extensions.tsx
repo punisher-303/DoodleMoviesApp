@@ -639,13 +639,18 @@ const Extensions = ({ navigation }: Props) => {
         <TVFocusWrapper
           onPress={() => handleTabChange('installed')}
           className="flex-1 py-3 rounded-xl"
+          containerStyle={{ flex: 1 }}
           style={{
             backgroundColor:
               activeTab === 'installed' ? primary : 'transparent',
           }}>
           <Text
-            className={`text-center font-medium ${activeTab === 'installed' ? 'text-white' : 'text-gray-400'
-              }`}>
+            style={{
+              color: activeTab === 'installed' ? 'white' : '#9CA3AF',
+              fontSize: 18,
+              fontWeight: '700',
+              textAlign: 'center',
+            }}>
             Installed ({(installedProviders || []).length})
           </Text>
         </TVFocusWrapper>
@@ -653,13 +658,18 @@ const Extensions = ({ navigation }: Props) => {
         <TVFocusWrapper
           onPress={() => handleTabChange('available')}
           className="flex-1 py-3 rounded-xl"
+          containerStyle={{ flex: 1 }}
           style={{
             backgroundColor:
               activeTab === 'available' ? primary : 'transparent',
           }}>
           <Text
-            className={`text-center font-medium ${activeTab === 'available' ? 'text-white' : 'text-gray-400'
-              }`}>
+            style={{
+              color: activeTab === 'available' ? 'white' : '#9CA3AF',
+              fontSize: 18,
+              fontWeight: '700',
+              textAlign: 'center',
+            }}>
             Available ({(availableProviders || []).length})
           </Text>
         </TVFocusWrapper>
