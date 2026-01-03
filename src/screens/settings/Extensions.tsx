@@ -837,7 +837,7 @@ const Extensions = ({ navigation }: Props) => {
             </TouchableWithoutFeedback>
           </Modal>
         </View>
-        );
+    );
   };
 
-        export default Extensions;
+export default Extensions;
