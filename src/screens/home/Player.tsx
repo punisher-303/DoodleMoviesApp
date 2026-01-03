@@ -1900,14 +1900,14 @@ const Player = ({ route }: Props): React.JSX.Element => {
                   numberOfLines={1}>
                   {shareLink}
                 </Text>
-                <TouchableOpacity
+                <TVFocusWrapper
                   onPress={() => {
                     Clipboard.setString(shareLink);
                     ToastAndroid.show('Copied share link!', ToastAndroid.SHORT);
                   }}
                   className="p-1 bg-blue-500 rounded">
                   <MaterialIcons name="content-copy" size={16} color="white" />
-                </TouchableOpacity>
+                </TVFocusWrapper>
               </View>
               <Text className="text-[10px] text-gray-400 mt-1">
                 Room ID: {roomId || 'Generating...'}

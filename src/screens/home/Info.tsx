@@ -336,10 +336,10 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                             <Text
                               key={actor}
                               className={`text-xs bg-tertiary p-1 px-2 rounded-md ${index % 3 === 0
-                                  ? 'text-red-500'
-                                  : index % 3 === 1
-                                    ? 'text-blue-500'
-                                    : 'text-green-500'
+                                ? 'text-red-500'
+                                : index % 3 === 1
+                                  ? 'text-blue-500'
+                                  : 'text-green-500'
                                 }`}>
                               {actor}
                             </Text>
@@ -350,10 +350,10 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                             <Text
                               key={actor}
                               className={`text-xs bg-tertiary p-1 px-2 rounded-md ${index % 3 === 0
-                                  ? 'text-red-500'
-                                  : index % 3 === 1
-                                    ? 'text-blue-500'
-                                    : 'text-green-500'
+                                ? 'text-red-500'
+                                : index % 3 === 1
+                                  ? 'text-blue-500'
+                                  : 'text-green-500'
                                 }`}>
                               {actor}
                             </Text>
@@ -375,32 +375,41 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                     </Skeleton>
                     <View className="flex-row items-center gap-4 mb-1">
                       {meta?.trailers && meta?.trailers.length > 0 && (
-                        <MaterialCommunityIcons
-                          name="movie-open"
-                          size={25}
-                          color="rgb(156 163 175)"
+                        <TVFocusWrapper
+                          className="p-1 rounded-full"
                           onPress={() =>
                             Linking.openURL(
                               'https://www.youtube.com/watch?v=' +
                               meta?.trailers?.[0]?.source,
                             )
-                          }
-                        />
+                          }>
+                          <MaterialCommunityIcons
+                            name="movie-open"
+                            size={25}
+                            color="rgb(156 163 175)"
+                          />
+                        </TVFocusWrapper>
                       )}
                       {inLibrary ? (
-                        <Ionicons
-                          name="bookmark"
-                          size={30}
-                          color={primary}
-                          onPress={() => removeLibrary()}
-                        />
+                        <TVFocusWrapper
+                          className="p-1 rounded-full"
+                          onPress={() => removeLibrary()}>
+                          <Ionicons
+                            name="bookmark"
+                            size={30}
+                            color={primary}
+                          />
+                        </TVFocusWrapper>
                       ) : (
-                        <Ionicons
-                          name="bookmark-outline"
-                          size={30}
-                          color={primary}
-                          onPress={() => addLibrary()}
-                        />
+                        <TVFocusWrapper
+                          className="p-1 rounded-full"
+                          onPress={() => addLibrary()}>
+                          <Ionicons
+                            name="bookmark-outline"
+                            size={30}
+                            color={primary}
+                          />
+                        </TVFocusWrapper>
                       )}
                       <TVFocusWrapper
                         onPress={() => openThreeDotsMenu()}
@@ -480,11 +489,14 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                         ? synopsis.slice(0, 180) + '... '
                         : synopsis}
                       {synopsis.length > 180 && !readMore && (
-                        <Text
+                        <TVFocusWrapper
                           onPress={() => setReadMore(!readMore)}
-                          className="text-white font-extrabold text-xs px-2 bg-tertiary rounded-md">
-                          read more
-                        </Text>
+                          className="px-2 bg-tertiary rounded-md"
+                          style={{ alignSelf: 'flex-start' }}>
+                          <Text className="text-white font-extrabold text-xs">
+                            read more
+                          </Text>
+                        </TVFocusWrapper>
                       )}
                     </Text>
                   </Skeleton>
