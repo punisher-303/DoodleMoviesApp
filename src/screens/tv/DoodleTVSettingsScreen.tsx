@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import TVFocusWrapper from '../../components/TVFocusWrapper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import useAppModeStore from '../../lib/zustand/appModeStore';
 
@@ -15,10 +16,10 @@ const DoodleTVSettingsScreen: React.FC = () => {
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Settings</Text>
-            <TouchableOpacity style={styles.settingItem} onPress={handleExitTVMode}>
+            <TVFocusWrapper style={styles.settingItem} onPress={handleExitTVMode}>
                 <MaterialCommunityIcons name="exit-to-app" size={24} color="white" />
                 <Text style={styles.settingText}>Exit DoodleTV Mode</Text>
-            </TouchableOpacity>
+            </TVFocusWrapper>
         </View>
     );
 };

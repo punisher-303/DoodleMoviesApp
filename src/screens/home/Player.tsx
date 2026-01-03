@@ -50,6 +50,7 @@ import {
   usePlayerProgress,
   usePlayerSettings,
 } from '../../lib/hooks/usePlayerSettings';
+import TVFocusWrapper from '../../components/TVFocusWrapper';
 import * as NavigationBar from 'expo-navigation-bar';
 import FullScreenChz from 'react-native-fullscreen-chz';
 
@@ -1788,11 +1789,11 @@ const Player = ({ route }: Props): React.JSX.Element => {
         <Text className="text-red-500 text-lg text-center mb-4">
           Failed to load stream. Please try again.
         </Text>
-        <TouchableOpacity
+        <TVFocusWrapper
           className="bg-red-600 px-4 py-2 rounded-md"
           onPress={() => navigation.goBack()}>
           <Text className="text-white">Go Back</Text>
-        </TouchableOpacity>
+        </TVFocusWrapper>
       </SafeAreaView>
     );
   }
@@ -1805,11 +1806,11 @@ const Player = ({ route }: Props): React.JSX.Element => {
         <Text className="text-red-500 text-lg text-center mb-4">
           Critical Error: Video link is missing. Cannot play content.
         </Text>
-        <TouchableOpacity
+        <TVFocusWrapper
           className="bg-red-600 px-4 py-2 rounded-md"
           onPress={() => navigation.goBack()}>
           <Text className="text-white">Go Back</Text>
-        </TouchableOpacity>
+        </TVFocusWrapper>
       </SafeAreaView>
     );
   }
@@ -1863,7 +1864,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
             </Text>
 
             {!isSessionLeader && (
-              <TouchableOpacity
+              <TVFocusWrapper
                 onPress={handleSyncVideo}
                 className="flex-row items-center justify-center p-2 rounded-lg my-2"
                 style={{
@@ -1880,7 +1881,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                     ? 'Playing in Sync Mode'
                     : 'Play Freely (Tap to Sync)'}
                 </Text>
-              </TouchableOpacity>
+              </TVFocusWrapper>
             )}
 
             <View className="mb-4 p-2 border border-blue-500/50 rounded-lg">
@@ -1934,11 +1935,11 @@ const Player = ({ route }: Props): React.JSX.Element => {
                 onChangeText={setChatMessage}
                 onSubmitEditing={handleSendChat}
               />
-              <TouchableOpacity
+              <TVFocusWrapper
                 className="bg-blue-500 rounded-r-md p-2 h-10 justify-center items-center"
                 onPress={handleSendChat}>
                 <MaterialIcons name="send" size={20} color="white" />
-              </TouchableOpacity>
+              </TVFocusWrapper>
             </View>
           </View>
         )}
@@ -1947,7 +1948,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
           <Animated.View
             style={[lockButtonStyle]}
             className="absolute top-5 right-5 flex-row items-center gap-4 z-50">
-            <TouchableOpacity
+            <TVFocusWrapper
               onPress={() => {
                 setActiveTab('general');
                 setShowSettings(!showSettings);
@@ -1958,9 +1959,9 @@ const Player = ({ route }: Props): React.JSX.Element => {
                 color={'hsl(0, 0%, 70%)'}
                 size={24}
               />
-            </TouchableOpacity>
+            </TVFocusWrapper>
 
-            <TouchableOpacity
+            <TVFocusWrapper
               onPress={toggleFullScreen}
               className="opacity-70 p-2 rounded-full">
               <MaterialIcons
@@ -1968,9 +1969,9 @@ const Player = ({ route }: Props): React.JSX.Element => {
                 color={'hsl(0, 0%, 70%)'}
                 size={24}
               />
-            </TouchableOpacity>
+            </TVFocusWrapper>
 
-            <TouchableOpacity
+            <TVFocusWrapper
               onPress={togglePlayerLock}
               className="opacity-70 p-2 rounded-full">
               <MaterialIcons
@@ -1978,7 +1979,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                 color={'hsl(0, 0%, 70%)'}
                 size={24}
               />
-            </TouchableOpacity>
+            </TVFocusWrapper>
           </Animated.View>
         )}
 
@@ -1989,13 +1990,13 @@ const Player = ({ route }: Props): React.JSX.Element => {
             <Animated.View
               style={[leftChatButtonStyle, { top: '55%' }]}
               className="absolute left-5 z-50">
-              <TouchableOpacity
+              <TVFocusWrapper
                 onPress={() => setShowChatOverlay(true)}
                 className="opacity-70 p-3 rounded-full bg-black/50"
                 onTouchStart={e => e.stopPropagation()}
                 onTouchEnd={e => e.stopPropagation()}>
                 <MaterialIcons name="chat" size={28} color={'white'} />
-              </TouchableOpacity>
+              </TVFocusWrapper>
             </Animated.View>
           )}
 
@@ -2003,7 +2004,8 @@ const Player = ({ route }: Props): React.JSX.Element => {
           <Animated.View
             style={[controlsStyle]}
             className="absolute bottom-3 right-6 flex flex-row justify-center w-full gap-x-12">
-            <TouchableOpacity
+            <TVFocusWrapper
+              hasTVPreferredFocus={true}
               onPress={() => {
                 setActiveTab('audio');
                 setShowSettings(!showSettings);
@@ -2018,9 +2020,9 @@ const Player = ({ route }: Props): React.JSX.Element => {
               <Text className="capitalize text-xs text-white opacity-70">
                 {audioTracks[selectedAudioTrackIndex]?.language || 'auto'}
               </Text>
-            </TouchableOpacity>
+            </TVFocusWrapper>
 
-            <TouchableOpacity
+            <TVFocusWrapper
               onPress={() => {
                 setActiveTab('subtitle');
                 setShowSettings(!showSettings);
@@ -2037,9 +2039,9 @@ const Player = ({ route }: Props): React.JSX.Element => {
                   ? 'none'
                   : textTracks[selectedTextTrackIndex]?.language}
               </Text>
-            </TouchableOpacity>
+            </TVFocusWrapper>
 
-            <TouchableOpacity
+            <TVFocusWrapper
               className="flex-row gap-1 items-center opacity-60"
               onPress={() => {
                 setActiveTab('speed');
@@ -2049,9 +2051,9 @@ const Player = ({ route }: Props): React.JSX.Element => {
               <Text className="text-white text-sm">
                 {basePlaybackRate === 1 ? '1.0' : basePlaybackRate}
               </Text>
-            </TouchableOpacity>
+            </TVFocusWrapper>
 
-            <TouchableOpacity
+            <TVFocusWrapper
               className="flex-row gap-1 items-center opacity-60"
               onPress={() => {
                 setActiveTab('fastForward');
@@ -2061,10 +2063,10 @@ const Player = ({ route }: Props): React.JSX.Element => {
               <Text className="text-xs text-white capitalize">
                 ({fastForwardRate.toFixed(1)}x)
               </Text>
-            </TouchableOpacity>
+            </TVFocusWrapper>
 
             {!Platform.isTV && (
-              <TouchableOpacity
+              <TVFocusWrapper
                 className="flex-row gap-1 items-center opacity-60"
                 onPress={() => {
                   playerRef?.current?.enterPictureInPicture();
@@ -2075,10 +2077,10 @@ const Player = ({ route }: Props): React.JSX.Element => {
                   color="white"
                 />
                 <Text className="text-white text-xs">PIP</Text>
-              </TouchableOpacity>
+              </TVFocusWrapper>
             )}
 
-            <TouchableOpacity
+            <TVFocusWrapper
               className="flex-row gap-1 items-center opacity-60"
               onPress={() => {
                 setActiveTab('server');
@@ -2093,9 +2095,9 @@ const Player = ({ route }: Props): React.JSX.Element => {
                     'auto',
                   )}
               </Text>
-            </TouchableOpacity>
+            </TVFocusWrapper>
 
-            <TouchableOpacity
+            <TVFocusWrapper
               className="flex-row gap-1 items-center opacity-60"
               onPress={handleResizeMode}>
               <MaterialIcons name="fit-screen" size={28} color="white" />
@@ -2108,19 +2110,19 @@ const Player = ({ route }: Props): React.JSX.Element => {
                       ? 'Stretch'
                       : 'Contain'}
               </Text>
-            </TouchableOpacity>
+            </TVFocusWrapper>
 
             {route.params?.episodeList?.indexOf(activeEpisode) <
               route.params?.episodeList?.length - 1 &&
               videoPositionRef.current.position /
               videoPositionRef.current.duration >
               0.7 && (
-                <TouchableOpacity
+                <TVFocusWrapper
                   className="flex-row items-center opacity-60"
                   onPress={handleNextEpisode}>
                   <Text className="text-white text-base">Next</Text>
                   <MaterialIcons name="skip-next" size={28} color="white" />
-                </TouchableOpacity>
+                </TVFocusWrapper>
               )}
           </Animated.View>
         )}
@@ -2150,7 +2152,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                 </Text>
                 <View className="flex-row justify-between items-center my-2">
                   <Text className="text-white text-base">Auto Skip Intro</Text>
-                  <TouchableOpacity
+                  <TVFocusWrapper
                     onPress={() => setAutoSkipIntro(!autoSkipIntro)}
                     className="p-2 rounded-full"
                     style={{
@@ -2161,25 +2163,25 @@ const Player = ({ route }: Props): React.JSX.Element => {
                       size={32}
                       color="white"
                     />
-                  </TouchableOpacity>
+                  </TVFocusWrapper>
                 </View>
                 <View className="flex-row justify-between items-center my-2">
                   <Text className="text-white text-base">
                     Intro Skip Duration ({skipDuration}s)
                   </Text>
                   <View className="flex-row items-center gap-4">
-                    <TouchableOpacity
+                    <TVFocusWrapper
                       onPress={() =>
                         setSkipDuration(Math.max(0, skipDuration - 5))
                       }
                       className="p-2 bg-white/10 rounded-md">
                       <Text className="text-white text-lg">-</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </TVFocusWrapper>
+                    <TVFocusWrapper
                       onPress={() => setSkipDuration(skipDuration + 5)}
                       className="p-2 bg-white/10 rounded-md">
                       <Text className="text-white text-lg">+</Text>
-                    </TouchableOpacity>
+                    </TVFocusWrapper>
                   </View>
                 </View>
                 <View className="border-t border-white/20 my-4" />
@@ -2192,18 +2194,18 @@ const Player = ({ route }: Props): React.JSX.Element => {
                       <Text className="text-white text-base">
                         Your Nickname: **{userNickname}**
                       </Text>
-                      <TouchableOpacity
+                      <TVFocusWrapper
                         onPress={() => setShowNicknameModal(true)}
                         className="p-1 bg-white/10 rounded-md">
                         <Text className="text-white text-sm">Change</Text>
-                      </TouchableOpacity>
+                      </TVFocusWrapper>
                     </View>
                     <View className="flex-row justify-between items-center my-2">
                       <Text className="text-white text-base">
                         Watch Together Mode (Leader:{' '}
                         {isSessionLeader ? 'Yes' : 'No'})
                       </Text>
-                      <TouchableOpacity
+                      <TVFocusWrapper
                         onPress={() => setWatchTogetherMode(!watchTogetherMode)}
                         className="p-2 rounded-full"
                         style={{
@@ -2214,13 +2216,13 @@ const Player = ({ route }: Props): React.JSX.Element => {
                           size={32}
                           color="white"
                         />
-                      </TouchableOpacity>
+                      </TVFocusWrapper>
                     </View>
                     <View className="flex-row justify-between items-center my-2">
                       <Text className="text-white text-base">
                         Assume Session Leadership
                       </Text>
-                      <TouchableOpacity
+                      <TVFocusWrapper
                         onPress={() => setIsSessionLeader(!isSessionLeader)}
                         disabled={!watchTogetherMode}
                         className="p-2 rounded-full"
@@ -2239,13 +2241,13 @@ const Player = ({ route }: Props): React.JSX.Element => {
                           size={24}
                           color="white"
                         />
-                      </TouchableOpacity>
+                      </TVFocusWrapper>
                     </View>
                     <View className="flex-row justify-between items-center my-2">
                       <Text className="text-white text-base">
                         Continuous Video Sync (Follower)
                       </Text>
-                      <TouchableOpacity
+                      <TVFocusWrapper
                         onPress={() => setIsSyncingVideo(!isSyncingVideo)}
                         disabled={isSessionLeader || !watchTogetherMode}
                         className="p-2 rounded-full"
@@ -2266,7 +2268,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                           size={24}
                           color="white"
                         />
-                      </TouchableOpacity>
+                      </TVFocusWrapper>
                     </View>
                     {watchTogetherMode && (
                       <View className="mt-4 p-3 border border-green-500 rounded-lg">
@@ -2283,14 +2285,14 @@ const Player = ({ route }: Props): React.JSX.Element => {
                     )}
                   </View>
                 ) : (
-                  <TouchableOpacity
+                  <TVFocusWrapper
                     onPress={() => setShowNicknameModal(true)}
                     className="p-3 rounded-md items-center"
                     style={{ backgroundColor: primary }}>
                     <Text className="text-white font-semibold">
                       Login to Enable Watch Together
                     </Text>
-                  </TouchableOpacity>
+                  </TVFocusWrapper>
                 )}
               </ScrollView>
             )}
@@ -2308,7 +2310,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                   </View>
                 )}
                 {audioTracks.map((track, i) => (
-                  <TouchableOpacity
+                  <TVFocusWrapper
                     className="flex-row gap-2 items-center rounded-md my-1 overflow-hidden ml-2"
                     key={i}
                     onPress={() => {
@@ -2350,7 +2352,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                     {selectedAudioTrackIndex === i && (
                       <MaterialIcons name="check" size={20} color="white" />
                     )}
-                  </TouchableOpacity>
+                  </TVFocusWrapper>
                 ))}
               </ScrollView>
             )}
@@ -2360,7 +2362,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                 <Text className="text-lg font-bold text-center text-white">
                   Subtitle
                 </Text>
-                <TouchableOpacity
+                <TVFocusWrapper
                   className="flex-row gap-2 items-center rounded-md my-1 overflow-hidden ml-3"
                   onPress={() => {
                     setSelectedTextTrack({ type: SelectedTrackType.DISABLED });
@@ -2376,9 +2378,9 @@ const Player = ({ route }: Props): React.JSX.Element => {
                     }}>
                     Disabled
                   </Text>
-                </TouchableOpacity>
+                </TVFocusWrapper>
                 {textTracks.map(track => (
-                  <TouchableOpacity
+                  <TVFocusWrapper
                     className="flex-row gap-2 items-center rounded-md my-1 overflow-hidden ml-2"
                     key={track.index}
                     onPress={() => {
@@ -2426,9 +2428,9 @@ const Player = ({ route }: Props): React.JSX.Element => {
                     {selectedTextTrackIndex === track.index && (
                       <MaterialIcons name="check" size={20} color="white" />
                     )}
-                  </TouchableOpacity>
+                  </TVFocusWrapper>
                 ))}
-                <TouchableOpacity
+                <TVFocusWrapper
                   className="flex-row gap-2 items-center rounded-md my-1 overflow-hidden ml-2"
                   onPress={async () => {
                     try {
@@ -2462,7 +2464,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                   <Text className="text-base font-semibold text-white">
                     Add external file
                   </Text>
-                </TouchableOpacity>
+                </TVFocusWrapper>
                 <SearchSubtitles
                   searchQuery={searchQuery}
                   setSearchQuery={setSearchQuery}
@@ -2479,7 +2481,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                   </Text>
                   {streamData?.length > 0 &&
                     streamData?.map((track, i) => (
-                      <TouchableOpacity
+                      <TVFocusWrapper
                         className="flex-row gap-2 items-center rounded-md my-1 overflow-hidden ml-2"
                         key={i}
                         onPress={() => {
@@ -2500,7 +2502,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                         {track.link === selectedStream.link && (
                           <MaterialIcons name="check" size={20} color="white" />
                         )}
-                      </TouchableOpacity>
+                      </TVFocusWrapper>
                     ))}
                 </ScrollView>
                 <ScrollView>
@@ -2509,7 +2511,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                   </Text>
                   {videoTracks &&
                     videoTracks.map((track: any, i: any) => (
-                      <TouchableOpacity
+                      <TVFocusWrapper
                         className="flex-row gap-2 items-center rounded-md my-1 overflow-hidden ml-2"
                         key={i}
                         onPress={() => {
@@ -2541,7 +2543,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                         {selectedQualityIndex === i && (
                           <MaterialIcons name="check" size={20} color="white" />
                         )}
-                      </TouchableOpacity>
+                      </TVFocusWrapper>
                     ))}
                 </ScrollView>
               </View>
@@ -2553,7 +2555,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                   Playback Speed
                 </Text>
                 {playbacks.map((rate, i) => (
-                  <TouchableOpacity
+                  <TVFocusWrapper
                     className="flex-row gap-2 items-center rounded-md my-1 overflow-hidden ml-2"
                     key={i}
                     onPress={() => {
@@ -2570,7 +2572,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                     {basePlaybackRate === rate && (
                       <MaterialIcons name="check" size={20} color="white" />
                     )}
-                  </TouchableOpacity>
+                  </TVFocusWrapper>
                 ))}
               </ScrollView>
             )}
@@ -2581,7 +2583,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                   Fast Forward Speed
                 </Text>
                 {MOCK_FAST_FORWARD_RATES.map((rate, i) => (
-                  <TouchableOpacity
+                  <TVFocusWrapper
                     className="flex-row gap-2 items-center rounded-md my-1 overflow-hidden ml-2"
                     key={i}
                     onPress={() => {
@@ -2598,7 +2600,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                     {fastForwardRate === rate && (
                       <MaterialIcons name="check" size={20} color="white" />
                     )}
-                  </TouchableOpacity>
+                  </TVFocusWrapper>
                 ))}
               </ScrollView>
             )}

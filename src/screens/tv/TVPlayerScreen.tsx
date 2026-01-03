@@ -37,6 +37,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import FullScreenChz from 'react-native-fullscreen-chz';
 import OrientationLocker from 'react-native-orientation-locker';
 import useThemeStore from '../../lib/zustand/themeStore';
+import TVFocusWrapper from '../../components/TVFocusWrapper';
 
 // --- Local Hooks ---
 
@@ -752,7 +753,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
               style={[styles.controlsOverlay, controlsStyle]}
               layout={Layout}>
               <View style={styles.controlsHeader}>
-                <TouchableOpacity
+                <TVFocusWrapper
                   onPress={() => navigation.goBack()}
                   style={styles.headerButton}>
                   <Ionicons
@@ -760,7 +761,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     size={30}
                     color="white"
                   />
-                </TouchableOpacity>
+                </TVFocusWrapper>
                 <View style={styles.headerTitleContainer}>
                   <Text style={styles.videoTitleText}>
                     {title || 'TV Channel'}
@@ -769,7 +770,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     <Text style={styles.videoSubtitleText}>{subtitle}</Text>
                   )}
                 </View>
-                <TouchableOpacity
+                <TVFocusWrapper
                   onPress={togglePlayerLock}
                   style={[styles.headerButton, styles.lockButton]}>
                   <Ionicons
@@ -781,11 +782,11 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     size={24}
                     color="white"
                   />
-                </TouchableOpacity>
+                </TVFocusWrapper>
               </View>
 
               <View style={styles.middleControls}>
-                <TouchableOpacity
+                <TVFocusWrapper
                   onPress={handleRewind}
                   style={styles.middleButton}>
                   <Ionicons
@@ -795,9 +796,10 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     style={styles.rotateLeft}
                   />
                   <Text style={styles.middleButtonText}>10</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
+                </TVFocusWrapper>
+                <TVFocusWrapper
                   onPress={handlePlayPause}
+                  hasTVPreferredFocus={true}
                   style={styles.middleButton}>
                   <Ionicons
                     name={
@@ -806,8 +808,8 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     size={80}
                     color="white"
                   />
-                </TouchableOpacity>
-                <TouchableOpacity
+                </TVFocusWrapper>
+                <TVFocusWrapper
                   onPress={handleForward}
                   style={styles.middleButton}>
                   <Ionicons
@@ -817,7 +819,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     style={styles.rotateRight}
                   />
                   <Text style={styles.middleButtonText}>10</Text>
-                </TouchableOpacity>
+                </TVFocusWrapper>
               </View>
 
               <View style={styles.controlsFooter}>
@@ -835,7 +837,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                 </View>
 
                 <View style={styles.footerButtonsContainer}>
-                  <TouchableOpacity
+                  <TVFocusWrapper
                     onPress={() => {
                       setShowSettings(!showSettings);
                       setActiveTab('audio');
@@ -849,8 +851,8 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     <Text style={styles.footerButtonText}>
                       {getAudioText()}
                     </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
+                  </TVFocusWrapper>
+                  <TVFocusWrapper
                     onPress={() => {
                       setShowSettings(!showSettings);
                       setActiveTab('subtitles');
@@ -864,8 +866,8 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     <Text style={styles.footerButtonText}>
                       {getSubtitleText()}
                     </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
+                  </TVFocusWrapper>
+                  <TVFocusWrapper
                     onPress={() => {
                       setShowSettings(!showSettings);
                       setActiveTab('speed');
@@ -873,8 +875,8 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     style={styles.footerButton}>
                     <MaterialIcons name="speed" size={24} color="white" />
                     <Text style={styles.footerButtonText}>{playbackRate}x</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
+                  </TVFocusWrapper>
+                  <TVFocusWrapper
                     onPress={() => { }}
                     style={styles.footerButton}>
                     <MaterialIcons
@@ -883,8 +885,8 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                       color="white"
                     />
                     <Text style={styles.footerButtonText}>PIP</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
+                  </TVFocusWrapper>
+                  <TVFocusWrapper
                     onPress={() => {
                       setShowSettings(!showSettings);
                       setActiveTab('quality');
@@ -898,15 +900,15 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     <Text style={styles.footerButtonText}>
                       {getQualityText()}
                     </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
+                  </TVFocusWrapper>
+                  <TVFocusWrapper
                     onPress={handleResizeMode}
                     style={styles.footerButton}>
                     <Ionicons name="expand-outline" size={24} color="white" />
                     <Text style={styles.footerButtonText}>
                       {resizeMode === 'contain' ? 'Fit' : 'Fill'}
                     </Text>
-                  </TouchableOpacity>
+                  </TVFocusWrapper>
                 </View>
               </View>
             </Animated.View>
@@ -915,7 +917,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
               <Animated.View
                 style={[styles.lockButtonContainer, lockButtonStyle]}
                 layout={Layout}>
-                <TouchableOpacity
+                <TVFocusWrapper
                   onPress={togglePlayerLock}
                   style={styles.unlockButton}>
                   <Ionicons
@@ -923,7 +925,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     size={40}
                     color="white"
                   />
-                </TouchableOpacity>
+                </TVFocusWrapper>
               </Animated.View>
             )}
           </View>
@@ -933,16 +935,16 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
         style={[styles.settingsModal, settingsStyle]}
         layout={Layout}>
         <View style={styles.settingsHeader}>
-          <TouchableOpacity onPress={() => setShowSettings(false)}>
+          <TVFocusWrapper onPress={() => setShowSettings(false)}>
             <Ionicons name="close-outline" size={30} color="white" />
-          </TouchableOpacity>
+          </TVFocusWrapper>
         </View>
         <View style={styles.settingsContent}>
           <View style={styles.settingsBody}>
             {activeTab === 'quality' && (
               <ScrollView>
                 <Text style={styles.tabHeading}>Video Quality</Text>
-                <TouchableOpacity
+                <TVFocusWrapper
                   style={styles.trackItem}
                   onPress={() => {
                     setSelectedQualityIndex(-1);
@@ -958,9 +960,9 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                   {selectedQualityIndex === -1 && (
                     <MaterialIcons name="check" size={20} color="white" />
                   )}
-                </TouchableOpacity>
+                </TVFocusWrapper>
                 {videoTracks.map((track, i) => (
-                  <TouchableOpacity
+                  <TVFocusWrapper
                     style={styles.trackItem}
                     key={i}
                     onPress={() => {
@@ -979,7 +981,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     {selectedQualityIndex === i && (
                       <MaterialIcons name="check" size={20} color="white" />
                     )}
-                  </TouchableOpacity>
+                  </TVFocusWrapper>
                 ))}
               </ScrollView>
             )}
@@ -988,7 +990,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
               <ScrollView>
                 <Text style={styles.tabHeading}>Playback Speed</Text>
                 {playbacks.map((rate, i) => (
-                  <TouchableOpacity
+                  <TVFocusWrapper
                     style={styles.trackItem}
                     key={i}
                     onPress={() => {
@@ -1005,7 +1007,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     {playbackRate === rate && (
                       <MaterialIcons name="check" size={20} color="white" />
                     )}
-                  </TouchableOpacity>
+                  </TVFocusWrapper>
                 ))}
               </ScrollView>
             )}
@@ -1014,7 +1016,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
               <ScrollView>
                 <Text style={styles.tabHeading}>Audio Tracks</Text>
                 {audioTracks.map((track, i) => (
-                  <TouchableOpacity
+                  <TVFocusWrapper
                     style={styles.trackItem}
                     key={i}
                     onPress={() => {
@@ -1034,7 +1036,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     {selectedAudioTrackIndex === i && (
                       <MaterialIcons name="check" size={20} color="white" />
                     )}
-                  </TouchableOpacity>
+                  </TVFocusWrapper>
                 ))}
               </ScrollView>
             )}
@@ -1042,7 +1044,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
             {activeTab === 'subtitles' && (
               <ScrollView>
                 <Text style={styles.tabHeading}>Subtitles</Text>
-                <TouchableOpacity
+                <TVFocusWrapper
                   style={styles.trackItem}
                   onPress={() => {
                     handleSelectSubtitle(-1);
@@ -1060,9 +1062,9 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                   {selectedTextTrack === null && (
                     <MaterialIcons name="check" size={20} color="white" />
                   )}
-                </TouchableOpacity>
+                </TVFocusWrapper>
                 {textTracks.map((track, i) => (
-                  <TouchableOpacity
+                  <TVFocusWrapper
                     style={styles.trackItem}
                     key={i}
                     onPress={() => {
@@ -1082,7 +1084,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     {selectedTextTrack?.value === i && (
                       <MaterialIcons name="check" size={20} color="white" />
                     )}
-                  </TouchableOpacity>
+                  </TVFocusWrapper>
                 ))}
               </ScrollView>
             )}

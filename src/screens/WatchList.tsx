@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { WatchListStackParamList } from '../App';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { TouchableOpacity } from 'react-native';
+import TVFocusWrapper from '../components/TVFocusWrapper';
 import useThemeStore from '../lib/zustand/themeStore';
 import useWatchListStore from '../lib/zustand/watchListStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -36,7 +37,7 @@ const WatchList = () => {
 
   // Render each grid item
   const renderItem = ({ item, index }: { item: any; index: number }) => (
-    <TouchableOpacity
+    <TVFocusWrapper
       key={item.link + index}
       onPress={() =>
         navigation.navigate('Info', {
@@ -67,7 +68,7 @@ const WatchList = () => {
           {item.title}
         </Text>
       </View>
-    </TouchableOpacity>
+    </TVFocusWrapper>
   );
 
   return (

@@ -6,6 +6,7 @@ import { SearchStackParamList } from '../App';
 import { MaterialIcons, MaterialCommunityIcons, Ionicons, Feather } from '@expo/vector-icons';
 import { TextInput } from 'react-native';
 import { TouchableOpacity } from 'react-native';
+import TVFocusWrapper from '../components/TVFocusWrapper';
 import useThemeStore from '../lib/zustand/themeStore';
 import { MMKV } from '../lib/Mmkv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -124,7 +125,7 @@ const RenderGenreItem = ({ item, index, primary, handleSearch }: any) => (
     entering={FadeInDown.delay(index * 50)}
     layout={Layout.springify()}>
     <View className="px-4">
-      <TouchableOpacity
+      <TVFocusWrapper
         className="py-3 border-b border-white/10"
         onPress={() => handleSearch(item.name)}>
         <View className="flex-row items-center">
@@ -136,7 +137,7 @@ const RenderGenreItem = ({ item, index, primary, handleSearch }: any) => (
           />
           <Text className="text-white text-base">{item.name}</Text>
         </View>
-      </TouchableOpacity>
+      </TVFocusWrapper>
     </View>
   </Animated.View>
 );
@@ -146,7 +147,7 @@ const RenderMovieItem = ({ item, index, primary, handleSearch }: any) => (
     entering={FadeInDown.delay(index * 50)}
     layout={Layout.springify()}>
     <View className="px-4">
-      <TouchableOpacity
+      <TVFocusWrapper
         className="py-3 border-b border-white/10"
         onPress={() => handleSearch(item.Title || item.l)}>
         <View className="flex-row items-center">
@@ -168,7 +169,7 @@ const RenderMovieItem = ({ item, index, primary, handleSearch }: any) => (
             </Text>
           </View>
         </View>
-      </TouchableOpacity>
+      </TVFocusWrapper>
     </View>
   </Animated.View>
 );
@@ -416,11 +417,11 @@ const Search = () => {
           <Text className="text-white/90 text-base font-semibold">
             Recent Searches
           </Text>
-          <TouchableOpacity
+          <TVFocusWrapper
             onPress={clearHistory}
             className="bg-red-500/10 rounded-full px-2 py-0.5">
             <Text className="text-red-500 text-xs">Clear All</Text>
-          </TouchableOpacity>
+          </TVFocusWrapper>
         </View>
         <FlatList
           data={searchHistory}
@@ -428,20 +429,20 @@ const Search = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 20 }}
           renderItem={({ item: search }) => (
-            <View className="bg-[#141414] rounded-lg p-3 mb-2 flex-row justify-between items-center border border-white/5">
-              <TouchableOpacity
+            <View className="bg-[#141414] rounded-lg p-1 mb-2 flex-row justify-between items-center border border-white/5">
+              <TVFocusWrapper
                 onPress={() => handleSearch(search)}
-                className="flex-row flex-1 items-center space-x-2">
+                className="flex-row flex-1 items-center space-x-2 p-2">
                 <View className="bg-white/10 rounded-full p-1.5">
                   <Ionicons name="time-outline" size={16} color={primary} />
                 </View>
                 <Text className="text-white text-sm ml-2">{search}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </TVFocusWrapper>
+              <TVFocusWrapper
                 onPress={() => removeHistoryItem(search)}
-                className="bg-white/5 rounded-full p-1.5">
+                className="bg-white/5 rounded-full p-2 mr-1">
                 <Feather name="x" size={14} color="#999" />
-              </TouchableOpacity>
+              </TVFocusWrapper>
             </View>
           )}
         />
@@ -476,11 +477,11 @@ const Search = () => {
         style={{ paddingTop: insets.top + 16 }}>
         <View className="flex-row justify-between items-center mb-3">
           <Text className="text-white text-xl font-bold">Search</Text>
-          <TouchableOpacity
+          <TVFocusWrapper
             onPress={() => navigation.navigate('Suggestion')}
             className="bg-white/5 rounded-full p-2 border border-white/10">
             <MaterialCommunityIcons name="movie-star-outline" size={20} color={primary} />
-          </TouchableOpacity>
+          </TVFocusWrapper>
         </View>
         <View className="flex-row items-center space-x-3 mb-2">
           <View className="flex-1">
@@ -504,11 +505,11 @@ const Search = () => {
                     returnKeyType="search"
                   />
                   {searchText.length > 0 && (
-                    <TouchableOpacity
+                    <TVFocusWrapper
                       onPress={() => setSearchText('')}
                       className="bg-gray-800/50 rounded-full p-2">
                       <Feather name="x" size={18} color="#999" />
-                    </TouchableOpacity>
+                    </TVFocusWrapper>
                   )}
                 </View>
               </View>

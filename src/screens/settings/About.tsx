@@ -7,6 +7,7 @@ import {
   Alert,
   Switch,
 } from 'react-native';
+import TVFocusWrapper from '../../components/TVFocusWrapper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // import pkg from '../../../package.json';
 import React, { useState } from 'react';
@@ -185,29 +186,34 @@ const About = () => {
               Automatically check for updates when app starts
             </Text>
           </View>
-          <Switch
-            value={autoCheckUpdate}
-            onValueChange={() => {
+          <TVFocusWrapper
+            onPress={() => {
               setAutoCheckUpdate(!autoCheckUpdate);
               settingsStorage.setAutoCheckUpdateEnabled(!autoCheckUpdate);
-            }}
-            thumbColor={autoCheckUpdate ? primary : 'gray'}
-          />
+            }}>
+            <Switch
+              value={autoCheckUpdate}
+              onValueChange={() => {
+                setAutoCheckUpdate(!autoCheckUpdate);
+                settingsStorage.setAutoCheckUpdateEnabled(!autoCheckUpdate);
+              }}
+              thumbColor={autoCheckUpdate ? primary : 'gray'}
+            />
+          </TVFocusWrapper>
         </View>
 
         {/* Check Updates Button */}
-        <TouchableNativeFeedback
+        <TVFocusWrapper
           onPress={handleManualCheck}
           disabled={updateLoading}
-          background={TouchableNativeFeedback.Ripple('#ffffff20', false)}>
-          <View className="bg-white/10 p-4 rounded-lg flex-row justify-between items-center mt-4">
-            <View className="flex-row items-center space-x-3">
-              <MaterialCommunityIcons name="update" size={22} color="white" />
-              <Text className="text-white text-base">Check for Updates</Text>
-            </View>
-            <Feather name="chevron-right" size={20} color="white" />
+          // background={TouchableNativeFeedback.Ripple('#ffffff20', false)}
+          className="bg-white/10 p-4 rounded-lg flex-row justify-between items-center mt-4">
+          <View className="flex-row items-center space-x-3">
+            <MaterialCommunityIcons name="update" size={22} color="white" />
+            <Text className="text-white text-base">Check for Updates</Text>
           </View>
-        </TouchableNativeFeedback>
+          <Feather name="chevron-right" size={20} color="white" />
+        </TVFocusWrapper>
       </View>
 
       <IOSModal

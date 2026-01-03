@@ -8,9 +8,11 @@ import {
   Dimensions,
   Switch,
   TextInput,
+  TextInput,
   Clipboard,
   ToastAndroid,
 } from 'react-native';
+import TVFocusWrapper from '../../components/TVFocusWrapper';
 import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import {
   settingsStorage,
@@ -78,19 +80,16 @@ const InternalOptionRow = React.memo(
     primaryColor: string;
     isLast?: boolean;
   }) => (
-    <TouchableNativeFeedback
+    <TVFocusWrapper
       onPress={onPress}
-      background={TouchableNativeFeedback.Ripple('#333333', false)}>
-      <View
-        className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#262626]' : ''
-          }`}>
-        <View className="flex-row items-center">
-          {React.cloneElement(icon, { size: 22, color: primaryColor })}
-          <Text className="text-white ml-3 text-base">{text}</Text>
-        </View>
-        <Feather name="chevron-right" size={20} color="gray" />
+      className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#262626]' : ''
+        }`}>
+      <View className="flex-row items-center">
+        {React.cloneElement(icon, { size: 22, color: primaryColor })}
+        <Text className="text-white ml-3 text-base">{text}</Text>
       </View>
-    </TouchableNativeFeedback>
+      <Feather name="chevron-right" size={20} color="gray" />
+    </TVFocusWrapper>
   ),
 );
 
@@ -109,19 +108,16 @@ const ExternalLinkRow = React.memo(
     iconColor: string;
     isLast?: boolean;
   }) => (
-    <TouchableNativeFeedback
+    <TVFocusWrapper
       onPress={() => Linking.openURL(url)}
-      background={TouchableNativeFeedback.Ripple('#333333', false)}>
-      <View
-        className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#262626]' : ''
-          }`}>
-        <View className="flex-row items-center">
-          {React.cloneElement(icon, { size: 22, color: iconColor })}
-          <Text className="text-white ml-3 text-base">{text}</Text>
-        </View>
-        <Feather name="external-link" size={20} color="gray" />
+      className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#262626]' : ''
+        }`}>
+      <View className="flex-row items-center">
+        {React.cloneElement(icon, { size: 22, color: iconColor })}
+        <Text className="text-white ml-3 text-base">{text}</Text>
       </View>
-    </TouchableNativeFeedback>
+      <Feather name="external-link" size={20} color="gray" />
+    </TVFocusWrapper>
   ),
 );
 
@@ -161,7 +157,7 @@ const Settings = ({ navigation }: Props) => {
 
   const renderProviderItem = useCallback(
     (item: ProviderExtension, isSelected: boolean) => (
-      <TouchableOpacity
+      <TVFocusWrapper
         key={item.value}
         onPress={() => handleProviderSelect(item)}
         className={`mr-3 rounded-lg ${isSelected ? 'bg-[#333333]' : 'bg-[#262626]'
@@ -185,7 +181,7 @@ const Settings = ({ navigation }: Props) => {
             </Text>
           )}
         </View>
-      </TouchableOpacity>
+      </TVFocusWrapper>
     ),
     [handleProviderSelect, primary],
   );
@@ -411,17 +407,17 @@ const Settings = ({ navigation }: Props) => {
             {/* Our Productions */}
             <Text className="text-gray-400 text-sm mb-1">Our Productions</Text>
             <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-              <TouchableNativeFeedback
-                onPress={() => navigation.navigate('Production')}
-                background={TouchableNativeFeedback.Ripple('#333333', false)}>
-                <View className="flex-row items-center justify-between p-4">
+              <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+                <TVFocusWrapper
+                  onPress={() => navigation.navigate('Production')}
+                  className="flex-row items-center justify-between p-4">
                   <View className="flex-row items-center">
                     <Feather name="smartphone" size={22} color={primary} />
                     <Text className="text-white ml-3 text-base">Check Our Softwares</Text>
                   </View>
                   <Feather name="chevron-right" size={20} color="gray" />
-                </View>
-              </TouchableNativeFeedback>
+                </TVFocusWrapper>
+              </View>
             </View>
           </View>
         </AnimatedSection>
@@ -496,7 +492,7 @@ const Settings = ({ navigation }: Props) => {
                       value={syncLink}
                       onChangeText={setSyncLink}
                     />
-                    <TouchableOpacity
+                    <TVFocusWrapper
                       className="bg-gray-500 p-2 h-10 justify-center items-center"
                       onPress={handlePasteLink}>
                       <MaterialIcons
@@ -504,12 +500,12 @@ const Settings = ({ navigation }: Props) => {
                         size={20}
                         color="white"
                       />
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </TVFocusWrapper>
+                    <TVFocusWrapper
                       className="bg-blue-600 rounded-r-md p-2 h-10 justify-center items-center"
                       onPress={handleJoinSession}>
                       <Text className="text-white font-semibold">Join</Text>
-                    </TouchableOpacity>
+                    </TVFocusWrapper>
                   </View>
                   <Text className="text-gray-500 text-xs mt-2">
                     Enabling this mode allows you to create and join
@@ -583,7 +579,7 @@ const Settings = ({ navigation }: Props) => {
               {/* Clear Cache */}
               <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
                 <Text className="text-white text-base">Clear Cache</Text>
-                <TouchableOpacity
+                <TVFocusWrapper
                   className="bg-[#262626] px-4 py-2 rounded-lg"
                   onPress={clearCacheHandler}>
                   <MaterialCommunityIcons
@@ -591,7 +587,7 @@ const Settings = ({ navigation }: Props) => {
                     size={20}
                     color={primary}
                   />
-                </TouchableOpacity>
+                </TVFocusWrapper>
               </View>
 
               {/* Clear Watch History */}
@@ -599,7 +595,7 @@ const Settings = ({ navigation }: Props) => {
                 <Text className="text-white text-base">
                   Clear Watch History
                 </Text>
-                <TouchableOpacity
+                <TVFocusWrapper
                   className="bg-[#262626] px-4 py-2 rounded-lg"
                   onPress={clearHistoryHandler}>
                   <MaterialCommunityIcons
@@ -607,7 +603,7 @@ const Settings = ({ navigation }: Props) => {
                     size={20}
                     color={primary}
                   />
-                </TouchableOpacity>
+                </TVFocusWrapper>
               </View>
             </View>
           </View>

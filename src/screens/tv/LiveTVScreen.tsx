@@ -12,6 +12,7 @@ import {
   Image,
   TextInput,
   Alert,
+  BackHandler,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { DoodleTVStackParamList } from '../../App';
@@ -198,6 +199,23 @@ const LiveTVScreen: React.FC = () => {
     }
   }, [channels]);
 
+  useEffect(() => {
+    const backAction = () => {
+      if (showFilterModal) {
+        setShowFilterModal(false);
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, [showFilterModal]);
+
   const allGenres = useMemo(() => {
     const genres = channels.map(channel => channel.groupTitle).filter(Boolean);
     return [...Array.from(new Set(genres as string[]))].sort();
@@ -369,6 +387,7 @@ const LiveTVScreen: React.FC = () => {
             <Text style={styles.header}>Doodle TV Channels</Text>
             <TVFocusWrapper
               onPress={handleSettings}
+              hasTVPreferredFocus={true}
               style={styles.settingsIcon}>
               <MaterialCommunityIcons name="cog" size={24} color="white" />
             </TVFocusWrapper>

@@ -14,6 +14,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useThemeStore from '../../lib/zustand/themeStore';
 import { Dropdown } from 'react-native-element-dropdown';
+import TVFocusWrapper from '../../components/TVFocusWrapper';
 import { themes } from '../../lib/constants';
 import { TextInput } from 'react-native';
 import { DevSettings } from 'react-native'; // ✅ Add at top
@@ -127,7 +128,7 @@ const Preferences = () => {
                         setPrimary(e.nativeEvent.text);
                       }}
                     />
-                    <TouchableOpacity
+                    <TVFocusWrapper
                       onPress={() => {
                         setCustom(false);
                         setPrimary('#FF6347');
@@ -137,7 +138,7 @@ const Preferences = () => {
                         size={20}
                         color="gray"
                       />
-                    </TouchableOpacity>
+                    </TVFocusWrapper>
                   </View>
                 ) : (
                   <Dropdown
@@ -184,14 +185,20 @@ const Preferences = () => {
             {/* Haptic Feedback */}
             <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
               <Text className="text-white text-base">Haptic Feedback</Text>
-              <Switch
-                thumbColor={hapticFeedback ? primary : 'gray'}
-                value={hapticFeedback}
-                onValueChange={() => {
+              <TVFocusWrapper
+                onPress={() => {
                   settingsStorage.setHapticFeedbackEnabled(!hapticFeedback);
                   setHapticFeedback(!hapticFeedback);
-                }}
-              />
+                }}>
+                <Switch
+                  thumbColor={hapticFeedback ? primary : 'gray'}
+                  value={hapticFeedback}
+                  onValueChange={() => {
+                    settingsStorage.setHapticFeedbackEnabled(!hapticFeedback);
+                    setHapticFeedback(!hapticFeedback);
+                  }}
+                />
+              </TVFocusWrapper>
             </View>
 
             {/* Analytics & Crashlytics Opt-In */}
@@ -199,40 +206,59 @@ const Preferences = () => {
               <Text className="text-white text-base">
                 Usage & Crash Reports
               </Text>
-              <Switch
-                thumbColor={telemetryOptIn ? primary : 'gray'}
-                value={telemetryOptIn}
-                onValueChange={async () => {
+              <TVFocusWrapper
+                onPress={async () => {
                   const next = !telemetryOptIn;
                   setTelemetryOptIn(next);
                   settingsStorage.setTelemetryOptIn(next);
                   if (hasFirebase) {
-
                     try {
-                      const analytics = getAnalytics();
-                      analytics &&
-                        (await analytics().setAnalyticsCollectionEnabled(next));
-                      // Also update consent for completeness
-                      analytics &&
-                        (await analytics().setConsent({
-                          analytics_storage: next,
-                          ad_storage: next,
-                          ad_user_data: next,
-                          ad_personalization: next,
-                        }));
+                      // const analytics = getAnalytics();
+                      // analytics &&
+                      //   (await analytics().setAnalyticsCollectionEnabled(next));
+                      // // Also update consent for completeness
+                      // analytics &&
+                      //   (await analytics().setConsent({
+                      //     analytics_storage: next,
+                      //     ad_storage: next,
+                      //     ad_user_data: next,
+                      //     ad_personalization: next,
+                      //   }));
                     } catch { }
                   }
-                }}
-              />
+                }}>
+                <Switch
+                  thumbColor={telemetryOptIn ? primary : 'gray'}
+                  value={telemetryOptIn}
+                  onValueChange={async () => {
+                    const next = !telemetryOptIn;
+                    setTelemetryOptIn(next);
+                    settingsStorage.setTelemetryOptIn(next);
+                    if (hasFirebase) {
+                      try {
+                        // const analytics = getAnalytics();
+                        // analytics &&
+                        //   (await analytics().setAnalyticsCollectionEnabled(next));
+                        // // Also update consent for completeness
+                        // analytics &&
+                        //   (await analytics().setConsent({
+                        //     analytics_storage: next,
+                        //     ad_storage: next,
+                        //     ad_user_data: next,
+                        //     ad_personalization: next,
+                        //   }));
+                      } catch { }
+                    }
+                  }}
+                />
+              </TVFocusWrapper>
             </View>
 
             {/* Show Tab Bar Labels */}
             <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
               <Text className="text-white text-base">Show Tab Bar Labels</Text>
-              <Switch
-                thumbColor={showTabBarLabels ? primary : 'gray'}
-                value={showTabBarLabels}
-                onValueChange={() => {
+              <TVFocusWrapper
+                onPress={() => {
                   settingsStorage.setShowTabBarLabels(!showTabBarLabels);
                   setShowTabBarLabels(!showTabBarLabels);
                   ToastAndroid.show(
@@ -243,21 +269,43 @@ const Preferences = () => {
                   setTimeout(() => {
                     DevSettings.reload(); // ⚠️ Only works in development or with dev menu enabled
                   }, 500);
-                }}
-              />
+                }}>
+                <Switch
+                  thumbColor={showTabBarLabels ? primary : 'gray'}
+                  value={showTabBarLabels}
+                  onValueChange={() => {
+                    settingsStorage.setShowTabBarLabels(!showTabBarLabels);
+                    setShowTabBarLabels(!showTabBarLabels);
+                    ToastAndroid.show(
+                      'Restart App to Apply Changes',
+                      ToastAndroid.SHORT,
+                    );
+                    // ✅ Soft restart the app
+                    setTimeout(() => {
+                      DevSettings.reload(); // ⚠️ Only works in development or with dev menu enabled
+                    }, 500);
+                  }}
+                />
+              </TVFocusWrapper>
             </View>
 
             {/* Show Hamburger Menu */}
             <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
               <Text className="text-white text-base">Show Hamburger Menu</Text>
-              <Switch
-                thumbColor={showHamburgerMenu ? primary : 'gray'}
-                value={showHamburgerMenu}
-                onValueChange={() => {
+              <TVFocusWrapper
+                onPress={() => {
                   settingsStorage.setShowHamburgerMenu(!showHamburgerMenu);
                   setShowHamburgerMenu(!showHamburgerMenu);
-                }}
-              />
+                }}>
+                <Switch
+                  thumbColor={showHamburgerMenu ? primary : 'gray'}
+                  value={showHamburgerMenu}
+                  onValueChange={() => {
+                    settingsStorage.setShowHamburgerMenu(!showHamburgerMenu);
+                    setShowHamburgerMenu(!showHamburgerMenu);
+                  }}
+                />
+              </TVFocusWrapper>
             </View>
 
             {/* Show Recently Watched */}
@@ -265,30 +313,45 @@ const Preferences = () => {
               <Text className="text-white text-base">
                 Show Recently Watched
               </Text>
-              <Switch
-                thumbColor={showRecentlyWatched ? primary : 'gray'}
-                value={showRecentlyWatched}
-                onValueChange={() => {
+              <TVFocusWrapper
+                onPress={() => {
                   settingsStorage.setBool(
                     'showRecentlyWatched',
                     !showRecentlyWatched,
                   );
                   setShowRecentlyWatched(!showRecentlyWatched);
-                }}
-              />
+                }}>
+                <Switch
+                  thumbColor={showRecentlyWatched ? primary : 'gray'}
+                  value={showRecentlyWatched}
+                  onValueChange={() => {
+                    settingsStorage.setBool(
+                      'showRecentlyWatched',
+                      !showRecentlyWatched,
+                    );
+                    setShowRecentlyWatched(!showRecentlyWatched);
+                  }}
+                />
+              </TVFocusWrapper>
             </View>
 
             {/* Disable Drawer */}
             <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
               <Text className="text-white text-base">Disable Drawer</Text>
-              <Switch
-                thumbColor={disableDrawer ? primary : 'gray'}
-                value={disableDrawer}
-                onValueChange={() => {
+              <TVFocusWrapper
+                onPress={() => {
                   settingsStorage.setBool('disableDrawer', !disableDrawer);
                   setDisableDrawer(!disableDrawer);
-                }}
-              />
+                }}>
+                <Switch
+                  thumbColor={disableDrawer ? primary : 'gray'}
+                  value={disableDrawer}
+                  onValueChange={() => {
+                    settingsStorage.setBool('disableDrawer', !disableDrawer);
+                    setDisableDrawer(!disableDrawer);
+                  }}
+                />
+              </TVFocusWrapper>
             </View>
 
             {/* Always Use External Downloader */}
@@ -296,17 +359,26 @@ const Preferences = () => {
               <Text className="text-white text-base">
                 Always Use External Downloader
               </Text>
-              <Switch
-                thumbColor={alwaysUseExternalDownload ? primary : 'gray'}
-                value={alwaysUseExternalDownload}
-                onValueChange={() => {
+              <TVFocusWrapper
+                onPress={() => {
                   settingsStorage.setBool(
                     'alwaysExternalDownloader',
                     !alwaysUseExternalDownload,
                   );
                   setAlwaysUseExternalDownload(!alwaysUseExternalDownload);
-                }}
-              />
+                }}>
+                <Switch
+                  thumbColor={alwaysUseExternalDownload ? primary : 'gray'}
+                  value={alwaysUseExternalDownload}
+                  onValueChange={() => {
+                    settingsStorage.setBool(
+                      'alwaysExternalDownloader',
+                      !alwaysUseExternalDownload,
+                    );
+                    setAlwaysUseExternalDownload(!alwaysUseExternalDownload);
+                  }}
+                />
+              </TVFocusWrapper>
             </View>
           </View>
         </View>
@@ -320,40 +392,58 @@ const Preferences = () => {
               <Text className="text-white text-base">
                 Always Use External Player
               </Text>
-              <Switch
-                thumbColor={OpenExternalPlayer ? primary : 'gray'}
-                value={OpenExternalPlayer}
-                onValueChange={val => {
-                  settingsStorage.setBool('useExternalPlayer', val);
-                  setOpenExternalPlayer(val);
-                }}
-              />
+              <TVFocusWrapper
+                onPress={() => {
+                  settingsStorage.setBool('useExternalPlayer', !OpenExternalPlayer);
+                  setOpenExternalPlayer(!OpenExternalPlayer);
+                }}>
+                <Switch
+                  thumbColor={OpenExternalPlayer ? primary : 'gray'}
+                  value={OpenExternalPlayer}
+                  onValueChange={val => {
+                    settingsStorage.setBool('useExternalPlayer', val);
+                    setOpenExternalPlayer(val);
+                  }}
+                />
+              </TVFocusWrapper>
             </View>
 
             {/* Media Controls */}
             <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
               <Text className="text-white text-base">Media Controls</Text>
-              <Switch
-                thumbColor={showMediaControls ? primary : 'gray'}
-                value={showMediaControls}
-                onValueChange={() => {
+              <TVFocusWrapper
+                onPress={() => {
                   settingsStorage.setShowMediaControls(!showMediaControls);
                   setShowMediaControls(!showMediaControls);
-                }}
-              />
+                }}>
+                <Switch
+                  thumbColor={showMediaControls ? primary : 'gray'}
+                  value={showMediaControls}
+                  onValueChange={() => {
+                    settingsStorage.setShowMediaControls(!showMediaControls);
+                    setShowMediaControls(!showMediaControls);
+                  }}
+                />
+              </TVFocusWrapper>
             </View>
 
             {/* Hide Seek Buttons */}
             <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
               <Text className="text-white text-base">Hide Seek Buttons</Text>
-              <Switch
-                thumbColor={hideSeekButtons ? primary : 'gray'}
-                value={hideSeekButtons}
-                onValueChange={() => {
+              <TVFocusWrapper
+                onPress={() => {
                   settingsStorage.setHideSeekButtons(!hideSeekButtons);
                   setHideSeekButtons(!hideSeekButtons);
-                }}
-              />
+                }}>
+                <Switch
+                  thumbColor={hideSeekButtons ? primary : 'gray'}
+                  value={hideSeekButtons}
+                  onValueChange={() => {
+                    settingsStorage.setHideSeekButtons(!hideSeekButtons);
+                    setHideSeekButtons(!hideSeekButtons);
+                  }}
+                />
+              </TVFocusWrapper>
             </View>
 
             {/* Swipe Gestures */}
@@ -361,14 +451,20 @@ const Preferences = () => {
               <Text className="text-white text-base">
                 Enable Swipe Gestures
               </Text>
-              <Switch
-                thumbColor={enableSwipeGesture ? primary : 'gray'}
-                value={enableSwipeGesture}
-                onValueChange={() => {
+              <TVFocusWrapper
+                onPress={() => {
                   settingsStorage.setSwipeGestureEnabled(!enableSwipeGesture);
                   setEnableSwipeGesture(!enableSwipeGesture);
-                }}
-              />
+                }}>
+                <Switch
+                  thumbColor={enableSwipeGesture ? primary : 'gray'}
+                  value={enableSwipeGesture}
+                  onValueChange={() => {
+                    settingsStorage.setSwipeGestureEnabled(!enableSwipeGesture);
+                    setEnableSwipeGesture(!enableSwipeGesture);
+                  }}
+                />
+              </TVFocusWrapper>
             </View>
           </View>
         </View>
@@ -382,7 +478,7 @@ const Preferences = () => {
             </Text>
             <View className="flex-row flex-wrap gap-2">
               {['360p', '480p', '720p'].map((quality, index) => (
-                <TouchableOpacity
+                <TVFocusWrapper
                   key={index}
                   onPress={() => {
                     if (settingsStorage.isHapticFeedbackEnabled()) {
@@ -401,7 +497,7 @@ const Preferences = () => {
                   }}
                   className="px-4 py-2 rounded-lg">
                   <Text className="text-white text-sm">{quality}</Text>
-                </TouchableOpacity>
+                </TVFocusWrapper>
               ))}
             </View>
           </View>

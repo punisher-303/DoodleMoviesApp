@@ -1,6 +1,6 @@
-// Suggestion.tsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
+import TVFocusWrapper from '../components/TVFocusWrapper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -301,93 +301,92 @@ const Suggestion = () => {
     <Animated.View
       entering={FadeInDown.delay(index * 70)}
       layout={Layout.springify()}
-      className="mb-3 px-4">
-      <TouchableOpacity
-        className="bg-[#141414] p-3 rounded-xl border border-white/10 flex-row items-center"
-        onPress={() => handleClick(item.Title)}
-        activeOpacity={0.7}>
-        {item.Poster ? (
-          <Image
-            source={{ uri: item.Poster }}
-            className="w-12 h-16 rounded mr-3"
-            resizeMode="cover"
-          />
-        ) : (
-          <View className="w-12 h-16 mr-3 bg-white/10 rounded items-center justify-center">
-            <Ionicons name="film-outline" size={24} color={primary} />
+      <View className="mb-3 px-4 flex-row items-center">
+        <TVFocusWrapper
+          className="flex-1 bg-[#141414] p-3 rounded-xl border border-white/10 flex-row items-center mr-2"
+          onPress={() => handleClick(item.Title)}>
+          {item.Poster ? (
+            <Image
+              source={{ uri: item.Poster }}
+              className="w-12 h-16 rounded mr-3"
+              resizeMode="cover"
+            />
+          ) : (
+            <View className="w-12 h-16 mr-3 bg-white/10 rounded items-center justify-center">
+              <Ionicons name="film-outline" size={24} color={primary} />
+            </View>
+          )}
+          <View className="flex-1 pr-2">
+            <Text
+              className="text-white text-base font-semibold"
+              numberOfLines={1}>
+              {item.Title}
+            </Text>
+            <Text className="text-white/50 text-xs" numberOfLines={1}>
+              {`${item.Type === 'series' ? 'TV SERIES' : 'MOVIE'
+                } · Suggested from: ${item.sourceQueryIndex === 0 ? 'Recent' : 'History'} · ${item.Year || 'N/A'
+                }`}
+            </Text>
           </View>
-        )}
-        <View className="flex-1 pr-2">
-          <Text
-            className="text-white text-base font-semibold"
-            numberOfLines={1}>
-            {item.Title}
-          </Text>
-          <Text className="text-white/50 text-xs" numberOfLines={1}>
-            {`${item.Type === 'series' ? 'TV SERIES' : 'MOVIE'
-              } · Suggested from: ${item.querySourceTitle} · ${item.Year || 'N/A'
-              }`}
-          </Text>
-        </View>
+        </TVFocusWrapper>
 
-        {/* Remove button */}
-        <TouchableOpacity
+        {/* Remove button - Separate focusable for TV */}
+        <TVFocusWrapper
           onPress={() => handleRemoveSuggestion(item.imdbID)}
-          className="p-2 ml-2"
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name="close-circle-outline" size={24} color="#FF6347" />
-        </TouchableOpacity>
-      </TouchableOpacity>
-    </Animated.View>
+          className="p-3 bg-[#141414] rounded-xl border border-white/10 justify-center items-center h-full">
+          <Ionicons name="close" size={24} color="#FF6347" />
+        </TVFocusWrapper>
+      </View>
+    </Animated.View >
   );
 
-  return (
-    <View className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
-      <View className="px-4 pt-4">
-        <Text className="text-white text-xl font-bold mb-1">
-          🍿 Recommendations
-        </Text>
-        <Text className="text-white/60 text-sm mb-4">
-          Based on your search & watch history
+return (
+  <View className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
+    <View className="px-4 pt-4">
+      <Text className="text-white text-xl font-bold mb-1">
+        🍿 Recommendations
+      </Text>
+      <Text className="text-white/60 text-sm mb-4">
+        Based on your search & watch history
+      </Text>
+    </View>
+    {isLoading ? (
+      <View className="flex-1 items-center justify-center">
+        <Animated.Text
+          entering={FadeInDown}
+          className="text-white/60 text-base">
+          Analyzing preferences...
+        </Animated.Text>
+      </View>
+    ) : filteredSuggestions.length > 0 ? (
+      <FlatList
+        data={filteredSuggestions}
+        keyExtractor={(item, idx) => `${item.imdbID || item.Title}-${idx}`}
+        renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      />
+    ) : suggestions.length > 0 ? (
+      // State for when all suggestions have been removed
+      <View className="flex-1 items-center justify-center px-6">
+        <Ionicons name="thumbs-up-outline" size={30} color={primary} />
+        <Text className="text-white/60 text-sm mt-2 text-center">
+          You've cleared all visible suggestions! Keep watching and searching
+          to get more.
         </Text>
       </View>
-      {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <Animated.Text
-            entering={FadeInDown}
-            className="text-white/60 text-base">
-            Analyzing preferences...
-          </Animated.Text>
-        </View>
-      ) : filteredSuggestions.length > 0 ? (
-        <FlatList
-          data={filteredSuggestions}
-          keyExtractor={(item, idx) => `${item.imdbID || item.Title}-${idx}`}
-          renderItem={renderItem}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
-        />
-      ) : suggestions.length > 0 ? (
-        // State for when all suggestions have been removed
-        <View className="flex-1 items-center justify-center px-6">
-          <Ionicons name="thumbs-up-outline" size={30} color={primary} />
-          <Text className="text-white/60 text-sm mt-2 text-center">
-            You've cleared all visible suggestions! Keep watching and searching
-            to get more.
-          </Text>
-        </View>
-      ) : (
-        // Original empty state
-        <View className="flex-1 items-center justify-center px-6">
-          <Ionicons name="sparkles-outline" size={30} color={primary} />
-          <Text className="text-white/60 text-sm mt-2 text-center">
-            No suggestions yet — start searching, watching, or marking your
-            favorites!
-          </Text>
-        </View>
-      )}
-    </View>
-  );
+    ) : (
+      // Original empty state
+      <View className="flex-1 items-center justify-center px-6">
+        <Ionicons name="sparkles-outline" size={30} color={primary} />
+        <Text className="text-white/60 text-sm mt-2 text-center">
+          No suggestions yet — start searching, watching, or marking your
+          favorites!
+        </Text>
+      </View>
+    )}
+  </View>
+);
 };
 
 export default Suggestion;

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
+import TVFocusWrapper from '../../components/TVFocusWrapper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -44,11 +45,11 @@ const SeriesEpisodes = ({ navigation, route }: SeriesEpisodesRouteProp) => {
       {/* Simple Header */}
       <View className="bg-tertiary px-4 pb-4" style={{ paddingTop: insets.top + 10 }}>
         <View className="flex-row items-center">
-          <TouchableOpacity
+          <TVFocusWrapper
             onPress={() => navigation.goBack()}
             className="bg-quaternary p-2 rounded-full">
             <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
-          </TouchableOpacity>
+          </TVFocusWrapper>
           <Text
             className="text-xl text-white font-bold ml-4 flex-1"
             numberOfLines={1}
@@ -73,7 +74,7 @@ const SeriesEpisodes = ({ navigation, route }: SeriesEpisodesRouteProp) => {
             const episodeNumber = getEpisodeNumber(fileName);
 
             return (
-              <TouchableOpacity
+              <TVFocusWrapper
                 className="flex-row bg-tertiary rounded-lg overflow-hidden mb-2 h-24"
                 onPress={() => {
                   navigation.navigate('Player', {
@@ -113,7 +114,7 @@ const SeriesEpisodes = ({ navigation, route }: SeriesEpisodesRouteProp) => {
                     {(item.size / (1024 * 1024)).toFixed(1)} MB
                   </Text>
                 </View>
-              </TouchableOpacity>
+              </TVFocusWrapper>
             );
           }}
         />

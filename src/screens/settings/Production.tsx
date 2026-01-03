@@ -3,9 +3,13 @@ import {
   View,
   Text,
   TouchableNativeFeedback,
+  View,
+  Text,
+  TouchableNativeFeedback,
   Linking,
   ScrollView,
 } from 'react-native';
+import TVFocusWrapper from '../../components/TVFocusWrapper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React from 'react';
 import { Feather } from '@expo/vector-icons'; // Import Feather icons
@@ -48,63 +52,57 @@ const Production = () => {
           {/* Echo Pulse Music */}
           <AnimatedSection delay={100}>
             <View className="mb-3">
-              <TouchableNativeFeedback
+              <TVFocusWrapper
                 onPress={() => Linking.openURL(productionApps.app1.url)}
-                background={TouchableNativeFeedback.Ripple('#333333', false)}>
-                <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-                  <View className="flex-row items-center justify-between p-4">
-                    <View className="flex-row items-center">
-                      <Feather name={productionApps.app1.icon} size={22} color={primary} />
-                      <Text className="text-white ml-3 text-base">
-                        {productionApps.app1.name}
-                      </Text>
-                    </View>
-                    <Feather name="external-link" size={20} color="gray" />
+                className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+                <View className="flex-row items-center justify-between p-4">
+                  <View className="flex-row items-center">
+                    <Feather name={productionApps.app1.icon} size={22} color={primary} />
+                    <Text className="text-white ml-3 text-base">
+                      {productionApps.app1.name}
+                    </Text>
                   </View>
+                  <Feather name="external-link" size={20} color="gray" />
                 </View>
-              </TouchableNativeFeedback>
+              </TVFocusWrapper>
             </View>
           </AnimatedSection>
 
           {/* Doodle Windows */}
           <AnimatedSection delay={200}>
             <View className="mb-3">
-              <TouchableNativeFeedback
+              <TVFocusWrapper
                 onPress={() => Linking.openURL(productionApps.app2.url)}
-                background={TouchableNativeFeedback.Ripple('#333333', false)}>
-                <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-                  <View className="flex-row items-center justify-between p-4">
-                    <View className="flex-row items-center">
-                      <Feather name={productionApps.app2.icon} size={22} color={primary} />
-                      <Text className="text-white ml-3 text-base">
-                        {productionApps.app2.name}
-                      </Text>
-                    </View>
-                    <Feather name="external-link" size={20} color="gray" />
+                className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+                <View className="flex-row items-center justify-between p-4">
+                  <View className="flex-row items-center">
+                    <Feather name={productionApps.app2.icon} size={22} color={primary} />
+                    <Text className="text-white ml-3 text-base">
+                      {productionApps.app2.name}
+                    </Text>
                   </View>
+                  <Feather name="external-link" size={20} color="gray" />
                 </View>
-              </TouchableNativeFeedback>
+              </TVFocusWrapper>
             </View>
           </AnimatedSection>
 
           {/* Doodle Web Play */}
           <AnimatedSection delay={300}>
             <View className="mb-3">
-              <TouchableNativeFeedback
+              <TVFocusWrapper
                 onPress={() => Linking.openURL(productionApps.app3.url)}
-                background={TouchableNativeFeedback.Ripple('#333333', false)}>
-                <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-                  <View className="flex-row items-center justify-between p-4">
-                    <View className="flex-row items-center">
-                      <Feather name={productionApps.app3.icon} size={22} color={primary} />
-                      <Text className="text-white ml-3 text-base">
-                        {productionApps.app3.name}
-                      </Text>
-                    </View>
-                    <Feather name="external-link" size={20} color="gray" />
+                className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+                <View className="flex-row items-center justify-between p-4">
+                  <View className="flex-row items-center">
+                    <Feather name={productionApps.app3.icon} size={22} color={primary} />
+                    <Text className="text-white ml-3 text-base">
+                      {productionApps.app3.name}
+                    </Text>
                   </View>
+                  <Feather name="external-link" size={20} color="gray" />
                 </View>
-              </TouchableNativeFeedback>
+              </TVFocusWrapper>
             </View>
           </AnimatedSection>
 

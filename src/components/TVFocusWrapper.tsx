@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, StyleProp, ViewStyle, Animated, GestureResponderEvent, TouchableOpacityProps } from 'react-native';
+import { TouchableOpacity, StyleProp, ViewStyle, Animated, GestureResponderEvent, TouchableOpacityProps, Platform } from 'react-native';
 
 interface TVFocusWrapperProps extends TouchableOpacityProps {
     children: React.ReactNode;
@@ -22,34 +22,40 @@ const TVFocusWrapper: React.FC<TVFocusWrapperProps> = ({
     const [scale] = useState(new Animated.Value(1));
 
     const handleFocus = () => {
-        setIsFocused(true);
-        Animated.spring(scale, {
-            toValue: 1.05,
-            friction: 3,
-            useNativeDriver: true,
-        }).start();
-        if (onFocus) onFocus();
+        if (Platform.isTV) {
+            setIsFocused(true);
+            Animated.spring(scale, {
+                toValue: 1.1, // Increased scale for better visibility
+                friction: 3,
+                useNativeDriver: true,
+            }).start();
+            if (onFocus) onFocus();
+        }
     };
 
     const handleBlur = () => {
-        setIsFocused(false);
-        Animated.spring(scale, {
-            toValue: 1,
-            friction: 3,
-            useNativeDriver: true,
-        }).start();
-        if (onBlur) onBlur();
+        if (Platform.isTV) {
+            setIsFocused(false);
+            Animated.spring(scale, {
+                toValue: 1,
+                friction: 3,
+                useNativeDriver: true,
+            }).start();
+            if (onBlur) onBlur();
+        }
     };
 
     // Default focus style if none provided
     const defaultFocusStyle: StyleProp<ViewStyle> = {
-        borderColor: 'white',
-        borderWidth: 2,
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+        borderColor: '#FF0000', // Red border for high contrast (matches logo)
+        borderWidth: 4, // Thicker border
+        backgroundColor: '#333333', // Lighter background to highlight
+        elevation: 10,
+        shadowColor: '#FF0000', // Colored shadow/glow
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.5,
+        shadowRadius: 5,
+        zIndex: 999, // Ensure it pops on top
     };
 
     return (
@@ -58,6 +64,7 @@ const TVFocusWrapper: React.FC<TVFocusWrapperProps> = ({
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 activeOpacity={0.7}
+                focusable={true} // Ensure it's focusable on Android TV
                 {...props}
                 style={[
                     style,

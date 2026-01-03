@@ -6,6 +6,7 @@ import {
   Switch,
   TouchableOpacity,
 } from 'react-native';
+import TVFocusWrapper from '../../components/TVFocusWrapper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
 import { providersStorage } from '../../lib/storage';
@@ -43,11 +44,11 @@ const DisableProviders = () => {
           <Text className="text-2xl font-bold text-white">
             Disable Providers
           </Text>
-          <TouchableOpacity
+          <TVFocusWrapper
             onPress={enableAll}
             className="bg-[#262626] px-4 py-2 rounded-lg">
             <Text className="text-white text-xs">Enable All</Text>
-          </TouchableOpacity>
+          </TVFocusWrapper>
         </View>
 
         <Text className="text-gray-400 text-sm mb-3">
@@ -56,7 +57,8 @@ const DisableProviders = () => {
 
         <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
           {installedProviders?.map((provider, index) => (
-            <View
+            <TVFocusWrapper
+              onPress={() => toggleProvider(provider.value)}
               key={provider.value}
               className={`flex-row items-center justify-between p-4 ${index !== installedProviders.length - 1
                 ? 'border-b border-[#262626]'
@@ -80,7 +82,7 @@ const DisableProviders = () => {
                 value={!disabledProviders.includes(provider.value)}
                 onValueChange={() => toggleProvider(provider.value)}
               />
-            </View>
+            </TVFocusWrapper>
           ))}
         </View>
 

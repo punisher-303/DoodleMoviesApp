@@ -1,4 +1,5 @@
 import { View, Text, Image, Platform, TouchableOpacity } from 'react-native';
+import TVFocusWrapper from '../../components/TVFocusWrapper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import requestStoragePermission from '../../lib/file/getStoragePermission';
 import * as FileSystem from 'expo-file-system';
@@ -418,34 +419,34 @@ const Downloads = () => {
         <View className="flex-row gap-x-7 items-center">
           {/* Button calls the real file picker using expo-document-picker */}
           {!isSelecting && (
-            <TouchableOpacity onPress={handleSelectExternal} className="p-1">
+            <TVFocusWrapper onPress={handleSelectExternal} className="p-1">
               <MaterialCommunityIcons
                 name="folder-plus-outline"
                 size={28}
                 color={primary}
               />
-            </TouchableOpacity>
+            </TVFocusWrapper>
           )}
 
           {isSelecting && (
-            <TouchableOpacity
+            <TVFocusWrapper
               onPress={() => {
                 setGroupSelected([]);
                 setIsSelecting(false);
                 setIsDeleting(false); // Ensure deletion state is off when canceling
               }}>
               <MaterialCommunityIcons name="close" size={28} color={primary} />
-            </TouchableOpacity>
+            </TVFocusWrapper>
           )}
 
           {isSelecting && groupSelected.length > 0 && (
-            <TouchableOpacity onPress={deleteFiles}>
+            <TVFocusWrapper onPress={deleteFiles}>
               <MaterialCommunityIcons
                 name="delete-outline"
                 size={28}
                 color={primary}
               />
-            </TouchableOpacity>
+            </TVFocusWrapper>
           )}
         </View>
       </View>
@@ -474,7 +475,7 @@ const Downloads = () => {
           const episodeLabel = isEpisode ? `E${episodeInfo.episode}` : '';
 
           return (
-            <TouchableOpacity
+            <TVFocusWrapper
               key={item.uri}
               // Use an array for style to combine dynamic border and the new opacity effect
               style={[
@@ -556,7 +557,7 @@ const Downloads = () => {
                   </Text>
                 </View>
               </View>
-            </TouchableOpacity>
+            </TVFocusWrapper>
           );
         }}
       />

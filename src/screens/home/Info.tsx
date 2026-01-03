@@ -10,35 +10,36 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
-import React, {useCallback, useMemo, useRef, useState} from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import {HomeStackParamList, TabStackParamList} from '../../App';
+import { HomeStackParamList, TabStackParamList } from '../../App';
 import LinearGradient from 'react-native-linear-gradient';
 import SeasonList from '../../components/SeasonList';
-import {Skeleton} from 'moti/skeleton';
+import { Skeleton } from 'moti/skeleton';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import {settingsStorage, watchListStorage} from '../../lib/storage';
+import { settingsStorage, watchListStorage } from '../../lib/storage';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
-import {MaterialCommunityIcons} from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import useThemeStore from '../../lib/zustand/themeStore';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import useWatchListStore from '../../lib/zustand/watchListStore';
-import {useContentDetails} from '../../lib/hooks/useContentInfo';
-import {QueryErrorBoundary} from '../../components/ErrorBoundary';
+import { useContentDetails } from '../../lib/hooks/useContentInfo';
+import { QueryErrorBoundary } from '../../components/ErrorBoundary';
 import { Switch } from 'react-native';
+import TVFocusWrapper from '../../components/TVFocusWrapper';
 // import {BlurView} from 'expo-blur';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
-export default function Info({route, navigation}: Props): React.JSX.Element {
+export default function Info({ route, navigation }: Props): React.JSX.Element {
   const searchNavigation =
     useNavigation<NativeStackNavigationProp<TabStackParamList>>();
-  const {primary} = useThemeStore(state => state);
-  const {addItem, removeItem} = useWatchListStore(state => state);
-  const {provider} = useContentStore(state => state);
+  const { primary } = useThemeStore(state => state);
+  const { addItem, removeItem } = useWatchListStore(state => state);
+  const { provider } = useContentStore(state => state);
 
   // React Query for optimized data fetching
   const {
@@ -55,7 +56,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
   // UI state
   const [threeDotsMenuOpen, setThreeDotsMenuOpen] = useState(false);
   const [readMore, setReadMore] = useState(false);
-  const [menuPosition, setMenuPosition] = useState({top: -1000, right: 0});
+  const [menuPosition, setMenuPosition] = useState({ top: -1000, right: 0 });
   const [backgroundColor, setBackgroundColor] = useState('transparent');
   const [logoError, setLogoError] = useState(false);
   const [OpenExternalPlayer, setOpenExternalPlayer] = useState(
@@ -63,7 +64,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
   );
   const [alwaysUseExternalDownload, setAlwaysUseExternalDownload] = useState(
     settingsStorage.getBool('alwaysExternalDownloader', false),
-  ); 
+  );
 
 
   const threeDotsRef = useRef<any>();
@@ -85,7 +86,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           pageX: number,
           pageY: number,
         ) => {
-          setMenuPosition({top: pageY - 35, right: 35});
+          setMenuPosition({ top: pageY - 35, right: 35 });
           setThreeDotsMenuOpen(true);
         },
       );
@@ -190,16 +191,16 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           {error.message ||
             'An unexpected error occurred while loading the content'}
         </Text>
-        <TouchableOpacity
+        <TVFocusWrapper
           onPress={handleRefresh}
           className="bg-red-600 px-6 py-3 rounded-lg mb-4">
           <Text className="text-white font-semibold">Try Again</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </TVFocusWrapper>
+        <TVFocusWrapper
           onPress={() => navigation.goBack()}
           className="bg-gray-600 px-6 py-3 rounded-lg">
           <Text className="text-white font-semibold">Go Back</Text>
-        </TouchableOpacity>
+        </TVFocusWrapper>
       </View>
     );
   }
@@ -221,7 +222,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
               height={'100%'}
               width={'100%'}>
               <Image
-                source={{uri: backgroundImage}}
+                source={{ uri: backgroundImage }}
                 className=" h-[256] w-full"
                 onError={e => {
                   console.warn('Background image failed to load:', e);
@@ -264,8 +265,8 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                     {(meta?.logo && !logoError) || infoLoading ? (
                       <Image
                         onError={() => setLogoError(true)}
-                        source={{uri: meta?.logo}}
-                        style={{width: 200, height: 100, resizeMode: 'contain'}}
+                        source={{ uri: meta?.logo }}
+                        style={{ width: 200, height: 100, resizeMode: 'contain' }}
                       />
                     ) : (
                       <Text className="text-white text-2xl mt-3 capitalize font-semibold w-3/4 truncate">
@@ -334,13 +335,12 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                           .map((actor: string, index: number) => (
                             <Text
                               key={actor}
-                              className={`text-xs bg-tertiary p-1 px-2 rounded-md ${
-                                index % 3 === 0
+                              className={`text-xs bg-tertiary p-1 px-2 rounded-md ${index % 3 === 0
                                   ? 'text-red-500'
                                   : index % 3 === 1
-                                  ? 'text-blue-500'
-                                  : 'text-green-500'
-                              }`}>
+                                    ? 'text-blue-500'
+                                    : 'text-green-500'
+                                }`}>
                               {actor}
                             </Text>
                           ))}
@@ -349,13 +349,12 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                           .map((actor: string, index: number) => (
                             <Text
                               key={actor}
-                              className={`text-xs bg-tertiary p-1 px-2 rounded-md ${
-                                index % 3 === 0
+                              className={`text-xs bg-tertiary p-1 px-2 rounded-md ${index % 3 === 0
                                   ? 'text-red-500'
                                   : index % 3 === 1
-                                  ? 'text-blue-500'
-                                  : 'text-green-500'
-                              }`}>
+                                    ? 'text-blue-500'
+                                    : 'text-green-500'
+                                }`}>
                               {actor}
                             </Text>
                           ))}
@@ -383,7 +382,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                           onPress={() =>
                             Linking.openURL(
                               'https://www.youtube.com/watch?v=' +
-                                meta?.trailers?.[0]?.source,
+                              meta?.trailers?.[0]?.source,
                             )
                           }
                         />
@@ -403,7 +402,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                           onPress={() => addLibrary()}
                         />
                       )}
-                      <TouchableOpacity
+                      <TVFocusWrapper
                         onPress={() => openThreeDotsMenu()}
                         ref={threeDotsRef}>
                         <MaterialCommunityIcons
@@ -411,7 +410,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                           size={25}
                           color="rgb(156 163 175)"
                         />
-                      </TouchableOpacity>
+                      </TVFocusWrapper>
                       {
                         <Modal
                           animationType="none"
@@ -430,7 +429,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                                 right: menuPosition.right,
                               }}>
                               {/* open in web  */}
-                              <TouchableOpacity
+                              <TVFocusWrapper
                                 className="flex-row items-center gap-2"
                                 onPress={async () => {
                                   setThreeDotsMenuOpen(false);
@@ -446,9 +445,9 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                                 <Text className="text-white text-base">
                                   Open in Web
                                 </Text>
-                              </TouchableOpacity>
+                              </TVFocusWrapper>
                               {/* search */}
-                              <TouchableOpacity
+                              <TVFocusWrapper
                                 className="flex-row items-center gap-2 mt-1"
                                 onPress={async () => {
                                   setThreeDotsMenuOpen(false);
@@ -468,7 +467,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                                 <Text className="text-white text-base">
                                   Search Title
                                 </Text>
-                              </TouchableOpacity>
+                              </TVFocusWrapper>
                             </View>
                           </Pressable>
                         </Modal>
@@ -496,7 +495,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                 <View className="p-4 bg-black">
                   {/* Button row with gap */}
                   <View className="flex-row justify-between mb-3">
-                    
+
                     {/* Left Button - External Play */}
                     <View className="bg-zinc-900 rounded-xl p-3 flex-row items-center" style={{ width: '48%' }}>
                       <MaterialCommunityIcons
