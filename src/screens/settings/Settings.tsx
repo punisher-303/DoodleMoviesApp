@@ -427,22 +427,10 @@ const Settings = ({ navigation }: Props) => {
           <View className="mb-6 flex-col gap-3">
             <Text className="text-gray-400 text-sm mb-1">App Mode</Text>
             <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-              <View className="flex-row items-center justify-between p-4">
-                <View className="flex-row items-center">
-                  <MaterialCommunityIcons
-                    name="television-play"
-                    size={22}
-                    color={primary}
-                  />
-                  <Text className="text-white ml-3 text-base">
-                    Doodle-TV Mode
-                  </Text>
-                </View>
-                <Switch
-                  trackColor={{ false: '#767577', true: primary }}
-                  thumbColor={appMode === 'doodleTv' ? '#f4f3f4' : '#f4f3f4'}
-                  ios_backgroundColor="#3e3e3e"
-                  onValueChange={() => {
+              <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+                <TVFocusWrapper
+                  className="flex-row items-center justify-between p-4"
+                  onPress={() => {
                     setAppMode('doodleTv');
                     if (settingsStorage.isHapticFeedbackEnabled()) {
                       ReactNativeHapticFeedback.trigger('impactLight', {
@@ -450,9 +438,28 @@ const Settings = ({ navigation }: Props) => {
                         ignoreAndroidSystemSettings: false,
                       });
                     }
-                  }}
-                  value={appMode === 'doodleTv'}
-                />
+                  }}>
+                  <View className="flex-row items-center">
+                    <MaterialCommunityIcons
+                      name="television-play"
+                      size={22}
+                      color={primary}
+                    />
+                    <Text className="text-white ml-3 text-base">
+                      Doodle-TV Mode
+                    </Text>
+                  </View>
+                  <Switch
+                    trackColor={{ false: '#767577', true: primary }}
+                    thumbColor={appMode === 'doodleTv' ? '#f4f3f4' : '#f4f3f4'}
+                    ios_backgroundColor="#3e3e3e"
+                    value={appMode === 'doodleTv'}
+                    onValueChange={() => { }}
+                    style={{ transform: [{ scale: 0.8 }] }}
+                    focusable={false} // Disable focus on switch itself
+                    pointerEvents="none" // Let parent handle touch
+                  />
+                </TVFocusWrapper>
               </View>
             </View>
           </View>
@@ -463,58 +470,63 @@ const Settings = ({ navigation }: Props) => {
           <View className="mb-6 flex-col gap-3">
             <Text className="text-gray-400 text-sm mb-1">Watch Together</Text>
             <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-              <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-                <View className="flex-row items-center">
-                  <MaterialIcons name="group" size={22} color={primary} />
-                  <Text className="text-white ml-3 text-base">
-                    Enable Watch Together Mode
-                  </Text>
-                </View>
-                <Switch
-                  trackColor={{ false: '#767577', true: primary }}
-                  thumbColor={watchTogetherMode ? '#f4f3f4' : '#f4f3f4'}
-                  ios_backgroundColor="#3e3e3e"
-                  onValueChange={toggleWatchTogether}
-                  value={watchTogetherMode}
-                />
-              </View>
-
-              {watchTogetherMode && (
-                <View className="flex-col p-4">
-                  <Text className="text-gray-400 text-sm mb-2">
-                    Paste Sync Link to Join
-                  </Text>
+              <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+                <TVFocusWrapper
+                  className="flex-row items-center justify-between p-4 border-b border-[#262626]"
+                  onPress={toggleWatchTogether}>
                   <View className="flex-row items-center">
-                    <TextInput
-                      className="flex-1 bg-white/10 text-white rounded-l-md p-2 h-10"
-                      placeholder="e.g., doodlemovies://watch/video_id=..."
-                      placeholderTextColor="#9CA3AF"
-                      value={syncLink}
-                      onChangeText={setSyncLink}
-                    />
-                    <TVFocusWrapper
-                      className="bg-gray-500 p-2 h-10 justify-center items-center"
-                      onPress={handlePasteLink}>
-                      <MaterialIcons
-                        name="content-paste"
-                        size={20}
-                        color="white"
-                      />
-                    </TVFocusWrapper>
-                    <TVFocusWrapper
-                      className="bg-blue-600 rounded-r-md p-2 h-10 justify-center items-center"
-                      onPress={handleJoinSession}>
-                      <Text className="text-white font-semibold">Join</Text>
-                    </TVFocusWrapper>
+                    <MaterialIcons name="group" size={22} color={primary} />
+                    <Text className="text-white ml-3 text-base">
+                      Enable Watch Together Mode
+                    </Text>
                   </View>
-                  <Text className="text-gray-500 text-xs mt-2">
-                    Enabling this mode allows you to create and join
-                    synchronized playback sessions.
-                  </Text>
-                </View>
-              )}
+                  <Switch
+                    trackColor={{ false: '#767577', true: primary }}
+                    thumbColor={watchTogetherMode ? '#f4f3f4' : '#f4f3f4'}
+                    ios_backgroundColor="#3e3e3e"
+                    value={watchTogetherMode}
+                    onValueChange={() => { }}
+                    focusable={false}
+                    pointerEvents="none"
+                  />
+                </TVFocusWrapper>
+
+                {watchTogetherMode && (
+                  <View className="flex-col p-4">
+                    <Text className="text-gray-400 text-sm mb-2">
+                      Paste Sync Link to Join
+                    </Text>
+                    <View className="flex-row items-center">
+                      <TextInput
+                        className="flex-1 bg-white/10 text-white rounded-l-md p-2 h-10"
+                        placeholder="e.g., doodlemovies://watch/video_id=..."
+                        placeholderTextColor="#9CA3AF"
+                        value={syncLink}
+                        onChangeText={setSyncLink}
+                      />
+                      <TVFocusWrapper
+                        className="bg-gray-500 p-2 h-10 justify-center items-center"
+                        onPress={handlePasteLink}>
+                        <MaterialIcons
+                          name="content-paste"
+                          size={20}
+                          color="white"
+                        />
+                      </TVFocusWrapper>
+                      <TVFocusWrapper
+                        className="bg-blue-600 rounded-r-md p-2 h-10 justify-center items-center"
+                        onPress={handleJoinSession}>
+                        <Text className="text-white font-semibold">Join</Text>
+                      </TVFocusWrapper>
+                    </View>
+                    <Text className="text-gray-500 text-xs mt-2">
+                      Enabling this mode allows you to create and join
+                      synchronized playback sessions.
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
-          </View>
         </AnimatedSection>
         <AnimatedSection delay={250}>
           <View className="mb-6">
