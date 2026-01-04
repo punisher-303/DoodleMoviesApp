@@ -433,7 +433,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
         `}>
           <View className="flex-row w-full justify-between gap-2 items-center">
             <TVFocusWrapper
-              className={`rounded-xl bg-zinc-800 flex-1 h-14 items-center justify-center border border-zinc-700 flex-row gap-x-2 relative ${titleAlignment}`}
+              className={`rounded-xl bg-zinc-800 flex-1 h-16 items-center justify-center border border-zinc-700 flex-row gap-x-2 relative ${titleAlignment}`}
               onPress={() =>
                 playHandler({
                   linkIndex: index,
@@ -446,9 +446,9 @@ const SeasonList: React.FC<SeasonListProps> = ({
               }
               onLongPress={() => onLongPressHandler(true, item.link, 'series')}>
               <View className="bg-red-600 rounded-full p-1 items-center justify-center">
-                <Ionicons name="play" size={16} color="white" style={{ marginLeft: 2 }} />
+                <Ionicons name="play" size={18} color="white" style={{ marginLeft: 2 }} />
               </View>
-              <Text className="text-white font-bold text-lg">
+              <Text className="text-white font-bold text-xl">
                 {item.title.length > 30
                   ? item.title.slice(0, 30) + '...'
                   : item.title}
@@ -506,7 +506,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
         `}>
           <View className="flex-row w-full justify-between gap-2 items-center">
             <TVFocusWrapper
-              className={`rounded-xl bg-zinc-800 flex-1 h-14 items-center justify-center border border-zinc-700 flex-row gap-x-2 relative ${titleAlignment}`}
+              className={`rounded-xl bg-zinc-800 flex-1 h-16 items-center justify-center border border-zinc-700 flex-row gap-x-2 relative ${titleAlignment}`}
               onPress={() =>
                 playHandler({
                   linkIndex: index,
@@ -520,10 +520,10 @@ const SeasonList: React.FC<SeasonListProps> = ({
               onLongPress={() =>
                 onLongPressHandler(true, item.link, item?.type || 'series')
               }>
-              <View className="bg-red-600 rounded-full p-1 items-center justify-center" style={{ width: 28, height: 28 }}>
-                <Ionicons name="play" size={16} color="white" style={{ marginLeft: 2 }} />
+              <View className="bg-red-600 rounded-full p-1 items-center justify-center" style={{ width: 30, height: 30 }}>
+                <Ionicons name="play" size={18} color="white" style={{ marginLeft: 2 }} />
               </View>
-              <Text className="text-white font-bold text-lg">
+              <Text className="text-white font-bold text-xl">
                 {activeSeason?.directLinks?.length &&
                   activeSeason?.directLinks?.length > 1
                   ? item.title?.length > 27

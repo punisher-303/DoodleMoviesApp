@@ -46,7 +46,7 @@ export class ProviderManager {
     };
   }
 
-  public executeModule(moduleCode: string, ...args: any[]): any {
+  private executeModule(moduleCode: string, ...args: any[]): any {
     const context = this.createExecutionContext();
 
     const executeModule = new Function(
@@ -136,7 +136,7 @@ export class ProviderManager {
         page,
         providerValue,
         signal,
-        providerContext: { ...providerContext, extensionManager, providerManager: this },
+        providerContext,
       });
     } catch (error) {
       console.error('Error creating posts function:', error);
@@ -177,7 +177,7 @@ export class ProviderManager {
         page,
         providerValue,
         signal,
-        providerContext: { ...providerContext, extensionManager, providerManager: this },
+        providerContext,
       });
     } catch (error) {
       console.error('Error creating search posts function:', error);
@@ -249,7 +249,7 @@ export class ProviderManager {
         link,
         type,
         signal,
-        providerContext: { ...providerContext, extensionManager, providerManager: this },
+        providerContext,
       });
     } catch (error) {
       console.error('Error creating stream function:', error);

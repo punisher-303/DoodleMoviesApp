@@ -152,8 +152,6 @@ export type ProviderContext = {
     superVideoExtractor: (data: any) => Promise<string>;
     gdFlixExtracter: (link: string, signal: AbortSignal) => Promise<Stream[]>;
   };
-  extensionManager?: any;
-  providerManager?: any;
 };
 
 export type ISO639_1 =

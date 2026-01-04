@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, Pressable } from 'react-native';
+import TVFocusWrapper from './TVFocusWrapper';
 import { ifExists } from '../lib/file/ifExists';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -122,133 +123,126 @@ const DownloadComponent = ({
 
   return (
     <>
-      <View className="ml-3 h-14 w-14 rounded-full bg-zinc-800 items-center justify-center border border-zinc-700">
+      <TVFocusWrapper
+        className="h-16 w-16 rounded-full bg-zinc-800 items-center justify-center border border-zinc-700"
+        onPress={() => {
+          if (alreadyDownloaded) {
+            setDeleteModal(true);
+          } else if (downloadActive) {
+            setCancelModal(prev => !prev);
+          } else {
+            if (settingsStorage.getBool('alwaysExternalDownloader') === true) {
+              setLongPressModal(true);
+            } else {
+              setDownloadModal(true);
+            }
+          }
+        }}
+        onLongPress={() => {
+          if (alreadyDownloaded || downloadActive) return;
+          if (settingsStorage.getBool('hapticFeedback') !== false) {
+            ReactNativeHapticFeedback.trigger('effectHeavyClick', {
+              enableVibrateFallback: true,
+              ignoreAndroidSystemSettings: false,
+            });
+          }
+          setLongPressModal(true);
+        }}>
         {downloadActive ? (
           <MotiView
             style={{
               marginHorizontal: 4,
             }}
-            // animate opacity to opacity while downloding
             from={{ opacity: 1 }}
             animate={{ opacity: 0.5 }}
             //@ts-ignore
             transition={{ type: 'timing', duration: 500, loop: true }}>
-            <TouchableOpacity
-              onPress={() => {
-                setCancelModal(prev => !prev);
-                console.log('pressed');
-              }}>
-              <MaterialCommunityIcons name="progress-download" size={27} color={primary} />
-            </TouchableOpacity>
+            <MaterialCommunityIcons name="progress-download" size={27} color={primary} />
           </MotiView>
         ) : alreadyDownloaded ? (
-          <TouchableOpacity
-            onPress={() => setDeleteModal(true)}
-            className="mx-1">
-            <MaterialIcons name="delete-outline" size={27} color="#c1c4c9" />
-          </TouchableOpacity>
+          <MaterialIcons name="delete-outline" size={27} color="#c1c4c9" />
         ) : (
-          <TouchableOpacity
-            onPress={() => {
-              if (
-                settingsStorage.getBool('alwaysExternalDownloader') === true
-              ) {
-                setLongPressModal(true);
-              } else {
-                setDownloadModal(true);
-              }
-            }}
-            onLongPress={() => {
-              if (settingsStorage.getBool('hapticFeedback') !== false) {
-                ReactNativeHapticFeedback.trigger('effectHeavyClick', {
-                  enableVibrateFallback: true,
-                  ignoreAndroidSystemSettings: false,
-                });
-              }
-              setLongPressModal(true);
-            }}
-            className="mx-2">
-            <Octicons name="download" size={25} color="#c1c4c9" />
-          </TouchableOpacity>
+          <Octicons name="download" size={25} color="#c1c4c9" />
         )}
-        {/* delete modal */}
-        {
-          <Modal animationType="fade" visible={deleteModal} transparent={true}>
-            <View className="flex-1 bg-black/10 justify-center items-center p-4">
-              <View className="bg-tertiary p-3 w-80 rounded-md justify-center items-center">
-                <Text className="text-2xl font-semibold my-3 text-white">
-                  Confirm to delete
-                </Text>
-                <View className="flex-row items-center justify-evenly w-full my-5">
-                  <TouchableOpacity
-                    onPress={deleteDownload}
-                    className="p-2 rounded-md m-1 px-3"
-                    style={{ backgroundColor: primary }}>
-                    <Text className="text-white font-semibold text-base rounded-md capitalize px-1">
-                      Yes
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => setDeleteModal(false)}
-                    className="p-2 px-4 rounded-md m-1"
-                    style={{ backgroundColor: primary }}>
-                    <Text className="text-white font-semibold text-base rounded-md capitalize px-1">
-                      No
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+      </TVFocusWrapper>
+      {/* delete modal */}
+      {
+        <Modal animationType="fade" visible={deleteModal} transparent={true}>
+          <View className="flex-1 bg-black/10 justify-center items-center p-4">
+            <View className="bg-tertiary p-3 w-80 rounded-md justify-center items-center">
+              <Text className="text-2xl font-semibold my-3 text-white">
+                Confirm to delete
+              </Text>
+              <View className="flex-row items-center justify-evenly w-full my-5">
+                <TouchableOpacity
+                  onPress={deleteDownload}
+                  className="p-2 rounded-md m-1 px-3"
+                  style={{ backgroundColor: primary }}>
+                  <Text className="text-white font-semibold text-base rounded-md capitalize px-1">
+                    Yes
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setDeleteModal(false)}
+                  className="p-2 px-4 rounded-md m-1"
+                  style={{ backgroundColor: primary }}>
+                  <Text className="text-white font-semibold text-base rounded-md capitalize px-1">
+                    No
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
-          </Modal>
-        }
-        {/* download modal */}
-        <DownloadBottomSheet
-          setModal={setDownloadModal}
-          showModal={downloadModal}
-          data={servers}
-          loading={serverLoading}
-          title="Select Server To Download"
-          onPressVideo={(server: Stream) => {
-            downloadManager({
-              title: title,
-              url: server.link,
-              fileName: fileName,
-              fileType: server.type,
-              setDownloadActive: setDownloadActive,
-              setAlreadyDownloaded: setAlreadyDownloaded,
-              setDownloadId: setDownloadId,
-              headers: server?.headers,
-              deleteDownload: deleteDownload,
-            });
-          }}
-          onPressSubs={(sub: { link: string; type: string; title: string }) => {
-            downloadManager({
-              title: title + ' ' + sub.title + ' Subtitle ',
-              url: sub.link,
-              fileName: fileName + '-' + sub.title,
-              fileType: sub.type,
-              setDownloadActive: setDownloadActive,
-              setAlreadyDownloaded: () => { },
-              setDownloadId: setDownloadId,
-              deleteDownload: () => { },
-            });
-          }}
-        />
-        {/* long press modal */}
-        <DownloadBottomSheet
-          setModal={setLongPressModal}
-          showModal={longPressModal}
-          data={servers}
-          loading={serverLoading}
-          title="Select Server To Open"
-          onPressVideo={(server: Stream) => {
-            longPressDownload(server.link);
-          }}
-          onPressSubs={(sub: { link: string; type: string; title: string }) => {
-            longPressDownload(sub.link, 'text/vtt');
-          }}
-        />
-      </View>
+          </View>
+        </Modal>
+      }
+      {/* download modal */}
+      <DownloadBottomSheet
+        setModal={setDownloadModal}
+        showModal={downloadModal}
+        data={servers}
+        loading={serverLoading}
+        title="Select Server To Download"
+        onPressVideo={(server: Stream) => {
+          downloadManager({
+            title: title,
+            url: server.link,
+            fileName: fileName,
+            fileType: server.type,
+            setDownloadActive: setDownloadActive,
+            setAlreadyDownloaded: setAlreadyDownloaded,
+            setDownloadId: setDownloadId,
+            headers: server?.headers,
+            deleteDownload: deleteDownload,
+          });
+        }}
+        onPressSubs={(sub: { link: string; type: string; title: string }) => {
+          downloadManager({
+            title: title + ' ' + sub.title + ' Subtitle ',
+            url: sub.link,
+            fileName: fileName + '-' + sub.title,
+            fileType: sub.type,
+            setDownloadActive: setDownloadActive,
+            setAlreadyDownloaded: () => { },
+            setDownloadId: setDownloadId,
+            deleteDownload: () => { },
+          });
+        }}
+      />
+      {/* long press modal */}
+      <DownloadBottomSheet
+        setModal={setLongPressModal}
+        showModal={longPressModal}
+        data={servers}
+        loading={serverLoading}
+        title="Select Server To Open"
+        onPressVideo={(server: Stream) => {
+          longPressDownload(server.link);
+        }}
+        onPressSubs={(sub: { link: string; type: string; title: string }) => {
+          longPressDownload(sub.link, 'text/vtt');
+        }}
+      />
+
       {cancelModal && downloadId && (
         <Pressable
           onPress={async () => {
@@ -285,7 +279,8 @@ const DownloadComponent = ({
           className="absolute right-12 bg-quaternary/80 bottom-3 rounded-md px-2">
           <Text className="text-lg text-white">Cancel</Text>
         </Pressable>
-      )}
+      )
+      }
     </>
   );
 };
