@@ -124,7 +124,7 @@ const DownloadComponent = ({
   return (
     <>
       <TVFocusWrapper
-        className="h-16 w-16 rounded-full bg-zinc-800 items-center justify-center border border-zinc-700"
+        className="h-14 w-14 rounded-full bg-zinc-800 items-center justify-center border border-zinc-700"
         onPress={() => {
           if (alreadyDownloaded) {
             setDeleteModal(true);

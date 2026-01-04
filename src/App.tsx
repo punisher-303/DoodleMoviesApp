@@ -222,7 +222,7 @@ const App = () => {
       Linking.openURL(updateData.play_store_url || 'https://doodlemovies.vercel.app');
     }
   };
-  const showTabBarLables = settingsStorage.showTabBarLabels();
+  const showTabBarLabels = settingsStorage.showTabBarLabels();
 
   SystemUI.setBackgroundColorAsync('black');
 
@@ -473,7 +473,13 @@ const App = () => {
           freezeOnBlur: true,
           tabBarActiveTintColor: primary,
           tabBarInactiveTintColor: '#dadde3',
-          tabBarShowLabel: showTabBarLables,
+          tabBarShowLabel: showTabBarLabels,
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '600',
+            marginBottom: 5,
+            display: showTabBarLabels ? 'flex' : 'none'
+          },
           tabBarStyle: !isLargeScreen
             ? {
               // Re-adding absolute positioning properties
