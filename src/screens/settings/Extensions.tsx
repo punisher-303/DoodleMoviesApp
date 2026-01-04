@@ -523,71 +523,69 @@ const Extensions = ({ navigation }: Props) => {
           </View>
           {/* Right: Buttons */}
           <View className="flex-row gap-3 items-center">
-            <View className="flex-row gap-3 items-center">
-              {activeTab === 'installed' ? (
-                <>
-                  <TVFocusWrapper
-                    onPress={() => handleSetActiveProvider(item)}
-                    className={`w-9 h-9 rounded-full items-center justify-center ${isActive ? 'bg-green-600' : 'bg-gray-700'
-                      }`}
-                    style={{ opacity: isActive ? 1 : 0.9 }}>
-                    <MaterialIcons
-                      name={isActive ? 'check-circle' : 'radio-button-unchecked'}
-                      size={20}
-                      color="white"
-                    />
-                  </TVFocusWrapper>
-                  {hasUpdate && (
-                    <TVFocusWrapper
-                      onPress={() => handleUpdateProvider(updateInfo!.provider)}
-                      disabled={isUpdating}
-                      className="w-9 h-9 rounded-full items-center justify-center"
-                      style={{
-                        backgroundColor: primary,
-                        opacity: isUpdating ? 0.7 : 1,
-                      }}>
-                      {isUpdating ? (
-                        <ActivityIndicator size="small" color="white" />
-                      ) : (
-                        <MaterialCommunityIcons
-                          name="update"
-                          size={20}
-                          color="white"
-                        />
-                      )}
-                    </TVFocusWrapper>
-                  )}
-                  <TVFocusWrapper
-                    onPress={() => handleUninstallProvider(item)}
-                    className="w-9 h-9 rounded-full items-center justify-center bg-red-600">
-                    <MaterialCommunityIcons
-                      name="delete"
-                      size={20}
-                      color="white"
-                    />
-                  </TVFocusWrapper>
-                </>
-              ) : (
+            {activeTab === 'installed' ? (
+              <>
                 <TVFocusWrapper
-                  onPress={() => handleInstallProvider(item)}
-                  disabled={isInstalled || isInstalling}
-                  className={'w-9 h-9 rounded-full items-center justify-center'}
-                  style={{
-                    opacity: isInstalling ? 0.7 : 1,
-                    backgroundColor: isInstalled ? 'gray' : primary,
-                  }}>
-                  {isInstalling ? (
-                    <ActivityIndicator size="small" color="white" />
-                  ) : (
-                    <MaterialCommunityIcons
-                      name={isInstalled ? 'check' : 'download'}
-                      size={20}
-                      color="white"
-                    />
-                  )}
+                  onPress={() => handleSetActiveProvider(item)}
+                  className={`w-9 h-9 rounded-full items-center justify-center ${isActive ? 'bg-green-600' : 'bg-gray-700'
+                    }`}
+                  style={{ opacity: isActive ? 1 : 0.9 }}>
+                  <MaterialIcons
+                    name={isActive ? 'check-circle' : 'radio-button-unchecked'}
+                    size={20}
+                    color="white"
+                  />
                 </TVFocusWrapper>
-              )}
-            </View>
+                {hasUpdate && (
+                  <TVFocusWrapper
+                    onPress={() => handleUpdateProvider(updateInfo!.provider)}
+                    disabled={isUpdating}
+                    className="w-9 h-9 rounded-full items-center justify-center"
+                    style={{
+                      backgroundColor: primary,
+                      opacity: isUpdating ? 0.7 : 1,
+                    }}>
+                    {isUpdating ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <MaterialCommunityIcons
+                        name="update"
+                        size={20}
+                        color="white"
+                      />
+                    )}
+                  </TVFocusWrapper>
+                )}
+                <TVFocusWrapper
+                  onPress={() => handleUninstallProvider(item)}
+                  className="w-9 h-9 rounded-full items-center justify-center bg-red-600">
+                  <MaterialCommunityIcons
+                    name="delete"
+                    size={20}
+                    color="white"
+                  />
+                </TVFocusWrapper>
+              </>
+            ) : (
+              <TVFocusWrapper
+                onPress={() => handleInstallProvider(item)}
+                disabled={isInstalled || isInstalling}
+                className={'w-9 h-9 rounded-full items-center justify-center'}
+                style={{
+                  opacity: isInstalling ? 0.7 : 1,
+                  backgroundColor: isInstalled ? 'gray' : primary,
+                }}>
+                {isInstalling ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <MaterialCommunityIcons
+                    name={isInstalled ? 'check' : 'download'}
+                    size={20}
+                    color="white"
+                  />
+                )}
+              </TVFocusWrapper>
+            )}
           </View>
         </View>
       </View>
@@ -639,18 +637,13 @@ const Extensions = ({ navigation }: Props) => {
         <TVFocusWrapper
           onPress={() => handleTabChange('installed')}
           className="flex-1 py-3 rounded-xl"
-          containerStyle={{ flex: 1 }}
           style={{
             backgroundColor:
               activeTab === 'installed' ? primary : 'transparent',
           }}>
           <Text
-            style={{
-              color: activeTab === 'installed' ? 'white' : '#9CA3AF',
-              fontSize: 18,
-              fontWeight: '700',
-              textAlign: 'center',
-            }}>
+            className={`text-center font-medium ${activeTab === 'installed' ? 'text-white' : 'text-gray-400'
+              }`}>
             Installed ({(installedProviders || []).length})
           </Text>
         </TVFocusWrapper>
@@ -658,18 +651,13 @@ const Extensions = ({ navigation }: Props) => {
         <TVFocusWrapper
           onPress={() => handleTabChange('available')}
           className="flex-1 py-3 rounded-xl"
-          containerStyle={{ flex: 1 }}
           style={{
             backgroundColor:
               activeTab === 'available' ? primary : 'transparent',
           }}>
           <Text
-            style={{
-              color: activeTab === 'available' ? 'white' : '#9CA3AF',
-              fontSize: 18,
-              fontWeight: '700',
-              textAlign: 'center',
-            }}>
+            className={`text-center font-medium ${activeTab === 'available' ? 'text-white' : 'text-gray-400'
+              }`}>
             Available ({(availableProviders || []).length})
           </Text>
         </TVFocusWrapper>
@@ -696,7 +684,7 @@ const Extensions = ({ navigation }: Props) => {
 
       {/* Filter Section */}
       {/* Filter Section */}
-      <View className="ml-4 mr-4 mt-4 mb-2 flex-row items-center gap-x-2">
+      <View className="mx-4 mt-4 mb-2 flex-row items-center gap-x-2">
         {/* Horizontal Type Filters - Grows to fill space */}
         <ScrollView
           horizontal
@@ -847,6 +835,7 @@ const Extensions = ({ navigation }: Props) => {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
     </View>
   );
 };
