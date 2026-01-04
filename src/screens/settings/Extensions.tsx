@@ -633,12 +633,15 @@ const Extensions = ({ navigation }: Props) => {
       </View>
 
       {/* Tabs */}
-      <View className="flex-row bg-quaternary mx-4 mt-4 rounded-xl">
+      <View className="flex-row bg-zinc-900 mx-4 mt-4 rounded-xl p-1 h-14 items-center">
         <TVFocusWrapper
           onPress={() => handleTabChange('installed')}
-          className="flex-1 py-3 rounded-xl"
-          containerStyle={{ flex: 1 }}
+          className="flex-1 h-full justify-center items-center rounded-xl"
+          containerStyle={{ flex: 1, paddingRight: 4 }}
           style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
             backgroundColor:
               activeTab === 'installed' ? primary : 'transparent',
           }}>
@@ -655,9 +658,12 @@ const Extensions = ({ navigation }: Props) => {
 
         <TVFocusWrapper
           onPress={() => handleTabChange('available')}
-          className="flex-1 py-3 rounded-xl"
-          containerStyle={{ flex: 1 }}
+          className="flex-1 h-full justify-center items-center rounded-xl"
+          containerStyle={{ flex: 1, paddingLeft: 4 }}
           style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
             backgroundColor:
               activeTab === 'available' ? primary : 'transparent',
           }}>
