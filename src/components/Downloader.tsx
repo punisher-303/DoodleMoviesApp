@@ -1,23 +1,23 @@
-import React, {useEffect, useLayoutEffect, useState} from 'react';
-import {View, Text, TouchableOpacity, Modal, Pressable} from 'react-native';
-import {ifExists} from '../lib/file/ifExists';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, Modal, Pressable } from 'react-native';
+import { ifExists } from '../lib/file/ifExists';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Octicons from '@expo/vector-icons/Octicons';
-import {Stream} from '../lib/providers/types';
-import {MotiView} from 'moti';
+import { Stream } from '../lib/providers/types';
+import { MotiView } from 'moti';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../lib/zustand/contentStore';
 import * as IntentLauncher from 'expo-intent-launcher';
-import {downloadManager} from '../lib/downloader';
-import {cancelHlsDownload} from '../lib/hlsDownloader2';
+import { downloadManager } from '../lib/downloader';
+import { cancelHlsDownload } from '../lib/hlsDownloader2';
 // import {FFmpegKit} from 'ffmpeg-kit-react-native';
 import * as RNFS from '@dr.pogodin/react-native-fs';
-import {downloadFolder} from '../lib/constants';
+import { downloadFolder } from '../lib/constants';
 import useThemeStore from '../lib/zustand/themeStore';
 import DownloadBottomSheet from './DownloadBottomSheet';
-import {settingsStorage} from '../lib/storage';
-import {providerManager} from '../lib/services/ProviderManager';
+import { settingsStorage } from '../lib/storage';
+import { providerManager } from '../lib/services/ProviderManager';
 
 const DownloadComponent = ({
   link,
@@ -32,8 +32,8 @@ const DownloadComponent = ({
   providerValue: string;
   title: string;
 }) => {
-  const {primary} = useThemeStore(state => state);
-  const {provider} = useContentStore(state => state);
+  const { primary } = useThemeStore(state => state);
+  const { provider } = useContentStore(state => state);
   const [alreadyDownloaded, setAlreadyDownloaded] = useState<string | boolean>(
     false,
   );
@@ -122,17 +122,17 @@ const DownloadComponent = ({
 
   return (
     <>
-      <View className="flex-row items-center mt-1 justify-between rounded-full bg-white/30 p-1">
+      <View className="ml-3 h-14 w-14 rounded-full bg-zinc-800 items-center justify-center border border-zinc-700">
         {downloadActive ? (
           <MotiView
             style={{
               marginHorizontal: 4,
             }}
             // animate opacity to opacity while downloding
-            from={{opacity: 1}}
-            animate={{opacity: 0.5}}
+            from={{ opacity: 1 }}
+            animate={{ opacity: 0.5 }}
             //@ts-ignore
-            transition={{type: 'timing', duration: 500, loop: true}}>
+            transition={{ type: 'timing', duration: 500, loop: true }}>
             <TouchableOpacity
               onPress={() => {
                 setCancelModal(prev => !prev);
@@ -183,7 +183,7 @@ const DownloadComponent = ({
                   <TouchableOpacity
                     onPress={deleteDownload}
                     className="p-2 rounded-md m-1 px-3"
-                    style={{backgroundColor: primary}}>
+                    style={{ backgroundColor: primary }}>
                     <Text className="text-white font-semibold text-base rounded-md capitalize px-1">
                       Yes
                     </Text>
@@ -191,7 +191,7 @@ const DownloadComponent = ({
                   <TouchableOpacity
                     onPress={() => setDeleteModal(false)}
                     className="p-2 px-4 rounded-md m-1"
-                    style={{backgroundColor: primary}}>
+                    style={{ backgroundColor: primary }}>
                     <Text className="text-white font-semibold text-base rounded-md capitalize px-1">
                       No
                     </Text>
@@ -221,16 +221,16 @@ const DownloadComponent = ({
               deleteDownload: deleteDownload,
             });
           }}
-          onPressSubs={(sub: {link: string; type: string; title: string}) => {
+          onPressSubs={(sub: { link: string; type: string; title: string }) => {
             downloadManager({
               title: title + ' ' + sub.title + ' Subtitle ',
               url: sub.link,
               fileName: fileName + '-' + sub.title,
               fileType: sub.type,
               setDownloadActive: setDownloadActive,
-              setAlreadyDownloaded: () => {},
+              setAlreadyDownloaded: () => { },
               setDownloadId: setDownloadId,
-              deleteDownload: () => {},
+              deleteDownload: () => { },
             });
           }}
         />
@@ -244,7 +244,7 @@ const DownloadComponent = ({
           onPressVideo={(server: Stream) => {
             longPressDownload(server.link);
           }}
-          onPressSubs={(sub: {link: string; type: string; title: string}) => {
+          onPressSubs={(sub: { link: string; type: string; title: string }) => {
             longPressDownload(sub.link, 'text/vtt');
           }}
         />
