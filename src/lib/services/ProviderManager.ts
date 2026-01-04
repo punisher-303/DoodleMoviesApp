@@ -168,7 +168,7 @@ export class ProviderManager {
         page,
         providerValue,
         signal,
-        providerContext: { ...providerContext, extensionManager, providerManager: this },
+        { ...providerContext, extensionManager, providerManager: this },
       );
 
       // Call the getSearchPosts function
@@ -241,7 +241,7 @@ export class ProviderManager {
         link,
         type,
         signal,
-        providerContext: { ...providerContext, extensionManager, providerManager: this },
+        { ...providerContext, extensionManager, providerManager: this },
       );
 
       // Call the getStream function
