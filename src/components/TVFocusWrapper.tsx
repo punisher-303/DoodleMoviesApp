@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, StyleProp, ViewStyle, Animated, GestureResponderEvent, TouchableOpacityProps, Platform } from 'react-native';
+import { StyleProp, ViewStyle, Animated, Platform, Pressable, PressableProps } from 'react-native';
 import useThemeStore from '../lib/zustand/themeStore';
 
-interface TVFocusWrapperProps extends TouchableOpacityProps {
+interface TVFocusWrapperProps extends PressableProps {
     children: React.ReactNode;
     focusedStyle?: StyleProp<ViewStyle>;
     containerStyle?: StyleProp<ViewStyle>;
     onFocus?: () => void;
     onBlur?: () => void;
+    style?: StyleProp<ViewStyle>;
 }
 
 const TVFocusWrapper: React.FC<TVFocusWrapperProps> = ({
@@ -21,11 +22,12 @@ const TVFocusWrapper: React.FC<TVFocusWrapperProps> = ({
 }) => {
     const [isFocused, setIsFocused] = useState(false);
     const [scale] = useState(new Animated.Value(1));
+    const { primary } = useThemeStore(state => state);
 
     const handleFocus = () => {
         setIsFocused(true);
         Animated.spring(scale, {
-            toValue: 1.1, // Increased scale for better visibility
+            toValue: 1.1,
             friction: 3,
             useNativeDriver: true,
         }).start();
@@ -42,36 +44,33 @@ const TVFocusWrapper: React.FC<TVFocusWrapperProps> = ({
         if (onBlur) onBlur();
     };
 
-    const { primary } = useThemeStore(state => state);
-
-    // Default focus style if none provided
+    // Default focus style
     const defaultFocusStyle: StyleProp<ViewStyle> = {
-        borderColor: primary || '#ffffff', // Use primary color or white
-        borderWidth: 3,
-        borderRadius: 8, // Add some rounding
-        // backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle highlight
+        borderColor: primary || '#ffffff',
+        borderWidth: 4, // Increased for visibility
+        borderRadius: 8,
+        borderStyle: 'solid',
         shadowColor: primary || '#ffffff',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        zIndex: 99,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.5,
+        shadowRadius: 6,
+        elevation: 10, // High elevation for Android visibility
+        zIndex: 999,   // Ensure it sits on top
     };
 
     return (
         <Animated.View style={[{ transform: [{ scale }] }, containerStyle]}>
-            <TouchableOpacity
+            <Pressable
                 onFocus={handleFocus}
                 onBlur={handleBlur}
-                activeOpacity={0.7}
                 {...props}
-                focusable={true} // Ensure it's focusable on Android TV
                 style={[
                     style,
                     isFocused && (focusedStyle || defaultFocusStyle),
                 ]}
             >
                 {children}
-            </TouchableOpacity>
+            </Pressable>
         </Animated.View>
     );
 };
