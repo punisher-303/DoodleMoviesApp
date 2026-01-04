@@ -1,14 +1,14 @@
-import {ToastAndroid} from 'react-native';
-import {providerContext} from '../providers/providerContext';
-import {Catalog, EpisodeLink, Info, Post} from '../providers/types';
-import {extensionManager} from './ExtensionManager';
+import { ToastAndroid } from 'react-native';
+import { providerContext } from '../providers/providerContext';
+import { Catalog, EpisodeLink, Info, Post } from '../providers/types';
+import { extensionManager } from './ExtensionManager';
 
 export class ProviderManager {
   private createExecutionContext() {
     return {
       exports: {},
       require: () => ({}), // Mock require function
-      module: {exports: {}},
+      module: { exports: {} },
       console,
       Promise,
       __awaiter: (thisArg: any, _arguments: any, P: any, generator: any) => {
@@ -16,8 +16,8 @@ export class ProviderManager {
           return value instanceof P
             ? value
             : new P(function (resolve: any) {
-                resolve(value);
-              });
+              resolve(value);
+            });
         }
         return new (P || (P = Promise))(function (resolve: any, reject: any) {
           function fulfilled(value: any) {
@@ -46,12 +46,12 @@ export class ProviderManager {
     };
   }
 
-  private executeModule(moduleCode: string, ...args: any[]): any {
+  public executeModule(moduleCode: string, ...args: any[]): any {
     const context = this.createExecutionContext();
 
     const executeModule = new Function(
       'context',
-      ...Array.from({length: args.length}, (_, i) => `arg${i}`),
+      ...Array.from({ length: args.length }, (_, i) => `arg${i}`),
       `
       const exports = context.exports;
       const __awaiter = context.__awaiter;
@@ -66,7 +66,7 @@ export class ProviderManager {
     );
     return executeModule(context, ...args);
   }
-  getCatalog = ({providerValue}: {providerValue: string}): Catalog[] => {
+  getCatalog = ({ providerValue }: { providerValue: string }): Catalog[] => {
     // Use extensionManager which now handles test mode automatically
     const catalogModule =
       extensionManager.getProviderModules(providerValue)?.modules.catalog;
@@ -84,7 +84,7 @@ export class ProviderManager {
       throw new Error(`Invalid catalog module for provider: ${providerValue}`);
     }
   };
-  getGenres = ({providerValue}: {providerValue: string}): Catalog[] => {
+  getGenres = ({ providerValue }: { providerValue: string }): Catalog[] => {
     // Use extensionManager which now handles test mode automatically
     const catalogModule =
       extensionManager.getProviderModules(providerValue)?.modules.catalog;
@@ -126,7 +126,8 @@ export class ProviderManager {
         page,
         providerValue,
         signal,
-        providerContext,
+        signal,
+        { ...providerContext, extensionManager, providerManager: this },
       );
 
       // Call the getPosts function
@@ -135,7 +136,7 @@ export class ProviderManager {
         page,
         providerValue,
         signal,
-        providerContext,
+        providerContext: { ...providerContext, extensionManager, providerManager: this },
       });
     } catch (error) {
       console.error('Error creating posts function:', error);
@@ -167,7 +168,7 @@ export class ProviderManager {
         page,
         providerValue,
         signal,
-        providerContext,
+        providerContext: { ...providerContext, extensionManager, providerManager: this },
       );
 
       // Call the getSearchPosts function
@@ -176,7 +177,7 @@ export class ProviderManager {
         page,
         providerValue,
         signal,
-        providerContext,
+        providerContext: { ...providerContext, extensionManager, providerManager: this },
       });
     } catch (error) {
       console.error('Error creating search posts function:', error);
@@ -240,7 +241,7 @@ export class ProviderManager {
         link,
         type,
         signal,
-        providerContext,
+        providerContext: { ...providerContext, extensionManager, providerManager: this },
       );
 
       // Call the getStream function
@@ -248,7 +249,7 @@ export class ProviderManager {
         link,
         type,
         signal,
-        providerContext,
+        providerContext: { ...providerContext, extensionManager, providerManager: this },
       });
     } catch (error) {
       console.error('Error creating stream function:', error);

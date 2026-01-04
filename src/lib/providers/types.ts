@@ -1,6 +1,6 @@
-import {AxiosStatic} from 'axios';
+import { AxiosStatic } from 'axios';
 import * as cheerio from 'cheerio';
-import {Content} from '../zustand/contentStore';
+import { Content } from '../zustand/contentStore';
 import * as Crypto from 'expo-crypto';
 
 export interface ProvidersList {
@@ -152,6 +152,8 @@ export type ProviderContext = {
     superVideoExtractor: (data: any) => Promise<string>;
     gdFlixExtracter: (link: string, signal: AbortSignal) => Promise<Stream[]>;
   };
+  extensionManager?: any;
+  providerManager?: any;
 };
 
 export type ISO639_1 =
