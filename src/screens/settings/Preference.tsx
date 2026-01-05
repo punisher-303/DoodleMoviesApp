@@ -70,8 +70,6 @@ const Preferences = () => {
 const { showTabBarLabels, setShowTabBarLabels: setGlobalShowTabBarLabels } = useSettingsStore();
 
 const [OpenExternalPlayer, setOpenExternalPlayer] = useState(
-
-  const [OpenExternalPlayer, setOpenExternalPlayer] = useState(
   settingsStorage.getBool('useExternalPlayer', false),
 );
 
