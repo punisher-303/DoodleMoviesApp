@@ -236,15 +236,23 @@ const Preferences = () => {
                 );
                 setTimeout(() => {
                   try { DevSettings.reload(); } catch (e) { }
-                }, 500);
+                }, 1000);
               }}>
               <Text className="text-white text-base">Show Tab Bar Labels</Text>
               <Switch
                 thumbColor={showTabBarLabels ? primary : 'gray'}
                 value={showTabBarLabels}
-                onValueChange={() => { }}
-                focusable={false}
-                pointerEvents="none"
+                onValueChange={() => {
+                  settingsStorage.setShowTabBarLabels(!showTabBarLabels);
+                  setShowTabBarLabels(!showTabBarLabels);
+                  ToastAndroid.show(
+                    'Restart App to Apply Changes',
+                    ToastAndroid.SHORT,
+                  );
+                  setTimeout(() => {
+                    try { DevSettings.reload(); } catch (e) { }
+                  }, 1000);
+                }}
               />
             </TVFocusWrapper>
 
