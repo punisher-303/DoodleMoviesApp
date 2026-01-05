@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import VoiceChatControl from '../../components/VoiceChatControl';
 import {
   ScrollView,
   Text,
@@ -667,6 +668,10 @@ const Player = ({ route }: Props): React.JSX.Element => {
     transform: [{ translateY: controlsTranslateY.value }],
     opacity: controlsOpacity.value,
   }));
+  const voiceChatStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: controlsTranslateY.value }], // Sync with controls visibility
+    opacity: controlsOpacity.value,
+  }));
   const toastStyle = useAnimatedStyle(() => ({ opacity: toastOpacity.value }));
   const settingsStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: settingsTranslateY.value }],
@@ -675,6 +680,10 @@ const Player = ({ route }: Props): React.JSX.Element => {
   const leftChatButtonStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: leftChatButtonTranslateX.value }],
     opacity: leftChatButtonOpacity.value,
+  }));
+  const voiceChatStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: controlsTranslateY.value }],
+    opacity: controlsOpacity.value,
   }));
 
   const initialActiveEpisode = useMemo(() => {
@@ -781,6 +790,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
     route.params?.link || route.params?.video_id || activeEpisode?.link || '';
 
   // --- WATCH TOGETHER STATE ---
+  const [agoraUid] = useState(Math.floor(Math.random() * 100000));
   const [watchTogetherMode, setWatchTogetherModeState] = useState(
     getWatchTogetherMode(),
   );
@@ -1980,6 +1990,13 @@ const Player = ({ route }: Props): React.JSX.Element => {
                 size={24}
               />
             </TVFocusWrapper>
+          </Animated.View>
+        )}
+
+        {watchTogetherMode && sessionId && !showNicknameModal && (
+          <Animated.View
+            style={[voiceChatStyle, { position: 'absolute', top: 50, right: 80, zIndex: 60 }]}>
+            <VoiceChatControl channelId={sessionId} uid={agoraUid} isLeader={isSessionLeader} />
           </Animated.View>
         )}
 
