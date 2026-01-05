@@ -415,6 +415,85 @@ return (
         </View>
       </View>
 
+      {/* Network Settings */}
+      <View className="mb-6">
+        <Text className="text-gray-400 text-sm mb-3">Network</Text>
+        <View className="bg-[#1A1A1A] rounded-xl overflow-hidden p-4">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-white text-base mb-2">User-Agent</Text>
+            {/* Reset Button if Custom */}
+            {settingsStorage.getUserAgent() !== '' && !userAgents.some(ua => ua.value === settingsStorage.getUserAgent()) && (
+              <TouchableOpacity onPress={() => {
+                settingsStorage.setUserAgent('');
+                ToastAndroid.show('Reset to Default', ToastAndroid.SHORT);
+                // Force re-render if needed, though state update below might handle it if we hook it up right
+                // For now, let's just let the dropdown re-render on next open or state change
+              }}>
+                <Text className="text-xs text-red-400">Reset</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <Dropdown
+            data={userAgents}
+            labelField="name"
+            valueField="value"
+            placeholder="Select User Agent"
+            placeholderStyle={{ color: 'gray', fontSize: 14 }}
+            selectedTextStyle={{ color: 'white', fontSize: 14 }}
+            containerStyle={{ backgroundColor: '#262626', borderWidth: 0 }}
+            itemContainerStyle={{ backgroundColor: '#262626' }}
+            itemTextStyle={{ color: 'white' }}
+            activeColor="#333333"
+            style={{
+              backgroundColor: '#262626',
+              borderRadius: 8,
+              paddingHorizontal: 10,
+              paddingVertical: 5,
+              marginBottom: 10,
+            }}
+            // Find current value or default to Custom
+            value={
+              userAgents.find(ua => ua.value === settingsStorage.getUserAgent())
+                ? settingsStorage.getUserAgent()
+                : 'custom'
+            }
+            onChange={item => {
+              if (item.value !== 'custom') {
+                settingsStorage.setUserAgent(item.value);
+                ToastAndroid.show(`Applied: ${item.name}`, ToastAndroid.SHORT);
+              } else {
+                // If they select Custom, we might want to clear it or keep previous?
+                // Let's just focus the input below
+              }
+            }}
+          />
+
+          {/* Show Input if Custom or not in list */}
+          {(settingsStorage.getUserAgent() === 'custom' ||
+            !userAgents.some(ua => ua.value === settingsStorage.getUserAgent()) && settingsStorage.getUserAgent() !== '') && (
+              <TextInput
+                style={{
+                  color: 'white',
+                  backgroundColor: '#262626',
+                  borderRadius: 8,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  fontSize: 14,
+                  marginTop: 5,
+                }}
+                placeholder="Enter custom User-Agent..."
+                placeholderTextColor="gray"
+                defaultValue={settingsStorage.getUserAgent()}
+                onSubmitEditing={e => {
+                  settingsStorage.setUserAgent(e.nativeEvent.text);
+                  ToastAndroid.show('Custom UA Saved', ToastAndroid.SHORT);
+                }}
+              />
+            )}
+        </View>
+      </View>
+
       {/* Quality Settings */}
       <View className="mb-6">
         <Text className="text-gray-400 text-sm mb-3">Quality</Text>

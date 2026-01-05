@@ -208,6 +208,7 @@ export class SettingsStorage {
   }
 
   // Telemetry / Privacy
+  // Telemetry (privacy)
   isTelemetryOptIn(): boolean {
     const val = mainStorage.getBool(SettingsKeys.TELEMETRY_OPT_IN);
     // Default to true (opted in) unless explicitly disabled
@@ -216,6 +217,15 @@ export class SettingsStorage {
 
   setTelemetryOptIn(enabled: boolean): void {
     mainStorage.setBool(SettingsKeys.TELEMETRY_OPT_IN, enabled);
+  }
+
+  // Network Settings
+  getUserAgent(): string {
+    return mainStorage.getString('UserAgent') || '';
+  }
+
+  setUserAgent(ua: string): void {
+    mainStorage.setString('UserAgent', ua);
   }
 
   // Generic get/set methods for settings not covered by specific methods
