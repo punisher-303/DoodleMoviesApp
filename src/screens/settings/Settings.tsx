@@ -139,6 +139,54 @@ const Settings = ({ navigation }: Props) => {
   const [syncLink, setSyncLink] = useState('');
   // ---------------------------------
 
+  // --- PROVIDER LATENCY Check ---
+  const [pingStatus, setPingStatus] = useState<Record<string, number | null>>({});
+
+  useEffect(() => {
+    const checkAllProviders = async () => {
+      const results: Record<string, number | null> = {};
+
+      const checkProvider = async (p: ProviderExtension) => {
+        if (!p.sourceUrl) {
+          results[p.value] = null;
+          return;
+        }
+
+        const start = Date.now();
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+
+          await fetch(p.sourceUrl, {
+            method: 'HEAD',
+            signal: controller.signal,
+            cache: 'no-cache'
+          });
+          clearTimeout(timeoutId);
+          const end = Date.now();
+          results[p.value] = end - start;
+        } catch (e) {
+          results[p.value] = -1; // Error/Timeout
+        }
+      };
+
+      await Promise.all(installedProviders.map(checkProvider));
+      setPingStatus(results);
+    };
+
+    if (installedProviders.length > 0) {
+      checkAllProviders();
+    }
+  }, [installedProviders]);
+
+  const getLatencyColor = (latency: number | null | undefined) => {
+    if (latency === undefined || latency === null) return 'gray';
+    if (latency === -1) return '#EF4444'; // Red (Error)
+    if (latency < 300) return '#22C55E'; // Green (Good)
+    if (latency < 800) return '#EAB308'; // Yellow (Okay)
+    return '#EF4444'; // Red (Slow)
+  };
+
   const handleProviderSelect = useCallback(
     (item: ProviderExtension) => {
       setProvider(item);
@@ -168,7 +216,20 @@ const Settings = ({ navigation }: Props) => {
           borderWidth: 1.5,
           borderColor: isSelected ? primary : '#333333',
         }}>
-        <View className="flex-col items-center justify-center h-full p-2">
+        <View className="flex-col items-center justify-center h-full p-2 relative">
+          {/* Latency Dot */}
+          <View
+            style={{
+              position: 'absolute',
+              top: 6,
+              left: 6,
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: getLatencyColor(pingStatus[item.value])
+            }}
+          />
+
           <RenderProviderFlagIcon type={item.type} />
           <Text
             numberOfLines={1}
@@ -183,7 +244,7 @@ const Settings = ({ navigation }: Props) => {
         </View>
       </TVFocusWrapper>
     ),
-    [handleProviderSelect, primary],
+    [handleProviderSelect, primary, pingStatus],
   );
 
   const providersList = useMemo(
@@ -193,6 +254,7 @@ const Settings = ({ navigation }: Props) => {
       ),
     [installedProviders, provider.value, renderProviderItem],
   );
+
 
   const clearCacheHandler = useCallback(() => {
     if (settingsStorage.isHapticFeedbackEnabled()) {
