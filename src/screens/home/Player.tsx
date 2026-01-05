@@ -681,10 +681,6 @@ const Player = ({ route }: Props): React.JSX.Element => {
     transform: [{ translateX: leftChatButtonTranslateX.value }],
     opacity: leftChatButtonOpacity.value,
   }));
-  const voiceChatStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: controlsTranslateY.value }],
-    opacity: controlsOpacity.value,
-  }));
 
   const initialActiveEpisode = useMemo(() => {
     const fromList = route.params?.episodeList?.[route.params.linkIndex];
