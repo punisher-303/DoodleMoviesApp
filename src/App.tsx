@@ -56,6 +56,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import useAppModeStore from './lib/zustand/appModeStore';
 import DoodleTVStack from './navigation/DoodleTVStack';
 import TVFocusWrapper from './components/TVFocusWrapper';
+import useSettingsStore from './lib/zustand/settingsStore';
 
 // Lazy-load Firebase modules so app runs without google-services files
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -222,7 +223,7 @@ const App = () => {
       Linking.openURL(updateData.play_store_url || 'https://doodlemovies.vercel.app');
     }
   };
-  const showTabBarLables = settingsStorage.showTabBarLabels();
+  const { showTabBarLabels } = useSettingsStore();
 
   SystemUI.setBackgroundColorAsync('black');
 

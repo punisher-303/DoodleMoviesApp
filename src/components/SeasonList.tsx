@@ -433,7 +433,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
         `}>
           <View className="flex-row w-full justify-between gap-2 items-center">
             <TVFocusWrapper
-              className={`rounded-xl bg-zinc-800 flex-1 h-14 items-center justify-center border border-zinc-700 flex-row gap-x-2 relative ${titleAlignment}`}
+              className={`rounded-xl bg-zinc-800 flex-1 h-10 items-center justify-center border border-zinc-700 flex-row gap-x-2 relative ${titleAlignment}`}
               containerStyle={{ flex: 1 }}
               onPress={() =>
                 playHandler({
@@ -464,6 +464,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
                   ? metaTitle.slice(0, 30) + '... ' + item.title
                   : metaTitle + ' ' + item.title
               }
+              className="h-10 w-10"
               fileName={(
                 metaTitle +
                 activeSeason.title +
@@ -507,7 +508,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
         `}>
           <View className="flex-row w-full justify-between gap-2 items-center">
             <TVFocusWrapper
-              className={`rounded-xl bg-zinc-800 flex-1 h-14 items-center justify-center border border-zinc-700 flex-row gap-x-2 relative ${titleAlignment}`}
+              className={`rounded-xl bg-zinc-800 flex-1 h-10 items-center justify-center border border-zinc-700 flex-row gap-x-2 relative ${titleAlignment}`}
               containerStyle={{ flex: 1 }}
               onPress={() =>
                 playHandler({
@@ -543,6 +544,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
                   ? metaTitle.slice(0, 30) + '... ' + item.title
                   : metaTitle + ' ' + item.title
               }
+              className="h-10 w-10"
               fileName={(
                 metaTitle +
                 activeSeason.title +

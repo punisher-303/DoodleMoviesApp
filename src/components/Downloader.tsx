@@ -26,12 +26,14 @@ const DownloadComponent = ({
   type,
   providerValue,
   title,
+  className,
 }: {
   link: string;
   fileName: string;
   type: string;
   providerValue: string;
   title: string;
+  className?: string; // Optional className for customization
 }) => {
   const { primary } = useThemeStore(state => state);
   const { provider } = useContentStore(state => state);
@@ -124,7 +126,8 @@ const DownloadComponent = ({
   return (
     <>
       <TVFocusWrapper
-        className="h-14 w-14 rounded-full bg-zinc-800 items-center justify-center border border-zinc-700"
+        className={`${className ? className : 'h-14 w-14'
+          } rounded-full bg-zinc-800 items-center justify-center border border-zinc-700`}
         onPress={() => {
           if (alreadyDownloaded) {
             setDeleteModal(true);

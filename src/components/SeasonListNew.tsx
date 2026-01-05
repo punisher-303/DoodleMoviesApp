@@ -1,4 +1,4 @@
-import React, {useState, useMemo, useCallback} from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,23 +11,23 @@ import {
   ScrollView,
   TextInput,
 } from 'react-native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {useNavigation} from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Feather from '@expo/vector-icons/Feather';
-import {Dropdown} from 'react-native-element-dropdown';
-import {MotiView} from 'moti';
-import {Skeleton} from 'moti/skeleton';
+import { Dropdown } from 'react-native-element-dropdown';
+import { MotiView } from 'moti';
+import { Skeleton } from 'moti/skeleton';
 import * as IntentLauncher from 'expo-intent-launcher';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
-import {EpisodeLink, Link} from '../lib/providers/types';
-import {RootStackParamList} from '../App';
+import { EpisodeLink, Link } from '../lib/providers/types';
+import { RootStackParamList } from '../App';
 import Downloader from './Downloader';
-import {cacheStorage, mainStorage, settingsStorage} from '../lib/storage';
-import {ifExists} from '../lib/file/ifExists';
-import {useEpisodes, useStreamData} from '../lib/hooks/useEpisodes';
+import { cacheStorage, mainStorage, settingsStorage } from '../lib/storage';
+import { ifExists } from '../lib/file/ifExists';
+import { useEpisodes, useStreamData } from '../lib/hooks/useEpisodes';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
 
@@ -71,11 +71,11 @@ const SeasonList: React.FC<SeasonListProps> = ({
   refreshing: _refreshing,
   routeParams,
 }) => {
-  const {primary} = useThemeStore(state => state);
+  const { primary } = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const {addItem} = useWatchHistoryStore(state => state);
-  const {fetchStreams} = useStreamData();
+  const { addItem } = useWatchHistoryStore(state => state);
+  const { fetchStreams } = useStreamData();
 
   // Memoized initial active season
   const [activeSeason, setActiveSeason] = useState<Link>(() => {
@@ -328,7 +328,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
           ignoreAndroidSystemSettings: false,
         });
       }
-      setStickyMenu({active: active, link: link, type: type});
+      setStickyMenu({ active: active, link: link, type: type });
     },
     [],
   );
@@ -343,7 +343,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
           duration: 1,
         }),
       );
-      setStickyMenu({active: false});
+      setStickyMenu({ active: false });
     }
   }, [stickyMenu.link]);
 
@@ -357,13 +357,13 @@ const SeasonList: React.FC<SeasonListProps> = ({
           duration: 1,
         }),
       );
-      setStickyMenu({active: false});
+      setStickyMenu({ active: false });
     }
   }, [stickyMenu.link]);
 
   // Memoized sticky menu external player handler
   const handleStickyMenuExternalPlayer = useCallback(() => {
-    setStickyMenu({active: false});
+    setStickyMenu({ active: false });
     if (stickyMenu.link && stickyMenu.type) {
       handleExternalPlayer(stickyMenu.link, stickyMenu.type);
     }
@@ -371,20 +371,19 @@ const SeasonList: React.FC<SeasonListProps> = ({
 
   // Memoized episode render item
   const renderEpisodeItem = useCallback(
-    ({item, index}: {item: EpisodeLink; index: number}) => {
+    ({ item, index }: { item: EpisodeLink; index: number }) => {
       return (
         <View
           key={item.link + index}
           className={`w-full justify-center items-center gap-2 flex-row my-1
-          ${
-            isCompleted(item.link) || stickyMenu.link === item.link
+          ${isCompleted(item.link) || stickyMenu.link === item.link
               ? 'opacity-60'
               : ''
-          }
+            }
         `}>
           <View className="flex-row w-full justify-between gap-2 items-center">
             <TouchableOpacity
-              className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-1 flex-row gap-x-2 relative ${titleAlignment}`}
+              className={`rounded-md bg-white/30 w-[80%] h-10 items-center p-1 flex-row gap-x-2 relative ${titleAlignment}`}
               onPress={() =>
                 playHandler({
                   linkIndex: index,
@@ -396,7 +395,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
                 })
               }
               onLongPress={() => onLongPressHandler(true, item.link, 'series')}>
-              <Ionicons name="play-circle" size={28} color={primary} />
+              <Ionicons name="play-circle" size={24} color={primary} />
               <Text className="text-white">
                 {item.title.length > 30
                   ? item.title.slice(0, 30) + '...'
@@ -407,6 +406,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
               providerValue={providerValue}
               link={item.link}
               type="series"
+              className="h-10 w-10"
               title={
                 metaTitle.length > 30
                   ? metaTitle.slice(0, 30) + '... ' + item.title
@@ -438,20 +438,19 @@ const SeasonList: React.FC<SeasonListProps> = ({
 
   // Memoized direct link render item
   const renderDirectLinkItem = useCallback(
-    ({item, index}: {item: any; index: number}) => {
+    ({ item, index }: { item: any; index: number }) => {
       return (
         <View
           key={item.link + index}
           className={`w-full justify-center items-center my-2 gap-2 flex-row
-          ${
-            isCompleted(item.link) || stickyMenu.link === item.link
+          ${isCompleted(item.link) || stickyMenu.link === item.link
               ? 'opacity-60'
               : ''
-          }
+            }
         `}>
           <View className="flex-row w-full justify-between gap-2 items-center">
             <TouchableOpacity
-              className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-2 flex-row gap-x-2 relative ${titleAlignment}`}
+              className={`rounded-md bg-white/30 w-[80%] h-10 items-center p-2 flex-row gap-x-2 relative ${titleAlignment}`}
               onPress={() =>
                 playHandler({
                   linkIndex: index,
@@ -463,10 +462,10 @@ const SeasonList: React.FC<SeasonListProps> = ({
                 })
               }
               onLongPress={() => onLongPressHandler(true, item.link, 'series')}>
-              <Ionicons name="play-circle" size={28} color={primary} />
+              <Ionicons name="play-circle" size={24} color={primary} />
               <Text className="text-white">
                 {activeSeason?.directLinks?.length &&
-                activeSeason?.directLinks?.length > 1
+                  activeSeason?.directLinks?.length > 1
                   ? item.title?.length > 27
                     ? item.title.slice(0, 27) + '...'
                     : item.title
@@ -477,6 +476,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
               providerValue={providerValue}
               link={item.link}
               type={item.type || 'series'}
+              className="h-10 w-10"
               title={
                 metaTitle.length > 30
                   ? metaTitle.slice(0, 30) + '... ' + item.title
@@ -513,7 +513,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
       <TouchableOpacity
         key={`server-${index}-${item.server}`}
         className="bg-black/30 p-3 rounded-lg mb-2 flex-row justify-between items-center"
-        style={{borderColor: primary, borderWidth: 1}}
+        style={{ borderColor: primary, borderWidth: 1 }}
         onPress={() => openExternalPlayer(item.link)}>
         <View>
           <Text className="text-white text-lg capitalize font-bold">
@@ -565,9 +565,8 @@ const SeasonList: React.FC<SeasonListProps> = ({
             }}
             renderItem={item => (
               <View
-                className={`px-3 py-2 bg-black text-white flex-row justify-start items-center border-b border-gray-500 text-center ${
-                  activeSeason === item ? 'bg-quaternary' : ''
-                }`}>
+                className={`px-3 py-2 bg-black text-white flex-row justify-start items-center border-b border-gray-500 text-center ${activeSeason === item ? 'bg-quaternary' : ''
+                  }`}>
                 <Text className="text-white">{item.title}</Text>
               </View>
             )}
@@ -575,7 +574,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
         )}
 
         <MotiView
-          animate={{backgroundColor: '#0000'}}
+          animate={{ backgroundColor: '#0000' }}
           delay={0}
           //@ts-ignore
           transition={{
@@ -649,9 +648,8 @@ const SeasonList: React.FC<SeasonListProps> = ({
           }}
           renderItem={item => (
             <View
-              className={`px-3 py-2 bg-black text-white flex-row justify-start items-center border-b border-gray-500 text-center ${
-                activeSeason === item ? 'bg-quaternary' : ''
-              }`}>
+              className={`px-3 py-2 bg-black text-white flex-row justify-start items-center border-b border-gray-500 text-center ${activeSeason === item ? 'bg-quaternary' : ''
+                }`}>
               <Text className="text-white">{item.title}</Text>
             </View>
           )}
@@ -665,24 +663,24 @@ const SeasonList: React.FC<SeasonListProps> = ({
       {/* Search and Sort Controls */}
       {(filteredAndSortedEpisodes.length > 8 ||
         filteredAndSortedDirectLinks.length > 8) && (
-        <View className="flex-row justify-between items-center mt-2">
-          <TextInput
-            placeholder="Search..."
-            className="bg-black/30 text-white rounded-md p-2 h-10 w-[80%] border-collapse border border-white/10"
-            value={searchText}
-            onChangeText={setSearchText}
-          />
-          <TouchableOpacity
-            className="bg-black/30 rounded-md p-2 h-10 w-[15%] flex-row justify-center items-center"
-            onPress={toggleSortOrder}>
-            <MaterialCommunityIcons
-              name={sortOrder === 'asc' ? 'sort-ascending' : 'sort-descending'}
-              size={24}
-              color={primary}
+          <View className="flex-row justify-between items-center mt-2">
+            <TextInput
+              placeholder="Search..."
+              className="bg-black/30 text-white rounded-md p-2 h-10 w-[80%] border-collapse border border-white/10"
+              value={searchText}
+              onChangeText={setSearchText}
             />
-          </TouchableOpacity>
-        </View>
-      )}
+            <TouchableOpacity
+              className="bg-black/30 rounded-md p-2 h-10 w-[15%] flex-row justify-center items-center"
+              onPress={toggleSortOrder}>
+              <MaterialCommunityIcons
+                name={sortOrder === 'asc' ? 'sort-ascending' : 'sort-descending'}
+                size={24}
+                color={primary}
+              />
+            </TouchableOpacity>
+          </View>
+        )}
 
       {/* Episode/Direct Links List */}
       <View className="flex-row flex-wrap justify-center gap-x-2 gap-y-2">
@@ -736,8 +734,8 @@ const SeasonList: React.FC<SeasonListProps> = ({
       {vlcLoading && (
         <View className="absolute top-0 left-0 w-full h-full bg-black/60 bg-opacity-50 justify-center items-center">
           <MotiView
-            from={{rotate: '0deg'}}
-            animate={{rotate: '360deg'}}
+            from={{ rotate: '0deg' }}
+            animate={{ rotate: '360deg' }}
             //@ts-ignore
             transition={{
               type: 'timing',
@@ -774,7 +772,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
               <ActivityIndicator size="large" color={primary} />
             ) : (
               <>
-                <ScrollView style={{maxHeight: 300}}>
+                <ScrollView style={{ maxHeight: 300 }}>
                   {externalPlayerStreams.map((item, index) =>
                     renderServerItem(item, index),
                   )}
@@ -803,10 +801,10 @@ const SeasonList: React.FC<SeasonListProps> = ({
         animationType="fade"
         visible={stickyMenu.active}
         transparent={true}
-        onRequestClose={() => setStickyMenu({active: false})}>
+        onRequestClose={() => setStickyMenu({ active: false })}>
         <Pressable
           className="flex-1 justify-end items-center"
-          onPress={() => setStickyMenu({active: false})}>
+          onPress={() => setStickyMenu({ active: false })}>
           <View className="w-full h-14 bg-quaternary flex-row justify-evenly items-center pt-2">
             {isCompleted(stickyMenu.link || '') ? (
               <TouchableOpacity
