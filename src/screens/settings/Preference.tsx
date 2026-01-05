@@ -492,6 +492,80 @@ return (
               />
             )}
         </View>
+
+        {/* Custom DNS */}
+        <View className="bg-[#1A1A1A] rounded-xl overflow-hidden p-4 mt-3">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-white text-base mb-2">Custom DNS (DoH)</Text>
+            {/* Reset Button if Custom */}
+            {settingsStorage.getDnsUrl() !== '' && !dnsProviders.some(d => d.value === settingsStorage.getDnsUrl()) && (
+              <TouchableOpacity onPress={() => {
+                settingsStorage.setDnsUrl('');
+                ToastAndroid.show('DNS Reset to Default', ToastAndroid.SHORT);
+              }}>
+                <Text className="text-xs text-red-400">Reset</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <Dropdown
+            data={dnsProviders}
+            labelField="name"
+            valueField="value"
+            placeholder="Select DNS Provider"
+            placeholderStyle={{ color: 'gray', fontSize: 14 }}
+            selectedTextStyle={{ color: 'white', fontSize: 14 }}
+            containerStyle={{ backgroundColor: '#262626', borderWidth: 0 }}
+            itemContainerStyle={{ backgroundColor: '#262626' }}
+            itemTextStyle={{ color: 'white' }}
+            activeColor="#333333"
+            style={{
+              backgroundColor: '#262626',
+              borderRadius: 8,
+              paddingHorizontal: 10,
+              paddingVertical: 5,
+              marginBottom: 10,
+            }}
+            value={
+              dnsProviders.find(d => d.value === settingsStorage.getDnsUrl())
+                ? settingsStorage.getDnsUrl()
+                : 'custom'
+            }
+            onChange={item => {
+              if (item.value !== 'custom') {
+                settingsStorage.setDnsUrl(item.value);
+                ToastAndroid.show(`DNS: ${item.name}`, ToastAndroid.SHORT);
+              }
+            }}
+          />
+
+          {/* Show Input if Custom or not in list */}
+          {(settingsStorage.getDnsUrl() === 'custom' ||
+            !dnsProviders.some(d => d.value === settingsStorage.getDnsUrl()) && settingsStorage.getDnsUrl() !== '') && (
+              <View>
+                <TextInput
+                  style={{
+                    color: 'white',
+                    backgroundColor: '#262626',
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    fontSize: 14,
+                  }}
+                  placeholder="https://..."
+                  placeholderTextColor="gray"
+                  defaultValue={settingsStorage.getDnsUrl()}
+                  onSubmitEditing={e => {
+                    settingsStorage.setDnsUrl(e.nativeEvent.text);
+                    ToastAndroid.show('Custom DNS Saved', ToastAndroid.SHORT);
+                  }}
+                />
+                <Text className="text-gray-500 text-xs mt-2">
+                  Enter a valid DNS-over-HTTPS URL.
+                </Text>
+              </View>
+            )}
+        </View>
       </View>
 
       {/* Quality Settings */}

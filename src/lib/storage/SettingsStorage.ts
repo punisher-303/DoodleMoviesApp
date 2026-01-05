@@ -228,6 +228,14 @@ export class SettingsStorage {
     mainStorage.setString('UserAgent', ua);
   }
 
+  getDnsUrl(): string {
+    return mainStorage.getString('DnsUrl') || '';
+  }
+
+  setDnsUrl(url: string): void {
+    mainStorage.setString('DnsUrl', url);
+  }
+
   // Generic get/set methods for settings not covered by specific methods
   getBool(key: string, defaultValue = false): boolean {
     return mainStorage.getBool(key, defaultValue);

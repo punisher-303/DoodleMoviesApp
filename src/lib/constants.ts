@@ -79,3 +79,12 @@ export const userAgents = [
   { name: 'iPhone (iOS)', value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1' },
   { name: 'Custom', value: 'custom' },
 ];
+
+export const dnsProviders = [
+  { name: 'Default (ISP/System)', value: '' },
+  { name: 'Cloudflare (1.1.1.1)', value: 'https://cloudflare-dns.com/dns-query' },
+  { name: 'Google (8.8.8.8)', value: 'https://dns.google/dns-query' },
+  { name: 'AdGuard (AdBlock)', value: 'https://dns.adguard-dns.com/dns-query' },
+  { name: 'Quad9 (Security)', value: 'https://dns.quad9.net/dns-query' },
+  { name: 'Custom', value: 'custom' },
+];
