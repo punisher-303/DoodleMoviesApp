@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
     View,
-    Text,
     TouchableOpacity,
     PermissionsAndroid,
     Platform,
@@ -11,27 +10,25 @@ import { WebView } from 'react-native-webview';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface VoiceChatControlProps {
-    channelId: string; // The Room ID
-    uid: number; // Not heavily used in Jitsi URL but good for consistency
+    channelId: string;
+    uid: number;
     isLeader: boolean;
 }
 
-const VoiceChatControl = ({ channelId, uid }: VoiceChatControlProps) => {
+const VoiceChatControl = ({ channelId }: VoiceChatControlProps) => {
     const webViewRef = useRef<WebView>(null);
     const [joined, setJoined] = useState(false);
-    const [isMuted, setIsMuted] = useState(true); // Start muted by default
+    const [isMuted, setIsMuted] = useState(true);
     const [hasPermission, setHasPermission] = useState(false);
 
-    // Sanitized Room Name for Jitsi
+    // Unique Room Name logic
     const roomName = `doodlemovies_v1_${channelId.replace(/[^a-zA-Z0-9]/g, '')}`;
 
-    // connection URL with config params
-    // startAudioOnly=true: disables video request
-    // startWithAudioMuted=true: start muted
-    // disableDeepLinking=true: prevent opening the app
+    // Jitsi Config: Start Audio Only, Start Muted
     const jitsiUrl = `https://meet.jit.si/${roomName}#config.startAudioOnly=true&config.startWithAudioMuted=true&config.disableDeepLinking=true&interfaceConfig.TOOLBAR_BUTTONS=['microphone']`;
 
     useEffect(() => {
+        let isMounted = true;
         const checkPerms = async () => {
             if (Platform.OS === 'android') {
                 try {
@@ -45,38 +42,26 @@ const VoiceChatControl = ({ channelId, uid }: VoiceChatControlProps) => {
                             buttonPositive: "OK"
                         }
                     );
-                    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                        setHasPermission(true);
-                    } else {
-                        Alert.alert("Permission Denied", "Voice chat requires microphone access.");
+                    if (isMounted) {
+                        setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
                     }
                 } catch (err) {
                     console.warn(err);
                 }
             } else {
-                setHasPermission(true);
+                if (isMounted) setHasPermission(true);
             }
         };
-
         checkPerms();
+        return () => { isMounted = false; };
     }, []);
 
-    // Inject JS to toggle mute
-    // This is a "best effort" hack since Jitsi DOM changes. 
-    // Ideally we use the Jitsi IFrame API but that's for web.
-    // In RN WebView, we can try sending key commands or finding buttons.
-    // BUT, simply toggling the WebView's "media access" or just reloading might be safer?
-    // Let's rely on the URL param for initial state.
-    // For toggling: 
-    // We can inject: `APP.conference.toggleAudioMuted();` -> This is the internal Jitsi API!
     const toggleMute = () => {
         if (!webViewRef.current) return;
         const newMuteState = !isMuted;
-
-        // Jitsi Internal API command
+        // Inject Jitsi Command
         const script = `try { APP.conference.toggleAudioMuted(); } catch(e) { console.log(e); }`;
         webViewRef.current.injectJavaScript(script);
-
         setIsMuted(newMuteState);
     };
 
@@ -84,7 +69,6 @@ const VoiceChatControl = ({ channelId, uid }: VoiceChatControlProps) => {
 
     return (
         <View className="items-center justify-center">
-            {/* Button UI */}
             <TouchableOpacity
                 onPress={toggleMute}
                 className="bg-black/60 p-3 rounded-full flex-row items-center gap-2"
@@ -97,8 +81,8 @@ const VoiceChatControl = ({ channelId, uid }: VoiceChatControlProps) => {
                 />
             </TouchableOpacity>
 
-            {/* Hidden WebView for Audio Engine */}
-            <View style={{ height: 1, width: 1, opacity: 0, overflow: 'hidden' }}>
+            {/* Hidden WebView Logic */}
+            <View style={{ height: 0, width: 0, opacity: 0, overflow: 'hidden' }}>
                 <WebView
                     ref={webViewRef}
                     source={{ uri: jitsiUrl }}
@@ -108,9 +92,7 @@ const VoiceChatControl = ({ channelId, uid }: VoiceChatControlProps) => {
                     javaScriptEnabled={true}
                     domStorageEnabled={true}
                     onLoadEnd={() => setJoined(true)}
-                    // Necessary to allow mic access
                     originWhitelist={['*']}
-                    permissionStatus="granted" // iOS specific
                 />
             </View>
         </View>

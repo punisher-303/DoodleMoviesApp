@@ -1996,6 +1996,8 @@ const Player = ({ route }: Props): React.JSX.Element => {
           </Animated.View>
         )}
 
+
+
         {!streamLoading &&
           !Platform.isTV &&
           watchTogetherMode &&

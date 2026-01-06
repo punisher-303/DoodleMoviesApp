@@ -242,6 +242,21 @@ const App = () => {
     if (result === RESULTS.GRANTED) {
       setShowNotificationModal(false);
       settingsStorage.setNotificationsEnabled(true);
+    } else {
+      setShowNotificationModal(false); // Close modal even if denied
+    }
+    // Request Microphone Permission for Voice Chat
+    if (Platform.OS === 'android') {
+      await request(PERMISSIONS.ANDROID.RECORD_AUDIO);
+
+      // Request Photos & Videos Permission
+      if (Number(Platform.Version) >= 33) {
+        await request(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
+        await request(PERMISSIONS.ANDROID.READ_MEDIA_VIDEO);
+      } else {
+        await request(PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE);
+        await request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE);
+      }
     }
   };
 
@@ -735,8 +750,8 @@ const App = () => {
       </SafeAreaProvider>
       <IOSModal
         visible={showNotificationModal}
-        title='"DoodleMovies" Would Like to Send You Notifications'
-        message="Notifications may include alerts, sounds, and icon badges. These can be configured in Settings."
+        title="DoodleMovies Needs Some Permissions"
+        message="For the best experience (Voice Chat, Downloads, Updates), please allow access to Notifications, Microphone, and Photos/Videos."
         actions={[
           { text: "Allow", onPress: handleAllowNotifications },
           { text: "Don't Allow", style: 'cancel', onPress: () => setShowNotificationModal(false) }
