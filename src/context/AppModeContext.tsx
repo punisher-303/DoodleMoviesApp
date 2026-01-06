@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-import {MMKV} from 'react-native-mmkv';
+import { MMKVLoader } from 'react-native-mmkv-storage';
 
 // Define the shape of our context data
 interface AppModeContextType {
@@ -17,10 +17,10 @@ interface AppModeContextType {
 const AppModeContext = createContext<AppModeContextType | undefined>(undefined);
 
 // Initialize the storage
-const storage = new MMKV();
+const storage = new MMKVLoader().initialize();
 
 // Create the provider component
-export const AppModeProvider = ({children}: {children: ReactNode}) => {
+export const AppModeProvider = ({ children }: { children: ReactNode }) => {
   const [appMode, setAppMode] = useState<'video'>('video');
 
   // Load the app mode from storage on initial render
@@ -36,10 +36,10 @@ export const AppModeProvider = ({children}: {children: ReactNode}) => {
   // Wrap the setter to also update storage
   const setAppModeWithStorage = (newMode: 'video') => {
     setAppMode(newMode);
-    storage.set('appMode', newMode);
+    storage.setString('appMode', newMode);
   };
 
-  const value = {appMode, setAppMode: setAppModeWithStorage};
+  const value = { appMode, setAppMode: setAppModeWithStorage };
 
   return (
     <AppModeContext.Provider value={value}>{children}</AppModeContext.Provider>

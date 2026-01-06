@@ -1,23 +1,21 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { MMKV } from 'react-native-mmkv'; // Import MMKV directly
+import { MMKVLoader } from 'react-native-mmkv-storage';
 
 // Initialize MMKV storage specifically for app mode
-const appModeMMKVStorage = new MMKV({
-  id: 'app-mode-storage', // Unique ID for this store's storage
-});
+const appModeMMKVStorage = new MMKVLoader().withInstanceID('app-mode-storage').initialize();
 
 // Create a custom storage for Zustand using the MMKV instance
 const zustandStorage = {
   setItem: (name: string, value: string) => {
-    return appModeMMKVStorage.set(name, value);
+    return appModeMMKVStorage.setString(name, value);
   },
   getItem: (name: string) => {
     const value = appModeMMKVStorage.getString(name);
     return value ?? null;
   },
   removeItem: (name: string) => {
-    return appModeMMKVStorage.delete(name);
+    return appModeMMKVStorage.removeItem(name);
   },
 };
 
