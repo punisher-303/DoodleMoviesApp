@@ -12,6 +12,7 @@ buildscript {
     }
     repositories {
         google()
+        maven { url "https://repo1.maven.org/maven2/" }
         mavenCentral()
         maven { url 'https://www.jitpack.io' }
     }
@@ -30,6 +31,7 @@ apply plugin: "com.facebook.react.rootproject"
 allprojects {
     repositories {
         google()
+        maven { url "https://repo1.maven.org/maven2/" }
         mavenCentral()
         maven { url 'https://www.jitpack.io' }
         maven {
