@@ -66,7 +66,6 @@ const Preferences = () => {
     settingsStorage.isSwipeGestureEnabled(),
   );
 
-  );
 
 const { showTabBarLabels, setShowTabBarLabels: setGlobalShowTabBarLabels } = useSettingsStore();
 
