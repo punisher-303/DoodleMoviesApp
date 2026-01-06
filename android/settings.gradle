@@ -3,8 +3,18 @@ pluginManagement {
     repositories {
         google()
         maven { url "https://repo1.maven.org/maven2/" }
-        mavenCentral()
         gradlePluginPortal()
+        mavenCentral()
+        
+        // Force replacement of blocked Maven Central URL
+        all { ArtifactRepository repo ->
+            if (repo instanceof MavenArtifactRepository) {
+                def url = repo.url.toString()
+                if (url.startsWith('https://repo.maven.apache.org/maven2')) {
+                    repo.setUrl('https://repo1.maven.org/maven2/')
+                }
+            }
+        }
     }
 }
 plugins { id("com.facebook.react.settings") }
