@@ -12,7 +12,6 @@ buildscript {
     }
     repositories {
         google()
-        maven { url "https://maven-central.storage-download.googleapis.com/maven2/" }
         mavenCentral()
         maven { url 'https://www.jitpack.io' }
     }
@@ -31,7 +30,6 @@ apply plugin: "com.facebook.react.rootproject"
 allprojects {
     repositories {
         google()
-        maven { url "https://maven-central.storage-download.googleapis.com/maven2/" }
         mavenCentral()
         maven { url 'https://www.jitpack.io' }
         maven {
@@ -41,16 +39,6 @@ allprojects {
         maven {
             // Android JSC binaries
             url(new File(['node', '--print', "require.resolve('jsc-android/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim(), '../dist'))
-        }
-        
-        // Force replacement of blocked Maven Central URL
-        all { ArtifactRepository repo ->
-            if (repo instanceof MavenArtifactRepository) {
-                def url = repo.url.toString()
-                if (url.startsWith('https://repo.maven.apache.org/maven2')) {
-                    repo.setUrl('https://repo1.maven.org/maven2/')
-                }
-            }
         }
     }
 }
