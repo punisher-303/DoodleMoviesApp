@@ -85,3 +85,7 @@ web-build/
 #env
 .env
 .env.*
+
+#keystore
+android/Doodle.jks
+android/key.properties
