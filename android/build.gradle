@@ -32,7 +32,6 @@ allprojects {
     repositories {
         google()
         maven { url "https://repo1.maven.org/maven2/" }
-        mavenCentral()
         maven { url 'https://www.jitpack.io' }
         maven {
             // React Native Android binaries
@@ -41,6 +40,16 @@ allprojects {
         maven {
             // Android JSC binaries
             url(new File(['node', '--print', "require.resolve('jsc-android/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim(), '../dist'))
+        }
+        
+        // Force replacement of blocked Maven Central URL
+        all { ArtifactRepository repo ->
+            if (repo instanceof MavenArtifactRepository) {
+                def url = repo.url.toString()
+                if (url.startsWith('https://repo.maven.apache.org/maven2')) {
+                    repo.setUrl('https://repo1.maven.org/maven2/')
+                }
+            }
         }
     }
 }
