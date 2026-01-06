@@ -165,7 +165,7 @@ const DownloadComponent = ({
         ) : alreadyDownloaded ? (
           <MaterialIcons name="delete-outline" size={27} color="#c1c4c9" />
         ) : (
-          <Octicons name="download" size={25} color="#c1c4c9" />
+          <Octicons name="download" size={20} color="#c1c4c9" />
         )}
       </TVFocusWrapper>
       {/* delete modal */}

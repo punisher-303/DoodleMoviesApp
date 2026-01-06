@@ -13,6 +13,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Application from 'expo-application';
 import * as Updates from 'expo-updates';
 import Constants from 'expo-constants';
+import BootSplash from 'react-native-bootsplash';
 // Lazy-load Crashlytics to avoid requiring Firebase when not configured
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getCrashlytics = (): any | null => {
@@ -56,6 +57,9 @@ export default class GlobalErrorBoundary extends React.Component<
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error(' Global Error Boundary caught an error:', error);
     console.error('Error Info:', errorInfo);
+
+    // Force hide BootSplash if an error occurs during startup
+    BootSplash.hide({ fade: true });
 
     this.setState({
       errorInfo,

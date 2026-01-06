@@ -496,7 +496,12 @@ const App = () => {
           freezeOnBlur: true,
           tabBarActiveTintColor: primary,
           tabBarInactiveTintColor: '#dadde3',
-          tabBarShowLabel: showTabBarLables,
+          tabBarShowLabel: typeof showTabBarLabels === 'boolean' ? showTabBarLabels : true,
+          tabBarLabelStyle: {
+            fontSize: 10,
+            fontWeight: '600',
+            marginBottom: 4,
+          },
           tabBarStyle: !isLargeScreen
             ? {
               // Re-adding absolute positioning properties
