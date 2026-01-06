@@ -115,6 +115,9 @@ export type RootStackParamList = {
     file?: string;
     providerValue?: string;
     infoUrl?: string;
+    roomId?: string;
+    syncLink?: boolean;
+    server?: any;
   };
 };
 
