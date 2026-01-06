@@ -229,9 +229,13 @@ const App = () => {
 
   useEffect(() => {
     const checkNotificationPermission = async () => {
-      const status = await check(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
-      if (status === RESULTS.DENIED) {
-        setShowNotificationModal(true);
+      try {
+        const status = await check(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
+        if (status === RESULTS.DENIED) {
+          setShowNotificationModal(true);
+        }
+      } catch (e) {
+        console.log('Permission check failed:', e);
       }
     };
     checkNotificationPermission();
