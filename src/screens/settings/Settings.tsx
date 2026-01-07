@@ -264,6 +264,9 @@ const Settings = ({ navigation }: Props) => {
       });
     }
     cacheStorageService.clearAll();
+    // Also clear extension cache to force manifest refresh (needed for latency fix)
+    extensionStorage.clearAll();
+    ToastAndroid.show('Cache cleared', ToastAndroid.SHORT);
   }, []);
 
   const clearHistoryHandler = useCallback(() => {

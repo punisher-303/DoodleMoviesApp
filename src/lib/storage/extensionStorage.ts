@@ -14,6 +14,7 @@ export interface ProviderExtension {
   installed: boolean;
   installedAt?: number;
   lastUpdated?: number;
+  sourceUrl?: string;
 }
 
 /**
