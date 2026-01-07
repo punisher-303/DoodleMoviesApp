@@ -534,7 +534,7 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                         size={18}
                         color={alwaysUseExternalDownload ? primary : 'gray'}
                       />
-                      <Text className="text-white text-xs ml-2 mr-auto">External Down</Text>
+                      <Text className="text-white text-xs ml-2 mr-auto">Web Download</Text>
                       <Switch
                         value={alwaysUseExternalDownload}
                         onValueChange={(val) => {
