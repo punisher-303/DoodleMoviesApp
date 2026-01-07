@@ -126,8 +126,7 @@ const DownloadComponent = ({
   return (
     <>
       <TVFocusWrapper
-        className={`${className ? className : 'h-14 w-14'
-          } rounded-full bg-zinc-800 items-center justify-center border border-zinc-700`}
+        className={`${className ? className : 'p-2'} rounded-full bg-white/30 items-center justify-center border border-zinc-700`}
         onPress={() => {
           if (alreadyDownloaded) {
             setDeleteModal(true);
@@ -165,7 +164,7 @@ const DownloadComponent = ({
         ) : alreadyDownloaded ? (
           <MaterialIcons name="delete-outline" size={27} color="#c1c4c9" />
         ) : (
-          <Octicons name="download" size={20} color="#c1c4c9" />
+          <Octicons name="download" size={25} color="#c1c4c9" />
         )}
       </TVFocusWrapper>
       {/* delete modal */}
