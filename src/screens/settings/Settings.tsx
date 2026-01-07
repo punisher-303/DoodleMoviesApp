@@ -545,13 +545,11 @@ const Settings = ({ navigation }: Props) => {
                   </Text>
                 </View>
                 <Switch
-                  trackColor={{ false: '#767577', true: primary }}
-                  thumbColor={watchTogetherMode ? '#f4f3f4' : '#f4f3f4'}
+                  trackColor={{ false: '#3f3f46', true: primary }}
+                  thumbColor={'white'}
                   ios_backgroundColor="#3e3e3e"
                   value={watchTogetherMode}
-                  onValueChange={() => { }}
-                  focusable={false}
-                  pointerEvents="none"
+                  onValueChange={toggleWatchTogether}
                 />
               </TVFocusWrapper>
 
