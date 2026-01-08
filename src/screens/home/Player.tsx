@@ -709,10 +709,8 @@ const Player = ({ route }: Props): React.JSX.Element => {
   const [activeEpisode, setActiveEpisode] = useState(initialActiveEpisode);
 
   useEffect(() => {
-    if (initialActiveEpisode?.link !== activeEpisode?.link) {
-      setActiveEpisode(initialActiveEpisode);
-    }
-  }, [initialActiveEpisode, activeEpisode]);
+    setActiveEpisode(initialActiveEpisode);
+  }, [initialActiveEpisode]);
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -1840,7 +1838,14 @@ const Player = ({ route }: Props): React.JSX.Element => {
           onTouchMove={e => e.stopPropagation()}
           onTouchEnd={e => e.stopPropagation()}>
           {showPlayer && (
-            <VideoPlayer key={keyForPlayer} {...videoPlayerProps} />
+            <VideoPlayer
+              key={
+                activeEpisode?.link
+                  ? activeEpisode.link + keyForPlayer
+                  : keyForPlayer
+              }
+              {...videoPlayerProps}
+            />
           )}
         </TouchableOpacity>
 
@@ -2449,6 +2454,12 @@ const Player = ({ route }: Props): React.JSX.Element => {
                 <TVFocusWrapper
                   className="flex-row gap-2 items-center rounded-md my-1 overflow-hidden ml-2"
                   onPress={async () => {
+                    // FIX: Prevent video from keeping playing in background
+                    const wasPlaying = isPlaying;
+                    if (wasPlaying) {
+                      setIsPlaying(false);
+                      playerRef.current?.pause();
+                    }
                     try {
                       const res = await DocumentPicker.getDocumentAsync({
                         type: [
@@ -2471,6 +2482,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                           uri: asset.uri,
                         };
                         setExternalSubs((prev: any) => [track, ...prev]);
+                        ToastAndroid.show('Subtitle Added', ToastAndroid.SHORT);
                       }
                     } catch (err) {
                       console.log(err);

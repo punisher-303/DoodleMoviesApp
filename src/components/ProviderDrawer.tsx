@@ -1,4 +1,5 @@
-import { View, Text } from 'react-native';
+import { View, Text, Image } from 'react-native';
+import RenderProviderFlagIcon from './RenderProviderFLagIcon';
 import React from 'react';
 import useContentStore from '../lib/zustand/contentStore';
 import { ScrollView } from 'moti';
@@ -53,19 +54,26 @@ const ProviderDrawer = ({
               borderWidth: 1,
               backgroundColor: 'rgba(255, 255, 255, 0.2)',
             }}>
-            <View className="flex-row items-center">
-              <MaterialIcons
-                name="movie"
-                size={20}
-                color={provider.value === item.value ? primary : '#888'}
-              />
-              <Text
-                className={`ml-3 text-base ${provider.value === item.value
-                    ? 'text-white font-medium'
-                    : 'text-gray-400'
-                  }`}>
-                {item.display_name}
-              </Text>
+            <View className="flex-row items-center flex-1">
+              {item.icon ? (
+                <Image
+                  source={{ uri: item.icon }}
+                  className="w-10 h-10 rounded-md bg-zinc-800"
+                  style={{ resizeMode: 'cover' }}
+                />
+              ) : (
+                <View className="w-10 h-10 bg-zinc-800 rounded-md items-center justify-center border border-white/10">
+                  <RenderProviderFlagIcon type={item.type} />
+                </View>
+              )}
+              <View className="ml-3 flex-1">
+                <Text className="text-white font-bold text-base">
+                  {item.display_name}
+                </Text>
+                <Text className="text-gray-400 text-xs mt-0.5">
+                  {item.type?.toUpperCase()} • V{item.version?.toUpperCase()}
+                </Text>
+              </View>
             </View>
             {provider.value === item.value && (
               <MaterialIcons name="check" size={20} color={primary} />

@@ -505,10 +505,10 @@ const App = () => {
               left: 0, // <--- Ensure coverage
               right: 0, // <--- Ensure coverage
 
-              height: 72, // Use adjusted height
+              backgroundColor: 'transparent',
               borderRadius: 0,
               // backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              overflow: 'hidden',
+              overflow: 'visible',
               elevation: 0,
               borderTopWidth: 0,
               paddingHorizontal: 0,

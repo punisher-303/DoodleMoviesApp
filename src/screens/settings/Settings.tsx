@@ -36,6 +36,7 @@ import {
   AntDesign,
   Feather,
   MaterialIcons,
+  Ionicons,
 } from '@expo/vector-icons';
 import useThemeStore from '../../lib/zustand/themeStore';
 import useAppModeStore from '../../lib/zustand/appModeStore';
@@ -58,6 +59,20 @@ const setWatchTogetherModeStorage = (mode: boolean) => {
   cacheStorageService.setString(KEY_WATCH_TOGETHER, String(mode));
 };
 // -----------------------------------------------------------
+
+// --- NETWORK PROXY PERSISTENCE ---
+const KEY_NETWORK_PROXY = 'networkProxyMode';
+
+const getNetworkProxyMode = () => {
+  const modeStr = cacheStorageService.getString(KEY_NETWORK_PROXY);
+  return modeStr === 'true' ? true : false;
+};
+
+const setNetworkProxyModeStorage = (mode: boolean) => {
+  cacheStorageService.setString(KEY_NETWORK_PROXY, String(mode));
+};
+// -----------------------------------------------------------
+
 
 // Helper for Internal Navigation
 type IconElement = React.ReactElement<{
@@ -135,6 +150,9 @@ const Settings = ({ navigation }: Props) => {
 
   const [watchTogetherMode, setWatchTogetherMode] = useState(
     getWatchTogetherMode(),
+  );
+  const [networkProxyMode, setNetworkProxyMode] = useState(
+    getNetworkProxyMode(),
   );
   const [syncLink, setSyncLink] = useState('');
   // ---------------------------------
@@ -264,6 +282,7 @@ const Settings = ({ navigation }: Props) => {
       });
     }
     cacheStorageService.clearAll();
+    ToastAndroid.show('Cache Cleared', ToastAndroid.SHORT);
     // Also clear extension cache to force manifest refresh (needed for latency fix)
     extensionStorage.clearAll();
     ToastAndroid.show('Cache cleared', ToastAndroid.SHORT);
@@ -277,6 +296,7 @@ const Settings = ({ navigation }: Props) => {
       });
     }
     clearHistory();
+    ToastAndroid.show('History Cleared', ToastAndroid.SHORT);
   }, [clearHistory]);
 
   const toggleWatchTogether = useCallback(() => {
@@ -291,6 +311,26 @@ const Settings = ({ navigation }: Props) => {
       });
     }
   }, [watchTogetherMode]);
+
+  // --- PROXY TOGGLE ---
+  const toggleNetworkProxy = useCallback(() => {
+    const newState = !networkProxyMode;
+    setNetworkProxyMode(newState);
+    setNetworkProxyModeStorage(newState);
+
+    if (settingsStorage.isHapticFeedbackEnabled()) {
+      ReactNativeHapticFeedback.trigger('impactMedium', {
+        enableVibrateFallback: true,
+        ignoreAndroidSystemSettings: false,
+      });
+    }
+
+    ToastAndroid.show(
+      newState ? 'Secure Proxy Enabled' : 'Secure Proxy Disabled',
+      ToastAndroid.SHORT,
+    );
+  }, [networkProxyMode]);
+  // --------------------
 
   // --- UPDATED PARSING LOGIC TO PREVENT CRASH ---
   const parseSyncLink = (link: string) => {
@@ -468,24 +508,44 @@ const Settings = ({ navigation }: Props) => {
                 isLast={true}
               />
             </View>
+          </View>
+        </AnimatedSection>
 
-            {/* Our Productions */}
-            <Text className="text-gray-400 text-sm mb-1">Our Productions</Text>
+        {/* --- NEW NETWORK / PROXY SECTION --- */}
+        <AnimatedSection delay={120}>
+          <View className="mb-6 flex-col gap-3">
+            <Text className="text-gray-400 text-sm mb-1">
+              Network & Connection
+            </Text>
             <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-              <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-                <TVFocusWrapper
-                  onPress={() => navigation.navigate('Production')}
-                  className="flex-row items-center justify-between p-4">
-                  <View className="flex-row items-center">
-                    <Feather name="smartphone" size={22} color={primary} />
-                    <Text className="text-white ml-3 text-base">Check Our Softwares</Text>
+              <View className="flex-row items-center justify-between p-4">
+                <View className="flex-row items-center flex-1 pr-2">
+                  <MaterialCommunityIcons
+                    name="shield-check-outline"
+                    size={22}
+                    color={primary}
+                  />
+                  <View className="flex-col ml-3 flex-1">
+                    <Text className="text-white text-base">
+                      Secure Proxy (VPN Mode)
+                    </Text>
+                    <Text className="text-gray-400 text-xs mt-0.5">
+                      Bypass ISP blocks (Jio, etc) via DoH.
+                    </Text>
                   </View>
-                  <Feather name="chevron-right" size={20} color="gray" />
-                </TVFocusWrapper>
+                </View>
+                <Switch
+                  trackColor={{ false: '#767577', true: primary }}
+                  thumbColor={networkProxyMode ? '#f4f3f4' : '#f4f3f4'}
+                  ios_backgroundColor="#3e3e3e"
+                  onValueChange={toggleNetworkProxy}
+                  value={networkProxyMode}
+                />
               </View>
             </View>
           </View>
         </AnimatedSection>
+        {/* ----------------------------------- */}
 
         {/* App Mode */}
         <AnimatedSection delay={50}>
@@ -693,6 +753,14 @@ const Settings = ({ navigation }: Props) => {
                 icon={<Feather name="info" />}
                 text="About"
                 onPress={() => navigation.navigate('About')}
+                primaryColor={primary}
+              />
+
+              {/* Our Productions */}
+              <InternalOptionRow
+                icon={<Feather name="smartphone" />}
+                text="Check Our Softwares"
+                onPress={() => navigation.navigate('Production')}
                 primaryColor={primary}
               />
 
