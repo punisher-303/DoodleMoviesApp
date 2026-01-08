@@ -477,6 +477,7 @@ const Downloads = () => {
           return (
             <TVFocusWrapper
               key={item.uri}
+              containerStyle={{ flex: 1 }}
               // Use an array for style to combine dynamic border and the new opacity effect
               style={[
                 { borderColor: isSelected ? primary : 'transparent' },
