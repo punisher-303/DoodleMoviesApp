@@ -1989,10 +1989,10 @@ const Player = ({ route }: Props): React.JSX.Element => {
           </Animated.View>
         )}
 
-        {watchTogetherMode && sessionId && !showNicknameModal && (
+        {watchTogetherMode && roomId && !showNicknameModal && (
           <Animated.View
             style={[voiceChatStyle, { position: 'absolute', top: 50, right: 80, zIndex: 60 }]}>
-            <VoiceChatControl channelId={sessionId} uid={agoraUid} isLeader={isSessionLeader} />
+            <VoiceChatControl channelId={roomId} uid={agoraUid} isLeader={isSessionLeader} />
           </Animated.View>
         )}
 
