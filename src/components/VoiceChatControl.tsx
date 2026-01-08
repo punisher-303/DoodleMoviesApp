@@ -49,6 +49,16 @@ const VoiceChatControl = ({ channelId, style }: VoiceChatControlProps) => {
         localOpacity.value = withDelay(3000, withTiming(0.3, { duration: 500 }));
     }, []);
 
+    const { width: screenW, height: screenH } = Dimensions.get('window');
+    const BUTTON_SIZE = 56;
+    const PEEK_OFFSET = 28; // How much it hides (50%)
+    const INITIAL_RIGHT = 80;
+    const INITIAL_TOP = 50;
+
+    // Initial Absolute X (relative to left 0)
+    // defined by: right: 80 means x = screenW - 80 - BUTTON_SIZE
+    const initialAbsX = screenW - INITIAL_RIGHT - BUTTON_SIZE;
+
     const pan = Gesture.Pan()
         .onStart(() => {
             contextX.value = translateX.value;
@@ -61,6 +71,20 @@ const VoiceChatControl = ({ channelId, style }: VoiceChatControlProps) => {
             resetIdleTimer();
         })
         .onEnd(() => {
+            const currentAbsX = initialAbsX + translateX.value;
+            const threshold = 50; // Distance to edge to trigger magnet
+
+            // Left Edge Snap
+            if (currentAbsX < threshold) {
+                const targetTranslateX = -initialAbsX - (BUTTON_SIZE - PEEK_OFFSET); // Snap to left edge + peek
+                translateX.value = withSpring(targetTranslateX, { damping: 15 });
+            }
+            // Right Edge Snap
+            else if (currentAbsX > screenW - BUTTON_SIZE - threshold) {
+                const targetTranslateX = (screenW - initialAbsX - BUTTON_SIZE) + (BUTTON_SIZE - PEEK_OFFSET); // Snap to right edge + peek
+                translateX.value = withSpring(targetTranslateX, { damping: 15 });
+            }
+
             resetIdleTimer();
         });
 
