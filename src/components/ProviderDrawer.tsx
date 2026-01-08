@@ -59,10 +59,19 @@ const ProviderDrawer = ({
                 <Image
                   source={{ uri: item.icon }}
                   className="w-10 h-10 rounded-md bg-zinc-800"
-                  style={{ resizeMode: 'cover' }}
+                  style={{
+                    resizeMode: 'cover',
+                    borderColor: provider.value === item.value ? primary : 'gray',
+                    borderWidth: 1,
+                  }}
                 />
               ) : (
-                <View className="w-10 h-10 bg-zinc-800 rounded-md items-center justify-center border border-white/10">
+                <View
+                  className="w-10 h-10 bg-zinc-800 rounded-md items-center justify-center"
+                  style={{
+                    borderColor: provider.value === item.value ? primary : 'gray',
+                    borderWidth: 1,
+                  }}>
                   <RenderProviderFlagIcon type={item.type} />
                 </View>
               )}
