@@ -16,7 +16,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Entypo from '@expo/vector-icons/Entypo';
 import 'react-native-reanimated';
-import 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import WebView from './screens/WebView';
 import SearchResults from './screens/SearchResults';
 import * as SystemUI from 'expo-system-ui';
@@ -669,115 +669,117 @@ const App = () => {
   }
 
   return (
-    <GlobalErrorBoundary>
-      <SafeAreaProvider>
-        <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-        <QueryClientProvider client={queryClient}>
-          <SafeAreaView
-            edges={{
-              right: 'off',
-              top: 'off',
-              left: 'off',
-              bottom: 'additive',
-            }}
-            className="flex-1"
-            style={{ backgroundColor: 'black' }}>
-            <NavigationContainer
-              ref={navigationRef}
-              onReady={async () => {
-                // Hide bootsplash
-                await BootSplash.hide({ fade: true });
-                // Track initial screen
-                if (hasFirebase) {
-                  try {
-                    const route = navigationRef.getCurrentRoute();
-                    if (route?.name) {
-                      // const analytics = getAnalytics();
-                      // analytics &&
-                      //   (await analytics().logScreenView({
-                      //     screen_name: route.name,
-                      //     screen_class: 'Navigation',
-                      //   }));
-                    }
-                  } catch { }
-                }
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <GlobalErrorBoundary>
+        <SafeAreaProvider>
+          <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+          <QueryClientProvider client={queryClient}>
+            <SafeAreaView
+              edges={{
+                right: 'off',
+                top: 'off',
+                left: 'off',
+                bottom: 'additive',
               }}
-              onStateChange={async () => {
-                if (hasFirebase) {
-                  try {
-                    const route = navigationRef.getCurrentRoute();
-                    if (route?.name) {
-                      // const analytics = getAnalytics();
-                      // analytics &&
-                      //   (await analytics().logScreenView({
-                      //     screen_name: route.name,
-                      //     screen_class: 'Navigation',
-                      //   }));
-                    }
-                  } catch { }
-                }
-              }}
-              theme={{
-                fonts: {
-                  regular: {
-                    fontFamily: 'Inter_400Regular',
-                    fontWeight: '400',
+              className="flex-1"
+              style={{ backgroundColor: 'black' }}>
+              <NavigationContainer
+                ref={navigationRef}
+                onReady={async () => {
+                  // Hide bootsplash
+                  await BootSplash.hide({ fade: true });
+                  // Track initial screen
+                  if (hasFirebase) {
+                    try {
+                      const route = navigationRef.getCurrentRoute();
+                      if (route?.name) {
+                        // const analytics = getAnalytics();
+                        // analytics &&
+                        //   (await analytics().logScreenView({
+                        //     screen_name: route.name,
+                        //     screen_class: 'Navigation',
+                        //   }));
+                      }
+                    } catch { }
+                  }
+                }}
+                onStateChange={async () => {
+                  if (hasFirebase) {
+                    try {
+                      const route = navigationRef.getCurrentRoute();
+                      if (route?.name) {
+                        // const analytics = getAnalytics();
+                        // analytics &&
+                        //   (await analytics().logScreenView({
+                        //     screen_name: route.name,
+                        //     screen_class: 'Navigation',
+                        //   }));
+                      }
+                    } catch { }
+                  }
+                }}
+                theme={{
+                  fonts: {
+                    regular: {
+                      fontFamily: 'Inter_400Regular',
+                      fontWeight: '400',
+                    },
+                    medium: {
+                      fontFamily: 'Inter_500Medium',
+                      fontWeight: '500',
+                    },
+                    bold: {
+                      fontFamily: 'Inter_700Bold',
+                      fontWeight: '700',
+                    },
+                    heavy: {
+                      fontFamily: 'Inter_800ExtraBold',
+                      fontWeight: '800',
+                    },
                   },
-                  medium: {
-                    fontFamily: 'Inter_500Medium',
-                    fontWeight: '500',
+                  dark: true,
+                  colors: {
+                    background: 'transparent',
+                    card: 'black',
+                    primary: primary,
+                    text: 'white',
+                    border: 'black',
+                    notification: primary,
                   },
-                  bold: {
-                    fontFamily: 'Inter_700Bold',
-                    fontWeight: '700',
-                  },
-                  heavy: {
-                    fontFamily: 'Inter_800ExtraBold',
-                    fontWeight: '800',
-                  },
-                },
-                dark: true,
-                colors: {
-                  background: 'transparent',
-                  card: 'black',
-                  primary: primary,
-                  text: 'white',
-                  border: 'black',
-                  notification: primary,
-                },
-              }}>
-              {appMode === 'doodleTv' ? (
-                <DoodleTVRootStackScreen />
-              ) : (
-                <VideoRootStackScreen />
-              )}
-            </NavigationContainer>
-          </SafeAreaView>
-        </QueryClientProvider>
-      </SafeAreaProvider>
-      <IOSModal
-        visible={showNotificationModal}
-        title="DoodleMovies Needs Some Permissions"
-        message="For the best experience (Voice Chat, Downloads, Updates), please allow access to Notifications, Microphone, and Photos/Videos."
-        actions={[
-          { text: "Allow", onPress: handleAllowNotifications },
-          { text: "Don't Allow", style: 'cancel', onPress: () => setShowNotificationModal(false) }
-        ]}
-        onClose={() => setShowNotificationModal(false)}
-      />
+                }}>
+                {appMode === 'doodleTv' ? (
+                  <DoodleTVRootStackScreen />
+                ) : (
+                  <VideoRootStackScreen />
+                )}
+              </NavigationContainer>
+            </SafeAreaView>
+          </QueryClientProvider>
+        </SafeAreaProvider>
+        <IOSModal
+          visible={showNotificationModal}
+          title="DoodleMovies Needs Some Permissions"
+          message="For the best experience (Voice Chat, Downloads, Updates), please allow access to Notifications, Microphone, and Photos/Videos."
+          actions={[
+            { text: "Allow", onPress: handleAllowNotifications },
+            { text: "Don't Allow", style: 'cancel', onPress: () => setShowNotificationModal(false) }
+          ]}
+          onClose={() => setShowNotificationModal(false)}
+        />
 
-      {/* App Update Modal */}
-      <IOSModal
-        visible={!!updateData}
-        title={`Update Available: ${updateData?.tag_name}`}
-        message={updateData?.body || 'A new version of the app is available.'}
-        actions={[
-          { text: "Update Now", onPress: performUpdate },
-          { text: "Later", style: 'cancel', onPress: () => setUpdateData(null) }
-        ]}
-        onClose={() => setUpdateData(null)}
-      />
-    </GlobalErrorBoundary>
+        {/* App Update Modal */}
+        <IOSModal
+          visible={!!updateData}
+          title={`Update Available: ${updateData?.tag_name}`}
+          message={updateData?.body || 'A new version of the app is available.'}
+          actions={[
+            { text: "Update Now", onPress: performUpdate },
+            { text: "Later", style: 'cancel', onPress: () => setUpdateData(null) }
+          ]}
+          onClose={() => setUpdateData(null)}
+        />
+      </GlobalErrorBoundary>
+    </GestureHandlerRootView>
   );
 };
 
