@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import TVFocusWrapper from '../components/TVFocusWrapper';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SearchStackParamList } from '../App';
@@ -61,11 +61,11 @@ const GenreListScreen: React.FC<GenreListScreenProps> = ({ navigation }) => {
       <Animated.View
         entering={FadeInDown.duration(500)}
         style={[styles.header, { backgroundColor: 'black' }]}>
-        <TVFocusWrapper
+        <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={'white'} />
-        </TVFocusWrapper>
+        </TouchableOpacity>
         <Text style={[styles.title, { color: 'white' }]}>Browse by Genre</Text>
       </Animated.View>
       <FlatList
@@ -78,7 +78,7 @@ const GenreListScreen: React.FC<GenreListScreenProps> = ({ navigation }) => {
             layout={Layout}
             entering={FadeInDown.delay(genres.indexOf(item) * 50).duration(300)}
             style={styles.itemWrapper}>
-            <TVFocusWrapper
+            <TouchableOpacity
               style={[
                 styles.genreCard,
                 { backgroundColor: '#1A1A1A', borderColor: primary },
@@ -90,7 +90,7 @@ const GenreListScreen: React.FC<GenreListScreenProps> = ({ navigation }) => {
               ]}
               onPress={() => setSelectedGenre(item)}>
               <Text style={[styles.genreText, { color: 'white' }]}>{item}</Text>
-            </TVFocusWrapper>
+            </TouchableOpacity>
           </Animated.View>
         )}
       />

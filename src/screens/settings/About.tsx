@@ -1,13 +1,14 @@
 import {
   View,
   Text,
+  TouchableOpacity,
   TouchableNativeFeedback,
   ToastAndroid,
   Linking,
   Alert,
   Switch,
 } from 'react-native';
-import TVFocusWrapper from '../../components/TVFocusWrapper';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // import pkg from '../../../package.json';
 import React, { useState } from 'react';
@@ -186,7 +187,7 @@ const About = () => {
               Automatically check for updates when app starts
             </Text>
           </View>
-          <TVFocusWrapper
+          <TouchableOpacity
             onPress={() => {
               setAutoCheckUpdate(!autoCheckUpdate);
               settingsStorage.setAutoCheckUpdateEnabled(!autoCheckUpdate);
@@ -199,11 +200,11 @@ const About = () => {
               }}
               thumbColor={autoCheckUpdate ? primary : 'gray'}
             />
-          </TVFocusWrapper>
+          </TouchableOpacity>
         </View>
 
         {/* Check Updates Button */}
-        <TVFocusWrapper
+        <TouchableOpacity
           onPress={handleManualCheck}
           disabled={updateLoading}
           // background={TouchableNativeFeedback.Ripple('#ffffff20', false)}
@@ -213,7 +214,7 @@ const About = () => {
             <Text className="text-white text-base">Check for Updates</Text>
           </View>
           <Feather name="chevron-right" size={20} color="white" />
-        </TVFocusWrapper>
+        </TouchableOpacity>
       </View>
 
       <IOSModal

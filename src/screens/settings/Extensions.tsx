@@ -15,7 +15,7 @@ import {
   TouchableWithoutFeedback,
   Dimensions,
 } from 'react-native';
-import TVFocusWrapper from '../../components/TVFocusWrapper';
+
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SettingsStackParamList } from '../../App';
 import {
@@ -525,7 +525,7 @@ const Extensions = ({ navigation }: Props) => {
           <View className="flex-row gap-3 items-center">
             {activeTab === 'installed' ? (
               <>
-                <TVFocusWrapper
+                <TouchableOpacity
                   onPress={() => handleSetActiveProvider(item)}
                   className={`w-9 h-9 rounded-full items-center justify-center ${isActive ? 'bg-green-600' : 'bg-gray-700'
                     }`}
@@ -535,9 +535,9 @@ const Extensions = ({ navigation }: Props) => {
                     size={20}
                     color="white"
                   />
-                </TVFocusWrapper>
+                </TouchableOpacity>
                 {hasUpdate && (
-                  <TVFocusWrapper
+                  <TouchableOpacity
                     onPress={() => handleUpdateProvider(updateInfo!.provider)}
                     disabled={isUpdating}
                     className="w-9 h-9 rounded-full items-center justify-center"
@@ -554,9 +554,9 @@ const Extensions = ({ navigation }: Props) => {
                         color="white"
                       />
                     )}
-                  </TVFocusWrapper>
+                  </TouchableOpacity>
                 )}
-                <TVFocusWrapper
+                <TouchableOpacity
                   onPress={() => handleUninstallProvider(item)}
                   className="w-9 h-9 rounded-full items-center justify-center bg-red-600">
                   <MaterialCommunityIcons
@@ -564,10 +564,10 @@ const Extensions = ({ navigation }: Props) => {
                     size={20}
                     color="white"
                   />
-                </TVFocusWrapper>
+                </TouchableOpacity>
               </>
             ) : (
-              <TVFocusWrapper
+              <TouchableOpacity
                 onPress={() => handleInstallProvider(item)}
                 disabled={isInstalled || isInstalling}
                 className={'w-9 h-9 rounded-full items-center justify-center'}
@@ -584,7 +584,7 @@ const Extensions = ({ navigation }: Props) => {
                     color="white"
                   />
                 )}
-              </TVFocusWrapper>
+              </TouchableOpacity>
             )}
           </View>
         </View>
@@ -597,9 +597,9 @@ const Extensions = ({ navigation }: Props) => {
       <StatusBar backgroundColor="black" barStyle="light-content" />
       {/* Header with bulk action options */}
       <View className="flex-row items-center justify-between p-4 border-b border-gray-800">
-        <TVFocusWrapper onPress={() => navigation.navigate('Settings')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
           <AntDesign name="arrow-left" size={24} color="white" />
-        </TVFocusWrapper>
+        </TouchableOpacity>
         <Text className="text-white text-xl font-semibold">Providers</Text>
         <View className="flex-row items-center space-x-2">
           {isPerformingBulkAction ? (
@@ -607,39 +607,39 @@ const Extensions = ({ navigation }: Props) => {
           ) : (
             <>
               {activeTab === 'available' && (
-                <TVFocusWrapper onPress={handleEnableAllProviders}>
+                <TouchableOpacity onPress={handleEnableAllProviders}>
                   <MaterialCommunityIcons
                     name="download-multiple"
                     size={24}
                     color={primary}
                   />
-                </TVFocusWrapper>
+                </TouchableOpacity>
               )}
               {activeTab === 'installed' && (
-                <TVFocusWrapper onPress={handleDisableAllProviders}>
+                <TouchableOpacity onPress={handleDisableAllProviders}>
                   <MaterialCommunityIcons
                     name="delete-sweep"
                     size={24}
                     color="red"
                   />
-                </TVFocusWrapper>
+                </TouchableOpacity>
               )}
             </>
           )}
-          <TVFocusWrapper onPress={handleRefresh}>
+          <TouchableOpacity onPress={handleRefresh}>
             <Feather name="refresh-cw" size={24} color={primary} />
-          </TVFocusWrapper>
+          </TouchableOpacity>
         </View>
       </View>
 
       {/* Tabs */}
       <View className="flex-row bg-zinc-900 mx-4 mt-4 rounded-xl p-1 h-14 items-center">
-        <TVFocusWrapper
+        <TouchableOpacity
           onPress={() => handleTabChange('installed')}
           className="flex-1 h-full justify-center items-center rounded-xl"
-          containerStyle={{ flex: 1, paddingRight: 4 }}
           style={{
             flex: 1,
+            paddingRight: 4,
             justifyContent: 'center',
             alignItems: 'center',
             backgroundColor:
@@ -654,14 +654,14 @@ const Extensions = ({ navigation }: Props) => {
             }}>
             Installed ({(installedProviders || []).length})
           </Text>
-        </TVFocusWrapper>
+        </TouchableOpacity>
 
-        <TVFocusWrapper
+        <TouchableOpacity
           onPress={() => handleTabChange('available')}
           className="flex-1 h-full justify-center items-center rounded-xl"
-          containerStyle={{ flex: 1, paddingLeft: 4 }}
           style={{
             flex: 1,
+            paddingLeft: 4,
             justifyContent: 'center',
             alignItems: 'center',
             backgroundColor:
@@ -676,7 +676,7 @@ const Extensions = ({ navigation }: Props) => {
             }}>
             Available ({(availableProviders || []).length})
           </Text>
-        </TVFocusWrapper>
+        </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
@@ -691,9 +691,9 @@ const Extensions = ({ navigation }: Props) => {
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
-            <TVFocusWrapper onPress={() => setSearchQuery('')}>
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
               <Feather name="x" size={18} color="gray" />
-            </TVFocusWrapper>
+            </TouchableOpacity>
           )}
         </View>
       </View>
@@ -708,7 +708,7 @@ const Extensions = ({ navigation }: Props) => {
           className="flex-1"
           contentContainerStyle={{ paddingRight: 10 }}>
           {uniqueTypes.map((type, index) => (
-            <TVFocusWrapper
+            <TouchableOpacity
               key={`type-${index}`}
               onPress={() => setSelectedType(type)}
               className={`px-3 py-1.5 rounded-full mr-2 border ${selectedType === type
@@ -724,12 +724,12 @@ const Extensions = ({ navigation }: Props) => {
                   }`}>
                 {type === 'All' ? 'All' : type.toUpperCase()}
               </Text>
-            </TVFocusWrapper>
+            </TouchableOpacity>
           ))}
         </ScrollView>
 
         {/* Category Filter Icon Button */}
-        <TVFocusWrapper
+        <TouchableOpacity
           onPress={() => setCategoryModalVisible(true)}
           className={`h-8 w-8 items-center justify-center rounded-full border ${selectedCategory !== 'All'
             ? 'bg-' + primary + ' border-' + primary
@@ -744,7 +744,7 @@ const Extensions = ({ navigation }: Props) => {
             size={14}
             color={selectedCategory !== 'All' ? 'white' : 'gray'}
           />
-        </TVFocusWrapper>
+        </TouchableOpacity>
       </View>
 
       {/* Provider list */}

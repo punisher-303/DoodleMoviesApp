@@ -6,7 +6,7 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
-import TVFocusWrapper from '../components/TVFocusWrapper';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
@@ -160,11 +160,11 @@ const WatchHistory = ({ navigation }: Props) => {
       <View className="flex-row justify-between items-center p-4">
         <Text className="text-white text-2xl font-bold">Watch History</Text>
         {uniqueHistory.length > 0 && (
-          <TVFocusWrapper
+          <TouchableOpacity
             onPress={() => clearHistory()}
             className="bg-white/10 px-3 py-1 rounded-full">
             <Text className="text-white">Clear</Text>
-          </TVFocusWrapper>
+          </TouchableOpacity>
         )}
       </View>
 
@@ -186,7 +186,7 @@ const WatchHistory = ({ navigation }: Props) => {
 
           return (
             <View className="flex-1 m-1">
-              <TVFocusWrapper
+              <TouchableOpacity
                 onPress={() => handleNavigateToInfo(item)}
               // activeOpacity={0.8}
               >
@@ -306,7 +306,7 @@ const WatchHistory = ({ navigation }: Props) => {
                     {item.episodeTitle}
                   </Text>
                 )}
-              </TVFocusWrapper>
+              </TouchableOpacity>
             </View>
           );
         }}

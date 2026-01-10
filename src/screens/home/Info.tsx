@@ -30,7 +30,7 @@ import useWatchListStore from '../../lib/zustand/watchListStore';
 import { useContentDetails } from '../../lib/hooks/useContentInfo';
 import { QueryErrorBoundary } from '../../components/ErrorBoundary';
 import { Switch } from 'react-native';
-import TVFocusWrapper from '../../components/TVFocusWrapper';
+
 // import {BlurView} from 'expo-blur';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
@@ -191,16 +191,16 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
           {error.message ||
             'An unexpected error occurred while loading the content'}
         </Text>
-        <TVFocusWrapper
+        <TouchableOpacity
           onPress={handleRefresh}
           className="bg-red-600 px-6 py-3 rounded-lg mb-4">
           <Text className="text-white font-semibold">Try Again</Text>
-        </TVFocusWrapper>
-        <TVFocusWrapper
+        </TouchableOpacity>
+        <TouchableOpacity
           onPress={() => navigation.goBack()}
           className="bg-gray-600 px-6 py-3 rounded-lg">
           <Text className="text-white font-semibold">Go Back</Text>
-        </TVFocusWrapper>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -375,7 +375,7 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                     </Skeleton>
                     <View className="flex-row items-center gap-4 mb-1">
                       {meta?.trailers && meta?.trailers.length > 0 && (
-                        <TVFocusWrapper
+                        <TouchableOpacity
                           className="p-1 rounded-full"
                           onPress={() =>
                             Linking.openURL(
@@ -388,10 +388,10 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                             size={25}
                             color="rgb(156 163 175)"
                           />
-                        </TVFocusWrapper>
+                        </TouchableOpacity>
                       )}
                       {inLibrary ? (
-                        <TVFocusWrapper
+                        <TouchableOpacity
                           className="p-1 rounded-full"
                           onPress={() => removeLibrary()}>
                           <Ionicons
@@ -399,9 +399,9 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                             size={30}
                             color={primary}
                           />
-                        </TVFocusWrapper>
+                        </TouchableOpacity>
                       ) : (
-                        <TVFocusWrapper
+                        <TouchableOpacity
                           className="p-1 rounded-full"
                           onPress={() => addLibrary()}>
                           <Ionicons
@@ -409,9 +409,9 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                             size={30}
                             color={primary}
                           />
-                        </TVFocusWrapper>
+                        </TouchableOpacity>
                       )}
-                      <TVFocusWrapper
+                      <TouchableOpacity
                         onPress={() => openThreeDotsMenu()}
                         ref={threeDotsRef}>
                         <MaterialCommunityIcons
@@ -419,7 +419,7 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                           size={25}
                           color="rgb(156 163 175)"
                         />
-                      </TVFocusWrapper>
+                      </TouchableOpacity>
                       {
                         <Modal
                           animationType="none"
@@ -438,7 +438,7 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                                 right: menuPosition.right,
                               }}>
                               {/* open in web  */}
-                              <TVFocusWrapper
+                              <TouchableOpacity
                                 className="flex-row items-center gap-2"
                                 onPress={async () => {
                                   setThreeDotsMenuOpen(false);
@@ -454,9 +454,9 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                                 <Text className="text-white text-base">
                                   Open in Web
                                 </Text>
-                              </TVFocusWrapper>
+                              </TouchableOpacity>
                               {/* search */}
-                              <TVFocusWrapper
+                              <TouchableOpacity
                                 className="flex-row items-center gap-2 mt-1"
                                 onPress={async () => {
                                   setThreeDotsMenuOpen(false);
@@ -476,7 +476,7 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                                 <Text className="text-white text-base">
                                   Search Title
                                 </Text>
-                              </TVFocusWrapper>
+                              </TouchableOpacity>
                             </View>
                           </Pressable>
                         </Modal>
@@ -489,14 +489,14 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                         ? synopsis.slice(0, 180) + '... '
                         : synopsis}
                       {synopsis.length > 180 && !readMore && (
-                        <TVFocusWrapper
+                        <TouchableOpacity
                           onPress={() => setReadMore(!readMore)}
                           className="px-2 bg-tertiary rounded-md"
                           style={{ alignSelf: 'flex-start' }}>
                           <Text className="text-white font-extrabold text-xs">
                             read more
                           </Text>
-                        </TVFocusWrapper>
+                        </TouchableOpacity>
                       )}
                     </Text>
                   </Skeleton>

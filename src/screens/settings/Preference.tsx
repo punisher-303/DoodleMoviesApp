@@ -16,7 +16,7 @@ import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useSettingsStore from '../../lib/zustand/settingsStore';
 import useThemeStore from '../../lib/zustand/themeStore';
 import { Dropdown } from 'react-native-element-dropdown';
-import TVFocusWrapper from '../../components/TVFocusWrapper';
+
 import { themes, userAgents, dnsProviders } from '../../lib/constants';
 import { TextInput } from 'react-native';
 import { DevSettings } from 'react-native'; // ✅ Add at top
@@ -129,7 +129,7 @@ const Preferences = () => {
                         setPrimary(e.nativeEvent.text);
                       }}
                     />
-                    <TVFocusWrapper
+                    <TouchableOpacity
                       onPress={() => {
                         setCustom(false);
                         setPrimary('#FF6347');
@@ -139,7 +139,7 @@ const Preferences = () => {
                         size={20}
                         color="gray"
                       />
-                    </TVFocusWrapper>
+                    </TouchableOpacity>
                   </View>
                 ) : (
                   <Dropdown
@@ -184,7 +184,7 @@ const Preferences = () => {
             </View>
 
             {/* Haptic Feedback */}
-            <TVFocusWrapper
+            <TouchableOpacity
               className="flex-row items-center justify-between p-4 border-b border-[#262626]"
               onPress={() => {
                 settingsStorage.setHapticFeedbackEnabled(!hapticFeedback);
@@ -198,10 +198,10 @@ const Preferences = () => {
                 focusable={false}
                 pointerEvents="none"
               />
-            </TVFocusWrapper>
+            </TouchableOpacity>
 
             {/* Analytics & Crashlytics Opt-In */}
-            <TVFocusWrapper
+            <TouchableOpacity
               className="flex-row items-center justify-between p-4 border-b border-[#262626]"
               onPress={async () => {
                 const next = !telemetryOptIn;
@@ -223,10 +223,10 @@ const Preferences = () => {
                 focusable={false}
                 pointerEvents="none"
               />
-            </TVFocusWrapper>
+            </TouchableOpacity>
 
             {/* Show Tab Bar Labels */}
-            <TVFocusWrapper
+            <TouchableOpacity
               className="flex-row items-center justify-between p-4 border-b border-[#262626]"
               onPress={() => {
                 const newValue = !showTabBarLabels;
@@ -255,10 +255,10 @@ const Preferences = () => {
                   }, 1000);
                 }}
               />
-            </TVFocusWrapper>
+            </TouchableOpacity>
 
             {/* Show Hamburger Menu */}
-            <TVFocusWrapper
+            <TouchableOpacity
               className="flex-row items-center justify-between p-4 border-b border-[#262626]"
               onPress={() => {
                 settingsStorage.setShowHamburgerMenu(!showHamburgerMenu);
@@ -272,10 +272,10 @@ const Preferences = () => {
                 focusable={false}
                 pointerEvents="none"
               />
-            </TVFocusWrapper>
+            </TouchableOpacity>
 
             {/* Show Recently Watched */}
-            <TVFocusWrapper
+            <TouchableOpacity
               className="flex-row items-center justify-between p-4 border-b border-[#262626]"
               onPress={() => {
                 settingsStorage.setBool(
@@ -294,10 +294,10 @@ const Preferences = () => {
                 focusable={false}
                 pointerEvents="none"
               />
-            </TVFocusWrapper>
+            </TouchableOpacity>
 
             {/* Disable Drawer */}
-            <TVFocusWrapper
+            <TouchableOpacity
               className="flex-row items-center justify-between p-4 border-b border-[#262626]"
               onPress={() => {
                 settingsStorage.setBool('disableDrawer', !disableDrawer);
@@ -311,10 +311,10 @@ const Preferences = () => {
                 focusable={false}
                 pointerEvents="none"
               />
-            </TVFocusWrapper>
+            </TouchableOpacity>
 
             {/* Always Use External Downloader */}
-            <TVFocusWrapper
+            <TouchableOpacity
               className="flex-row items-center justify-between p-4"
               onPress={() => {
                 settingsStorage.setBool(
@@ -333,7 +333,7 @@ const Preferences = () => {
                 focusable={false}
                 pointerEvents="none"
               />
-            </TVFocusWrapper>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -342,7 +342,7 @@ const Preferences = () => {
           <Text className="text-gray-400 text-sm mb-3">Player</Text>
           <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
             {/* External Player */}
-            <TVFocusWrapper
+            <TouchableOpacity
               className="flex-row items-center justify-between p-4 border-b border-[#262626]"
               onPress={() => {
                 settingsStorage.setBool('useExternalPlayer', !OpenExternalPlayer);
@@ -358,10 +358,10 @@ const Preferences = () => {
                 focusable={false}
                 pointerEvents="none"
               />
-            </TVFocusWrapper>
+            </TouchableOpacity>
 
             {/* Media Controls */}
-            <TVFocusWrapper
+            <TouchableOpacity
               className="flex-row items-center justify-between p-4 border-b border-[#262626]"
               onPress={() => {
                 settingsStorage.setShowMediaControls(!showMediaControls);
@@ -375,10 +375,10 @@ const Preferences = () => {
                 focusable={false}
                 pointerEvents="none"
               />
-            </TVFocusWrapper>
+            </TouchableOpacity>
 
             {/* Hide Seek Buttons */}
-            <TVFocusWrapper
+            <TouchableOpacity
               className="flex-row items-center justify-between p-4 border-b border-[#262626]"
               onPress={() => {
                 settingsStorage.setHideSeekButtons(!hideSeekButtons);
@@ -392,10 +392,10 @@ const Preferences = () => {
                 focusable={false}
                 pointerEvents="none"
               />
-            </TVFocusWrapper>
+            </TouchableOpacity>
 
             {/* Swipe Gestures */}
-            <TVFocusWrapper
+            <TouchableOpacity
               className="flex-row items-center justify-between p-4"
               onPress={() => {
                 settingsStorage.setSwipeGestureEnabled(!enableSwipeGesture);
@@ -411,7 +411,7 @@ const Preferences = () => {
                 focusable={false}
                 pointerEvents="none"
               />
-            </TVFocusWrapper>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -577,7 +577,7 @@ const Preferences = () => {
             </Text>
             <View className="flex-row flex-wrap gap-2">
               {['360p', '480p', '720p'].map((quality, index) => (
-                <TVFocusWrapper
+                <TouchableOpacity
                   key={index}
                   onPress={() => {
                     if (settingsStorage.isHapticFeedbackEnabled()) {
@@ -596,7 +596,7 @@ const Preferences = () => {
                   }}
                   className="px-4 py-2 rounded-lg">
                   <Text className="text-white text-sm">{quality}</Text>
-                </TVFocusWrapper>
+                </TouchableOpacity>
               ))}
             </View>
           </View>

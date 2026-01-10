@@ -12,7 +12,7 @@ import {
   Clipboard,
   ToastAndroid,
 } from 'react-native';
-import TVFocusWrapper from '../../components/TVFocusWrapper';
+
 import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import {
   settingsStorage,
@@ -95,7 +95,7 @@ const InternalOptionRow = React.memo(
     primaryColor: string;
     isLast?: boolean;
   }) => (
-    <TVFocusWrapper
+    <TouchableOpacity
       onPress={onPress}
       className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#262626]' : ''
         }`}>
@@ -104,7 +104,7 @@ const InternalOptionRow = React.memo(
         <Text className="text-white ml-3 text-base">{text}</Text>
       </View>
       <Feather name="chevron-right" size={20} color="gray" />
-    </TVFocusWrapper>
+    </TouchableOpacity>
   ),
 );
 
@@ -123,7 +123,7 @@ const ExternalLinkRow = React.memo(
     iconColor: string;
     isLast?: boolean;
   }) => (
-    <TVFocusWrapper
+    <TouchableOpacity
       onPress={() => Linking.openURL(url)}
       className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#262626]' : ''
         }`}>
@@ -132,7 +132,7 @@ const ExternalLinkRow = React.memo(
         <Text className="text-white ml-3 text-base">{text}</Text>
       </View>
       <Feather name="external-link" size={20} color="gray" />
-    </TVFocusWrapper>
+    </TouchableOpacity>
   ),
 );
 
@@ -223,7 +223,7 @@ const Settings = ({ navigation }: Props) => {
 
   const renderProviderItem = useCallback(
     (item: ProviderExtension, isSelected: boolean) => (
-      <TVFocusWrapper
+      <TouchableOpacity
         key={item.value}
         onPress={() => handleProviderSelect(item)}
         className={`mr-3 rounded-lg ${isSelected ? 'bg-[#333333]' : 'bg-[#262626]'
@@ -260,7 +260,7 @@ const Settings = ({ navigation }: Props) => {
             </Text>
           )}
         </View>
-      </TVFocusWrapper>
+      </TouchableOpacity>
     ),
     [handleProviderSelect, primary, pingStatus],
   );
@@ -553,7 +553,7 @@ const Settings = ({ navigation }: Props) => {
             <Text className="text-gray-400 text-sm mb-1">App Mode</Text>
             <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
               <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-                <TVFocusWrapper
+                <TouchableOpacity
                   className="flex-row items-center justify-between p-4"
                   onPress={() => {
                     setAppMode('doodleTv');
@@ -584,7 +584,7 @@ const Settings = ({ navigation }: Props) => {
                     focusable={false} // Disable focus on switch itself
                     pointerEvents="none" // Let parent handle touch
                   />
-                </TVFocusWrapper>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -595,7 +595,7 @@ const Settings = ({ navigation }: Props) => {
           <View className="mb-6 flex-col gap-3">
             <Text className="text-gray-400 text-sm mb-1">Watch Together</Text>
             <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-              <TVFocusWrapper
+              <TouchableOpacity
                 className="flex-row items-center justify-between p-4 border-b border-[#262626]"
                 onPress={toggleWatchTogether}>
                 <View className="flex-row items-center">
@@ -611,7 +611,7 @@ const Settings = ({ navigation }: Props) => {
                   value={watchTogetherMode}
                   onValueChange={toggleWatchTogether}
                 />
-              </TVFocusWrapper>
+              </TouchableOpacity>
 
               {watchTogetherMode && (
                 <View className="flex-col p-4">
@@ -626,7 +626,7 @@ const Settings = ({ navigation }: Props) => {
                       value={syncLink}
                       onChangeText={setSyncLink}
                     />
-                    <TVFocusWrapper
+                    <TouchableOpacity
                       className="bg-gray-500 p-2 h-10 justify-center items-center"
                       onPress={handlePasteLink}>
                       <MaterialIcons
@@ -634,12 +634,12 @@ const Settings = ({ navigation }: Props) => {
                         size={20}
                         color="white"
                       />
-                    </TVFocusWrapper>
-                    <TVFocusWrapper
+                    </TouchableOpacity>
+                    <TouchableOpacity
                       className="bg-blue-600 rounded-r-md p-2 h-10 justify-center items-center"
                       onPress={handleJoinSession}>
                       <Text className="text-white font-semibold">Join</Text>
-                    </TVFocusWrapper>
+                    </TouchableOpacity>
                   </View>
                   <Text className="text-gray-500 text-xs mt-2">
                     Enabling this mode allows you to create and join
@@ -713,7 +713,7 @@ const Settings = ({ navigation }: Props) => {
               {/* Clear Cache */}
               <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
                 <Text className="text-white text-base">Clear Cache</Text>
-                <TVFocusWrapper
+                <TouchableOpacity
                   className="bg-[#262626] px-4 py-2 rounded-lg"
                   onPress={clearCacheHandler}>
                   <MaterialCommunityIcons
@@ -721,7 +721,7 @@ const Settings = ({ navigation }: Props) => {
                     size={20}
                     color={primary}
                   />
-                </TVFocusWrapper>
+                </TouchableOpacity>
               </View>
 
               {/* Clear Watch History */}
@@ -729,7 +729,7 @@ const Settings = ({ navigation }: Props) => {
                 <Text className="text-white text-base">
                   Clear Watch History
                 </Text>
-                <TVFocusWrapper
+                <TouchableOpacity
                   className="bg-[#262626] px-4 py-2 rounded-lg"
                   onPress={clearHistoryHandler}>
                   <MaterialCommunityIcons
@@ -737,7 +737,7 @@ const Settings = ({ navigation }: Props) => {
                     size={20}
                     color={primary}
                   />
-                </TVFocusWrapper>
+                </TouchableOpacity>
               </View>
             </View>
           </View>

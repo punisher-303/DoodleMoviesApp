@@ -2,11 +2,12 @@
 import {
   View,
   Text,
+  TouchableOpacity,
   TouchableNativeFeedback,
   Linking,
   ScrollView,
 } from 'react-native';
-import TVFocusWrapper from '../../components/TVFocusWrapper';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React from 'react';
 import { Feather } from '@expo/vector-icons'; // Import Feather icons
@@ -49,7 +50,7 @@ const Production = () => {
           {/* Echo Pulse Music */}
           <AnimatedSection delay={100}>
             <View className="mb-3">
-              <TVFocusWrapper
+              <TouchableOpacity
                 onPress={() => Linking.openURL(productionApps.app1.url)}
                 className="bg-[#1A1A1A] rounded-xl overflow-hidden">
                 <View className="flex-row items-center justify-between p-4">
@@ -61,14 +62,14 @@ const Production = () => {
                   </View>
                   <Feather name="external-link" size={20} color="gray" />
                 </View>
-              </TVFocusWrapper>
+              </TouchableOpacity>
             </View>
           </AnimatedSection>
 
           {/* Doodle Windows */}
           <AnimatedSection delay={200}>
             <View className="mb-3">
-              <TVFocusWrapper
+              <TouchableOpacity
                 onPress={() => Linking.openURL(productionApps.app2.url)}
                 className="bg-[#1A1A1A] rounded-xl overflow-hidden">
                 <View className="flex-row items-center justify-between p-4">
@@ -80,14 +81,14 @@ const Production = () => {
                   </View>
                   <Feather name="external-link" size={20} color="gray" />
                 </View>
-              </TVFocusWrapper>
+              </TouchableOpacity>
             </View>
           </AnimatedSection>
 
           {/* Doodle Web Play */}
           <AnimatedSection delay={300}>
             <View className="mb-3">
-              <TVFocusWrapper
+              <TouchableOpacity
                 onPress={() => Linking.openURL(productionApps.app3.url)}
                 className="bg-[#1A1A1A] rounded-xl overflow-hidden">
                 <View className="flex-row items-center justify-between p-4">
@@ -99,7 +100,7 @@ const Production = () => {
                   </View>
                   <Feather name="external-link" size={20} color="gray" />
                 </View>
-              </TVFocusWrapper>
+              </TouchableOpacity>
             </View>
           </AnimatedSection>
 

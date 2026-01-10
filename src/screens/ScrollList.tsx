@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, GestureResponderEvent } from 'react-native';
-import TVFocusWrapper from '../components/TVFocusWrapper';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useEffect, useState, useRef, ReactElement } from 'react';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -148,7 +148,7 @@ const ScrollList = ({ route }: Props): ReactElement => {
         <Text className="text-2xl font-bold" style={{ color: primary }}>
           {route.params?.title}
         </Text>
-        <TVFocusWrapper
+        <TouchableOpacity
           onPress={() => {
             const newViewType = viewType === 1 ? 2 : 1;
             setViewType(newViewType);
@@ -159,7 +159,7 @@ const ScrollList = ({ route }: Props): ReactElement => {
             size={27}
             color="white"
           />
-        </TVFocusWrapper>
+        </TouchableOpacity>
       </View>
       <View className="justify-center flex-row w-full flex-1">
         <FlashList
@@ -182,7 +182,7 @@ const ScrollList = ({ route }: Props): ReactElement => {
           contentContainerStyle={{ paddingBottom: 80 }}
           keyExtractor={(item, i) => `${item.title}-${i}`}
           renderItem={({ item }) => (
-            <TVFocusWrapper
+            <TouchableOpacity
               style={{
                 flexDirection: viewType === 1 ? 'column' : 'row',
                 margin: 12,
@@ -218,7 +218,7 @@ const ScrollList = ({ route }: Props): ReactElement => {
                   ? item.title.slice(0, 24) + '...'
                   : item.title}
               </Text>
-            </TVFocusWrapper>
+            </TouchableOpacity>
           )}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}

@@ -8,7 +8,7 @@ import { TouchableOpacity, GestureResponderEvent } from 'react-native';
 import { DrawerLayout } from 'react-native-gesture-handler';
 import { BlurView } from 'expo-blur';
 import { MaterialIcons } from '@expo/vector-icons';
-import TVFocusWrapper from './TVFocusWrapper';
+
 
 const ProviderDrawer = ({
   drawerRef,
@@ -34,7 +34,7 @@ const ProviderDrawer = ({
 
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1 px-2">
         {installedProviders.map(item => (
-          <TVFocusWrapper
+          <TouchableOpacity
             key={item.value}
             onPress={() => {
               setProvider(item);
@@ -87,7 +87,7 @@ const ProviderDrawer = ({
             {provider.value === item.value && (
               <MaterialIcons name="check" size={20} color={primary} />
             )}
-          </TVFocusWrapper>
+          </TouchableOpacity>
         ))}
         <View className="h-16" />
       </ScrollView>

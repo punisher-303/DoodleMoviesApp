@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, Pressable } from 'react-native';
-import TVFocusWrapper from './TVFocusWrapper';
+
 import { ifExists } from '../lib/file/ifExists';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -125,7 +125,7 @@ const DownloadComponent = ({
 
   return (
     <>
-      <TVFocusWrapper
+      <TouchableOpacity
         className={`${className ? className : 'p-2'} rounded-full bg-white/30 items-center justify-center border border-zinc-700`}
         onPress={() => {
           if (alreadyDownloaded) {
@@ -166,7 +166,7 @@ const DownloadComponent = ({
         ) : (
           <Octicons name="download" size={25} color="#c1c4c9" />
         )}
-      </TVFocusWrapper>
+      </TouchableOpacity>
       {/* delete modal */}
       {
         <Modal animationType="fade" visible={deleteModal} transparent={true}>

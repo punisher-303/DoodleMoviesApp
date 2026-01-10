@@ -10,7 +10,7 @@ import SkeletonLoader from './Skeleton';
 
 // import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
-import TVFocusWrapper from './TVFocusWrapper';
+
 
 export default function Slider({
   isLoading,
@@ -41,7 +41,7 @@ export default function Slider({
           {title}
         </Text>
         {filter !== 'recent' && (
-          <TVFocusWrapper
+          <TouchableOpacity
             onPress={() =>
               navigation.navigate('ScrollList', {
                 title: title,
@@ -51,7 +51,7 @@ export default function Slider({
               })
             }>
             <Text className="text-white text-sm">more</Text>
-          </TVFocusWrapper>
+          </TouchableOpacity>
         )}
       </View>
       {isLoading ? (
@@ -75,7 +75,7 @@ export default function Slider({
           contentContainerStyle={{ paddingHorizontal: 3, paddingTop: 7 }}
           renderItem={({ item }) => (
             <View className="flex flex-col mx-2">
-              <TVFocusWrapper
+              <TouchableOpacity
                 onLongPress={e => {
                   e.stopPropagation();
                   // if (filter === 'recent') {
@@ -119,7 +119,7 @@ export default function Slider({
                     />
                   </View>
                 )} */}
-              </TVFocusWrapper>
+              </TouchableOpacity>
               <Text className="text-white text-center truncate w-24 text-xs">
                 {item.title.length > 24
                   ? `${item.title.slice(0, 24)}...`

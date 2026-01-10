@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   TouchableNativeFeedback,
 } from 'react-native';
-import TVFocusWrapper from '../../components/TVFocusWrapper';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React from 'react';
 import { startActivityAsync, ActivityAction } from 'expo-intent-launcher';
@@ -83,15 +83,15 @@ const SubtitlePreference = () => {
           <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
             <Text className="text-white text-base">Font Size</Text>
             <View className="flex-row items-center gap-4">
-              <TVFocusWrapper onPress={() => handleSubtitleSize('decrease')}>
+              <TouchableOpacity onPress={() => handleSubtitleSize('decrease')}>
                 <Entypo name="minus" size={23} color={primary} />
-              </TVFocusWrapper>
+              </TouchableOpacity>
               <Text className="text-white text-base bg-[#262626] px-3 rounded-md w-12 text-center">
                 {fontSize}
               </Text>
-              <TVFocusWrapper onPress={() => handleSubtitleSize('increase')}>
+              <TouchableOpacity onPress={() => handleSubtitleSize('increase')}>
                 <Entypo name="plus" size={23} color={primary} />
-              </TVFocusWrapper>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -99,17 +99,17 @@ const SubtitlePreference = () => {
           <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
             <Text className="text-white text-base">Opacity</Text>
             <View className="flex-row items-center gap-4">
-              <TVFocusWrapper
+              <TouchableOpacity
                 onPress={() => handleSubtitleOpacity('decrease')}>
                 <Entypo name="minus" size={23} color={primary} />
-              </TVFocusWrapper>
+              </TouchableOpacity>
               <Text className="text-white text-base bg-[#262626] px-3 rounded-md w-12 text-center">
                 {opacity}
               </Text>
-              <TVFocusWrapper
+              <TouchableOpacity
                 onPress={() => handleSubtitleOpacity('increase')}>
                 <Entypo name="plus" size={23} color={primary} />
-              </TVFocusWrapper>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -117,22 +117,22 @@ const SubtitlePreference = () => {
           <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
             <Text className="text-white text-base">Bottom Elevation</Text>
             <View className="flex-row items-center gap-4">
-              <TVFocusWrapper
+              <TouchableOpacity
                 onPress={() => handleSubtitleBottomPadding('decrease')}>
                 <Entypo name="minus" size={23} color={primary} />
-              </TVFocusWrapper>
+              </TouchableOpacity>
               <Text className="text-white text-base bg-[#262626] px-3 rounded-md w-12 text-center">
                 {bottomElevation}
               </Text>
-              <TVFocusWrapper
+              <TouchableOpacity
                 onPress={() => handleSubtitleBottomPadding('increase')}>
                 <Entypo name="plus" size={23} color={primary} />
-              </TVFocusWrapper>
+              </TouchableOpacity>
             </View>
           </View>
 
           {/* More Settings */}
-          <TVFocusWrapper
+          <TouchableOpacity
             onPress={async () => {
               await startActivityAsync(ActivityAction.CAPTIONING_SETTINGS);
             }}
@@ -143,12 +143,12 @@ const SubtitlePreference = () => {
               </Text>
             </View>
             <Feather name="chevron-right" size={20} color="gray" />
-          </TVFocusWrapper>
+          </TouchableOpacity>
 
           {/* reset */}
           <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
             <Text className="text-white text-base">Reset to Default</Text>
-            <TVFocusWrapper
+            <TouchableOpacity
               onPress={() => {
                 settingsStorage.setSubtitleFontSize(16);
                 settingsStorage.setSubtitleOpacity(1);
@@ -161,7 +161,7 @@ const SubtitlePreference = () => {
               <Text className="text-white text-base bg-[#262626] px-3 py-1 rounded-md text-center">
                 Reset
               </Text>
-            </TVFocusWrapper>
+            </TouchableOpacity>
           </View>
         </View>
         <View className="h-16" />

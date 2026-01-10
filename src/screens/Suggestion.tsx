@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
-import TVFocusWrapper from '../components/TVFocusWrapper';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -302,7 +302,7 @@ const Suggestion = () => {
       entering={FadeInDown.delay(index * 70)}
       layout={Layout.springify()}>
       <View className="mb-3 px-4 flex-row items-center">
-        <TVFocusWrapper
+        <TouchableOpacity
           className="flex-1 bg-[#141414] p-3 rounded-xl border border-white/10 flex-row items-center mr-2"
           onPress={() => handleClick(item.Title)}>
           {item.Poster ? (
@@ -328,14 +328,14 @@ const Suggestion = () => {
                 }`}
             </Text>
           </View>
-        </TVFocusWrapper>
+        </TouchableOpacity>
 
         {/* Remove button - Separate focusable for TV */}
-        <TVFocusWrapper
+        <TouchableOpacity
           onPress={() => handleRemoveSuggestion(item.imdbID)}
           className="p-3 bg-[#141414] rounded-xl border border-white/10 justify-center items-center h-full">
           <Ionicons name="close" size={24} color="#FF6347" />
-        </TVFocusWrapper>
+        </TouchableOpacity>
       </View>
     </Animated.View >
   );

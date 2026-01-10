@@ -29,7 +29,7 @@ import { ifExists } from '../lib/file/ifExists';
 import { useEpisodes, useStreamData } from '../lib/hooks/useEpisodes';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
-import TVFocusWrapper from './TVFocusWrapper';
+
 
 interface SeasonListProps {
   LinkList: Link[];
@@ -432,9 +432,9 @@ const SeasonList: React.FC<SeasonListProps> = ({
             }
         `}>
           <View className="flex-row w-full justify-between gap-2 items-center">
-            <TVFocusWrapper
+            <TouchableOpacity
               className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-1 flex-row gap-x-2 relative ${titleAlignment}`}
-              containerStyle={{ width: '80%' }}
+              style={{ width: '80%' }}
               onPress={() =>
                 playHandler({
                   linkIndex: index,
@@ -452,7 +452,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
                   ? item.title.slice(0, 30) + '...'
                   : item.title}
               </Text>
-            </TVFocusWrapper>
+            </TouchableOpacity>
             <Downloader
               providerValue={providerValue}
               link={item.link}
@@ -504,9 +504,9 @@ const SeasonList: React.FC<SeasonListProps> = ({
             }
         `}>
           <View className="flex-row w-full justify-between gap-2 items-center">
-            <TVFocusWrapper
+            <TouchableOpacity
               className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-2 flex-row gap-x-2 relative ${titleAlignment}`}
-              containerStyle={{ width: '80%' }}
+              style={{ width: '80%' }}
               onPress={() =>
                 playHandler({
                   linkIndex: index,
@@ -529,7 +529,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
                     : item.title
                   : 'Play'}
               </Text>
-            </TVFocusWrapper>
+            </TouchableOpacity>
             <Downloader
               providerValue={providerValue}
               link={item.link}
@@ -567,7 +567,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
   // Memoized server render item
   const renderServerItem = useCallback(
     (item: any, index: number) => (
-      <TVFocusWrapper
+      <TouchableOpacity
         key={`server-${index}-${item.server}`}
         className="bg-black/30 p-3 rounded-lg mb-2 flex-row justify-between items-center"
         style={{ borderColor: primary, borderWidth: 1 }}
@@ -581,7 +581,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
           </Text>
         </View>
         <MaterialCommunityIcons name="vlc" size={24} color={primary} />
-      </TVFocusWrapper>
+      </TouchableOpacity>
     ),
     [primary, openExternalPlayer],
   );
@@ -661,11 +661,11 @@ const SeasonList: React.FC<SeasonListProps> = ({
         <Text className="text-red-500 text-center">
           Failed to load episodes. Please try again.
         </Text>
-        <TVFocusWrapper
+        <TouchableOpacity
           className="mt-2 bg-red-600 p-2 rounded-md"
           onPress={() => refetchEpisodes()}>
           <Text className="text-white text-center">Retry</Text>
-        </TVFocusWrapper>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -727,7 +727,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
               value={searchText}
               onChangeText={setSearchText}
             />
-            <TVFocusWrapper
+            <TouchableOpacity
               className="bg-black/30 rounded-md p-2 h-10 w-[15%] flex-row justify-center items-center"
               onPress={toggleSortOrder}>
               <MaterialCommunityIcons
@@ -735,7 +735,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
                 size={24}
                 color={primary}
               />
-            </TVFocusWrapper>
+            </TouchableOpacity>
           </View>
         )}
 

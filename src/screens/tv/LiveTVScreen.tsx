@@ -20,7 +20,7 @@ import { useNavigation } from '@react-navigation/native';
 import useThemeStore from '../../lib/zustand/themeStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import TVFocusWrapper from '../../components/TVFocusWrapper';
+
 
 // Define the type for a single TV channel
 interface TVChannel {
@@ -300,9 +300,9 @@ const LiveTVScreen: React.FC = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Filter Channels</Text>
-            <TVFocusWrapper onPress={handleClearModalFilters}>
+            <TouchableOpacity onPress={handleClearModalFilters}>
               <Text style={styles.clearAllButtonText}>Clear All</Text>
-            </TVFocusWrapper>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.filterSection}>
@@ -318,7 +318,7 @@ const LiveTVScreen: React.FC = () => {
               <FlatList
                 data={filteredCountries}
                 renderItem={({ item }) => (
-                  <TVFocusWrapper
+                  <TouchableOpacity
                     style={[
                       styles.filterListItem,
                       tempFilters.country === item && {
@@ -329,7 +329,7 @@ const LiveTVScreen: React.FC = () => {
                       setTempFilters(prev => ({ ...prev, country: item }))
                     }>
                     <Text style={styles.filterListItemText}>{item}</Text>
-                  </TVFocusWrapper>
+                  </TouchableOpacity>
                 )}
                 keyExtractor={item => item}
                 style={styles.filterList}
@@ -354,7 +354,7 @@ const LiveTVScreen: React.FC = () => {
               <FlatList
                 data={filteredGenres}
                 renderItem={({ item }) => (
-                  <TVFocusWrapper
+                  <TouchableOpacity
                     style={[
                       styles.filterListItem,
                       tempFilters.genre === item && { backgroundColor: primary },
@@ -363,7 +363,7 @@ const LiveTVScreen: React.FC = () => {
                       setTempFilters(prev => ({ ...prev, genre: item }))
                     }>
                     <Text style={styles.filterListItemText}>{item}</Text>
-                  </TVFocusWrapper>
+                  </TouchableOpacity>
                 )}
                 keyExtractor={item => item}
                 style={styles.filterList}
@@ -375,26 +375,25 @@ const LiveTVScreen: React.FC = () => {
             )}
           </View>
 
-          <TVFocusWrapper
+          <TouchableOpacity
             style={[styles.doneButton, { backgroundColor: primary }]}
             onPress={handleApplyFilters}>
             <Text style={styles.doneButtonText}>Done</Text>
-          </TVFocusWrapper>
+          </TouchableOpacity>
         </View>
       ) : (
         <>
           <View style={styles.headerContainer}>
             <Text style={styles.header}>Doodle TV Channels</Text>
-            <TVFocusWrapper
+            <TouchableOpacity
               onPress={handleSettings}
-              hasTVPreferredFocus={true}
               style={styles.settingsIcon}>
               <MaterialCommunityIcons name="cog" size={24} color="white" />
-            </TVFocusWrapper>
+            </TouchableOpacity>
           </View>
 
           {heroChannel && (
-            <TVFocusWrapper
+            <TouchableOpacity
               onPress={handleHeroChannelPress}
               style={styles.heroContainer}>
               <Image
@@ -408,7 +407,7 @@ const LiveTVScreen: React.FC = () => {
               <View style={styles.heroLiveBadge}>
                 <Text style={styles.heroLiveBadgeText}>LIVE</Text>
               </View>
-            </TVFocusWrapper>
+            </TouchableOpacity>
           )}
 
           <View style={styles.searchFilterContainer}>
@@ -419,7 +418,7 @@ const LiveTVScreen: React.FC = () => {
               value={searchText}
               onChangeText={setSearchText}
             />
-            <TVFocusWrapper
+            <TouchableOpacity
               style={styles.filterButton}
               onPress={() => {
                 setCountrySearchText(selectedCountry);
@@ -435,13 +434,13 @@ const LiveTVScreen: React.FC = () => {
                 size={24}
                 color="white"
               />
-            </TVFocusWrapper>
+            </TouchableOpacity>
             {selectedCountry || selectedGenre || searchText ? (
-              <TVFocusWrapper
+              <TouchableOpacity
                 onPress={handleClearFilters}
                 style={styles.clearFilterButton}>
                 <MaterialCommunityIcons name="close" size={24} color="white" />
-              </TVFocusWrapper>
+              </TouchableOpacity>
             ) : null}
           </View>
 
@@ -449,7 +448,7 @@ const LiveTVScreen: React.FC = () => {
             data={filteredChannels}
             renderItem={({ item }) => {
               return (
-                <TVFocusWrapper
+                <TouchableOpacity
                   onPress={() =>
                     navigation.navigate('TVPlayerScreen', {
                       streamUrl: item.streamUrl,
@@ -457,8 +456,7 @@ const LiveTVScreen: React.FC = () => {
                       poster: item.logo,
                     })
                   }
-                  containerStyle={styles.channelItemContainer}
-                  style={styles.channelItem}>
+                  style={[styles.channelItem, styles.channelItemContainer]}>
                   <Image source={{ uri: item.logo }} style={styles.channelLogo} />
                   <Text style={styles.channelName} numberOfLines={1}>
                     {item.name}
@@ -466,7 +464,7 @@ const LiveTVScreen: React.FC = () => {
                   {item.country && item.country !== 'Unknown' && (
                     <Text style={styles.channelCountry}>{item.country}</Text>
                   )}
-                </TVFocusWrapper>
+                </TouchableOpacity>
               );
             }}
             keyExtractor={item => item.id}

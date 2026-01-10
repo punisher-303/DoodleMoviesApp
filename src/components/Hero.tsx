@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   GestureResponderEvent,
 } from 'react-native';
-import TVFocusWrapper from './TVFocusWrapper';
+
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
@@ -144,11 +144,11 @@ const Hero = memo(({ isDrawerOpen, drawerRef }: HeroProps) => {
               ? 'opacity-100'
               : 'opacity-0'
               }`}>
-            <TVFocusWrapper
+            <TouchableOpacity
               style={{ opacity: isDrawerOpen ? 0 : 1 }}
               onPress={() => drawerRef.current?.openDrawer()}>
               <Ionicons name="menu-sharp" size={27} color="white" />
-            </TVFocusWrapper>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -171,9 +171,9 @@ const Hero = memo(({ isDrawerOpen, drawerRef }: HeroProps) => {
         )}
 
         {!searchActive && (
-          <TVFocusWrapper onPress={() => setSearchActive(true)}>
+          <TouchableOpacity onPress={() => setSearchActive(true)}>
             <Feather name="search" size={24} color="white" />
-          </TVFocusWrapper>
+          </TouchableOpacity>
         )}
       </View>
 
@@ -224,7 +224,7 @@ const Hero = memo(({ isDrawerOpen, drawerRef }: HeroProps) => {
             {/* Play Button */}
             <View className="flex-1 items-center justify-center">
               {hero?.link && (
-                <TVFocusWrapper
+                <TouchableOpacity
                   style={{
                     backgroundColor: 'white',
                     paddingHorizontal: 40,
@@ -236,7 +236,7 @@ const Hero = memo(({ isDrawerOpen, drawerRef }: HeroProps) => {
                   onPress={handlePlayPress}>
                   <FontAwesome6 name="play" size={20} color="black" style={{ marginRight: 8 }} />
                   <Text className="text-black font-bold text-lg">Play</Text>
-                </TVFocusWrapper>
+                </TouchableOpacity>
               )}
             </View>
           </View>
