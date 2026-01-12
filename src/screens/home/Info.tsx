@@ -9,8 +9,14 @@ import {
   TouchableOpacity,
   Modal,
   Pressable,
+  Animated,
+  Easing,
+  useWindowDimensions,
+  PanResponder,
+  ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import {
   NativeStackNavigationProp,
   NativeStackScreenProps,
@@ -30,8 +36,279 @@ import useWatchListStore from '../../lib/zustand/watchListStore';
 import { useContentDetails } from '../../lib/hooks/useContentInfo';
 import { QueryErrorBoundary } from '../../components/ErrorBoundary';
 import { Switch } from 'react-native';
+import YoutubePlayer from 'react-native-youtube-iframe';
 
-// import {BlurView} from 'expo-blur';
+// --- CONFIGURATION ---
+const TMDB_API_KEY = '9d2bff12ed955c7f1f74b83187f188ae';
+const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+
+// --- UTILITIES (TRAILER SEARCH) ---
+const getTmdbTrailer = async (
+  title: string,
+  type: string = 'movie',
+  year?: string,
+  imdbId?: string,
+): Promise<string | null> => {
+  if (!TMDB_API_KEY) return null;
+
+  try {
+    const searchType = type === 'series' || type === 'tv' ? 'tv' : 'movie';
+    let tmdbId: number | null = null;
+
+    // 1. Find by IMDB ID
+    if (imdbId) {
+      try {
+        const findUrl = `${TMDB_BASE_URL}/find/${imdbId}?api_key=${TMDB_API_KEY}&external_source=imdb_id`;
+        const findRes = await fetch(findUrl);
+        const findData = await findRes.json();
+        const results =
+          searchType === 'movie' ? findData.movie_results : findData.tv_results;
+        if (results && results.length > 0) tmdbId = results[0].id;
+      } catch (e) {
+        console.warn('IMDB lookup failed');
+      }
+    }
+
+    // 2. Search by Title + Year
+    if (!tmdbId) {
+      const query = encodeURIComponent(title);
+      let yearParam = '';
+      if (year) {
+        yearParam =
+          searchType === 'movie'
+            ? `&year=${year}`
+            : `&first_air_date_year=${year}`;
+      }
+      const searchUrl = `${TMDB_BASE_URL}/search/${searchType}?api_key=${TMDB_API_KEY}&query=${query}${yearParam}`;
+      const searchRes = await fetch(searchUrl);
+      const searchData = await searchRes.json();
+      if (searchData.results && searchData.results.length > 0)
+        tmdbId = searchData.results[0].id;
+    }
+
+    // 3. Search by Title Only (Fallback)
+    if (!tmdbId && year) {
+      const query = encodeURIComponent(title);
+      const looseUrl = `${TMDB_BASE_URL}/search/${searchType}?api_key=${TMDB_API_KEY}&query=${query}`;
+      const looseRes = await fetch(looseUrl);
+      const looseData = await looseRes.json();
+      if (looseData.results && looseData.results.length > 0)
+        tmdbId = looseData.results[0].id;
+    }
+
+    if (!tmdbId) return null;
+
+    const videoUrl = `${TMDB_BASE_URL}/${searchType}/${tmdbId}/videos?api_key=${TMDB_API_KEY}`;
+    const videoRes = await fetch(videoUrl);
+    const videoData = await videoRes.json();
+
+    if (videoData.results && videoData.results.length > 0) {
+      const trailer = videoData.results.find(
+        (v: any) =>
+          v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser'),
+      );
+      return trailer ? trailer.key : videoData.results[0].key;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching trailer:', error);
+    return null;
+  }
+};
+
+// --- FLIP HEADER COMPONENT ---
+const FlipHeader = ({
+  posterImage,
+  trailerId,
+  meta,
+  info,
+  infoLoading,
+  setLogoError,
+  displayTitle,
+  logoError,
+  isFetchingTrailer,
+}: any) => {
+  const [showVideo, setShowVideo] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playerReady, setPlayerReady] = useState(false);
+  const animatedValue = useRef(new Animated.Value(0)).current;
+  const { width } = useWindowDimensions();
+  const videoHeight = width * (9 / 16);
+
+  const flipToVideo = useCallback(() => {
+    setShowVideo(true);
+    Animated.timing(animatedValue, {
+      toValue: 180,
+      duration: 600,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) setIsPlaying(true);
+    });
+  }, [animatedValue]);
+
+  const flipToPoster = useCallback(() => {
+    setIsPlaying(false);
+    setShowVideo(false);
+    Animated.timing(animatedValue, {
+      toValue: 0,
+      duration: 600,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+  }, [animatedValue]);
+
+  const onStateChange = useCallback((state: string) => {
+    if (state === 'ended') setIsPlaying(false);
+  }, []);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dy) < 10;
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx > 50 && showVideo) flipToPoster();
+        else if (gestureState.dx < -50 && !showVideo && trailerId)
+          flipToVideo();
+      },
+    }),
+  ).current;
+
+  const frontInterpolate = animatedValue.interpolate({
+    inputRange: [0, 180],
+    outputRange: ['0deg', '180deg'],
+  });
+  const backInterpolate = animatedValue.interpolate({
+    inputRange: [0, 180],
+    outputRange: ['180deg', '360deg'],
+  });
+  const frontOpacity = animatedValue.interpolate({
+    inputRange: [89, 90],
+    outputRange: [1, 0],
+  });
+  const backOpacity = animatedValue.interpolate({
+    inputRange: [89, 90],
+    outputRange: [0, 1],
+  });
+
+  return (
+    <View
+      style={{ height: 256, width: '100%', position: 'relative' }}
+      {...panResponder.panHandlers}>
+      {/* FRONT (Poster) */}
+      <Animated.View
+        style={{
+          width: '100%',
+          height: '100%',
+          position: 'absolute',
+          backfaceVisibility: 'hidden',
+          transform: [{ rotateY: frontInterpolate }, { perspective: 1000 }],
+          opacity: frontOpacity,
+          zIndex: showVideo ? 0 : 1,
+        }}>
+        <Skeleton
+          show={infoLoading}
+          colorMode="dark"
+          height={'100%'}
+          width={'100%'}>
+          <Image
+            source={{ uri: posterImage }}
+            className="h-[256] w-full"
+            resizeMode="cover"
+            onError={e => console.warn('Background image failed:', e)}
+          />
+        </Skeleton>
+        <LinearGradient
+          colors={['transparent', 'black']}
+          className="absolute h-full w-full"
+        />
+        <View className="absolute bottom-0 right-0 w-screen flex-row justify-between items-baseline px-2">
+          {(meta?.logo && !logoError) || infoLoading ? (
+            <Image
+              onError={() => setLogoError(true)}
+              source={{ uri: meta?.logo }}
+              style={{ width: 200, height: 100, resizeMode: 'contain' }}
+            />
+          ) : (
+            <Text className="text-white text-2xl mt-3 capitalize font-semibold w-3/4 truncate">
+              {displayTitle}
+            </Text>
+          )}
+          {(meta?.imdbRating || info?.rating) && (
+            <Text className="text-white text-2xl font-semibold">
+              {meta?.imdbRating || info?.rating}
+              <Text className="text-white text-lg">/10</Text>
+            </Text>
+          )}
+        </View>
+        {/* Indicators */}
+        <View className="absolute bottom-2 w-full flex-row justify-center items-center gap-2 z-50">
+          <View className="w-2 h-2 rounded-full bg-white scale-125" />
+          {trailerId ? (
+            <TouchableOpacity onPress={flipToVideo}>
+              <View className="w-2 h-2 rounded-full bg-white/30" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </Animated.View>
+
+      {/* BACK (Video) */}
+      <Animated.View
+        style={{
+          width: '100%',
+          height: '100%',
+          position: 'absolute',
+          backfaceVisibility: 'hidden',
+          backgroundColor: 'black',
+          transform: [{ rotateY: backInterpolate }, { perspective: 1000 }],
+          opacity: backOpacity,
+          zIndex: showVideo ? 1 : 0,
+        }}>
+        {trailerId ? (
+          <View className="flex-1 bg-black justify-center items-center">
+            <View style={{ height: videoHeight, width: width }}>
+              <YoutubePlayer
+                height={videoHeight}
+                width={width}
+                play={playerReady && isPlaying}
+                videoId={trailerId}
+                mute={false}
+                onReady={() => setPlayerReady(true)}
+                onChangeState={onStateChange}
+                initialPlayerParams={{
+                  controls: true,
+                  modestbranding: true,
+                  rel: false,
+                }}
+              />
+            </View>
+            <View className="absolute bottom-2 w-full flex-row justify-center items-center gap-2 z-50">
+              <TouchableOpacity onPress={flipToPoster}>
+                <View className="w-2 h-2 rounded-full bg-white/30" />
+              </TouchableOpacity>
+              <View className="w-2 h-2 rounded-full bg-white scale-125" />
+            </View>
+          </View>
+        ) : (
+          <View className="flex-1 justify-center items-center bg-zinc-900">
+            {isFetchingTrailer ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text className="text-white/50 text-xs">No Trailer Found</Text>
+            )}
+            <TouchableOpacity onPress={flipToPoster} className="p-2 mt-2">
+              <View className="w-2 h-2 rounded-full bg-white/30" />
+            </TouchableOpacity>
+          </View>
+        )}
+      </Animated.View>
+    </View>
+  );
+};
+
+// --- MAIN COMPONENT ---
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({ route, navigation }: Props): React.JSX.Element {
@@ -66,6 +343,10 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
     settingsStorage.getBool('alwaysExternalDownloader', false),
   );
 
+  // Trailer State
+  const [ytVideoId, setYtVideoId] = useState<string | null>(null);
+  const [isFetchingTrailer, setIsFetchingTrailer] = useState(false);
+  const isMounted = useRef(true);
 
   const threeDotsRef = useRef<any>();
 
@@ -150,6 +431,7 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
       'https://placehold.jp/24/363636/ffffff/500x500.png?text=Doodle'
     );
   }, [meta?.background, info?.image]);
+
   const filteredLinkList = useMemo(() => {
     if (!info?.linkList) {
       return [];
@@ -170,11 +452,49 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
       await refetch();
     } catch (refreshError) {
       console.error('Error refreshing content:', refreshError);
-      // Could show a toast or alert here if needed
     }
   }, [refetch]);
 
-  // Error handling - show error UI instead of throwing
+  // --- TRAILER FETCHING LOGIC ---
+  useEffect(() => {
+    isMounted.current = true;
+    const fetchTrailer = async () => {
+      // 1. Try Provider Trailer
+      const providerTrailer = meta?.trailers?.[0]?.source;
+      if (providerTrailer) {
+        if (isMounted.current) setYtVideoId(providerTrailer);
+        return;
+      }
+      // 2. Try TMDB Search
+      if (displayTitle && !infoLoading) {
+        if (isMounted.current) setIsFetchingTrailer(true);
+        const videoId = await getTmdbTrailer(
+          displayTitle,
+          info?.type,
+          meta?.year,
+          meta?.imdbId || meta?.imdb_id,
+        );
+        if (isMounted.current) {
+          setYtVideoId(videoId);
+          setIsFetchingTrailer(false);
+        }
+      }
+    };
+    fetchTrailer();
+    return () => {
+      isMounted.current = false;
+    };
+  }, [
+    displayTitle,
+    meta?.year,
+    meta?.trailers,
+    meta?.imdbId,
+    meta?.imdb_id,
+    infoLoading,
+    info?.type,
+  ]);
+
+  // Error handling
   if (error) {
     return (
       <View className="h-full w-full bg-black justify-center items-center p-4">
@@ -215,73 +535,25 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
           backgroundColor={backgroundColor}
         />
         <View>
-          <View className="absolute w-full h-[256px]">
-            <Skeleton
-              show={infoLoading}
-              colorMode="dark"
-              height={'100%'}
-              width={'100%'}>
-              <Image
-                source={{ uri: backgroundImage }}
-                className=" h-[256] w-full"
-                onError={e => {
-                  console.warn('Background image failed to load:', e);
-                }}
-              />
-            </Skeleton>
-          </View>
-
-          {
-            // manifest[route.params.provider || provider.value].blurImage && (
-            //   <BlurView
-            //     intensity={4}
-            //     blurReductionFactor={1}
-            //     experimentalBlurMethod="dimezisBlurView"
-            //     tint="default"
-            //     style={{
-            //       position: 'absolute',
-            //       top: 0,
-            //       left: 0,
-            //       right: 0,
-            //       bottom: 0,
-            //       height: 256,
-            //       width: '100%',
-            //     }}
-            //   />
-            // )
-          }
           <FlatList
             data={[]}
             keyExtractor={(_, i) => i.toString()}
             renderItem={() => <View />}
             ListHeaderComponent={
               <>
-                <View className="relative w-full h-[256px]">
-                  <LinearGradient
-                    colors={['transparent', 'black']}
-                    className="absolute h-full w-full"
-                  />
-                  <View className="absolute bottom-0 right-0 w-screen flex-row justify-between items-baseline px-2">
-                    {(meta?.logo && !logoError) || infoLoading ? (
-                      <Image
-                        onError={() => setLogoError(true)}
-                        source={{ uri: meta?.logo }}
-                        style={{ width: 200, height: 100, resizeMode: 'contain' }}
-                      />
-                    ) : (
-                      <Text className="text-white text-2xl mt-3 capitalize font-semibold w-3/4 truncate">
-                        {displayTitle}
-                      </Text>
-                    )}
-                    {/* rating */}
-                    {(meta?.imdbRating || info?.rating) && (
-                      <Text className="text-white text-2xl font-semibold">
-                        {meta?.imdbRating || info?.rating}
-                        <Text className="text-white text-lg">/10</Text>
-                      </Text>
-                    )}
-                  </View>
-                </View>
+                {/* --- NEW FLIP HEADER REPLACING OLD IMAGE HEADER --- */}
+                <FlipHeader
+                  posterImage={backgroundImage}
+                  trailerId={ytVideoId}
+                  meta={meta}
+                  info={info}
+                  infoLoading={infoLoading}
+                  setLogoError={setLogoError}
+                  displayTitle={displayTitle}
+                  logoError={logoError}
+                  isFetchingTrailer={isFetchingTrailer}
+                />
+
                 <View className="p-4 bg-black">
                   <View className="flex-row gap-x-3 gap-y-1 flex-wrap items-center mb-4">
                     {/* badges */}
@@ -336,10 +608,10 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                             <Text
                               key={actor}
                               className={`text-xs bg-tertiary p-1 px-2 rounded-md ${index % 3 === 0
-                                ? 'text-red-500'
-                                : index % 3 === 1
-                                  ? 'text-blue-500'
-                                  : 'text-green-500'
+                                  ? 'text-red-500'
+                                  : index % 3 === 1
+                                    ? 'text-blue-500'
+                                    : 'text-green-500'
                                 }`}>
                               {actor}
                             </Text>
@@ -350,10 +622,10 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                             <Text
                               key={actor}
                               className={`text-xs bg-tertiary p-1 px-2 rounded-md ${index % 3 === 0
-                                ? 'text-red-500'
-                                : index % 3 === 1
-                                  ? 'text-blue-500'
-                                  : 'text-green-500'
+                                  ? 'text-red-500'
+                                  : index % 3 === 1
+                                    ? 'text-blue-500'
+                                    : 'text-green-500'
                                 }`}>
                               {actor}
                             </Text>
@@ -374,6 +646,7 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                       </View>
                     </Skeleton>
                     <View className="flex-row items-center gap-4 mb-1">
+                      {/* Kept existing button, but now you also have the Flip Header */}
                       {meta?.trailers && meta?.trailers.length > 0 && (
                         <TouchableOpacity
                           className="p-1 rounded-full"
@@ -507,18 +780,21 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                 <View className="p-4 bg-black">
                   {/* Button row with gap */}
                   <View className="flex-row justify-between mb-3">
-
                     {/* Left Button - External Play */}
-                    <View className="bg-zinc-900 rounded-xl p-3 flex-row items-center" style={{ width: '48%' }}>
+                    <View
+                      className="bg-zinc-900 rounded-xl p-3 flex-row items-center"
+                      style={{ width: '48%' }}>
                       <MaterialCommunityIcons
                         name="vlc"
                         size={18}
                         color={OpenExternalPlayer ? primary : 'gray'}
                       />
-                      <Text className="text-white text-xs ml-2 mr-auto">External Play</Text>
+                      <Text className="text-white text-xs ml-2 mr-auto">
+                        External Play
+                      </Text>
                       <Switch
                         value={OpenExternalPlayer}
-                        onValueChange={(val) => {
+                        onValueChange={val => {
                           settingsStorage.setBool('useExternalPlayer', val);
                           setOpenExternalPlayer(val);
                         }}
@@ -528,20 +804,29 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                     </View>
 
                     {/* Right Button - External Download */}
-                    <View className="bg-zinc-900 rounded-xl p-3 flex-row items-center" style={{ width: '48%' }}>
+                    <View
+                      className="bg-zinc-900 rounded-xl p-3 flex-row items-center"
+                      style={{ width: '48%' }}>
                       <MaterialCommunityIcons
                         name="download"
                         size={18}
                         color={alwaysUseExternalDownload ? primary : 'gray'}
                       />
-                      <Text className="text-white text-xs ml-2 mr-auto">Web Download</Text>
+                      <Text className="text-white text-xs ml-2 mr-auto">
+                        Web Download
+                      </Text>
                       <Switch
                         value={alwaysUseExternalDownload}
-                        onValueChange={(val) => {
-                          settingsStorage.setBool('alwaysExternalDownloader', val);
+                        onValueChange={val => {
+                          settingsStorage.setBool(
+                            'alwaysExternalDownloader',
+                            val,
+                          );
                           setAlwaysUseExternalDownload(val);
                         }}
-                        thumbColor={alwaysUseExternalDownload ? primary : 'gray'}
+                        thumbColor={
+                          alwaysUseExternalDownload ? primary : 'gray'
+                        }
                         style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                       />
                     </View>

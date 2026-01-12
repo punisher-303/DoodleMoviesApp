@@ -1,6 +1,6 @@
 {
   "name": "doodle",
-  "version": "10.0.4",
+  "version": "10.0.5",
   "private": true,
   "scripts": {
     "android": "expo run:android",
@@ -19,10 +19,10 @@
     "expo-font": "13.0.4"
   },
   "dependencies": {
-    "@expo/vector-icons": ">=15.0.3",
     "@8man/react-native-media-console": "2.2.4-alpha.33",
     "@dr.pogodin/react-native-fs": "^2.34.0",
     "@expo/config-plugins": "~9.0.0",
+    "@expo/vector-icons": ">=15.0.3",
     "@gorhom/bottom-sheet": "^4.6.4",
     "@notifee/react-native": "^9.1.8",
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -70,7 +70,6 @@
     "react-native-get-random-values": "^1.8.0",
     "react-native-haptic-feedback": "^2.2.0",
     "react-native-linear-gradient": "^2.8.3",
-    "react-native-linear-gradient": "^2.8.3",
     "react-native-mmkv-storage": "^0.11.2",
     "react-native-onesignal": "^5.2.13",
     "react-native-orientation-locker": "^1.7.0",
@@ -83,6 +82,7 @@
     "react-native-video": "^6.11.0",
     "react-native-volume-manager": ">=2.0.8",
     "react-native-webview": "^13.12.5",
+    "react-native-youtube-iframe": "^2.4.1",
     "socket.io-client": "^4.8.1",
     "zustand": "^4.5.2"
   },
