@@ -27,7 +27,7 @@ import { enableFreeze, enableScreens } from 'react-native-screens';
 import Preferences from './screens/settings/Preference';
 import Production from './screens/settings/Production';
 import useThemeStore from './lib/zustand/themeStore';
-import { Dimensions, LogBox, ViewStyle, AppState, Linking, Alert, View, Text, Modal, TouchableOpacity, Image, Platform, StatusBar } from 'react-native';
+import { Dimensions, LogBox, ViewStyle, AppState, Linking, Alert, View, Text, Modal, TouchableOpacity, Image, Platform, StatusBar, DeviceEventEmitter } from 'react-native';
 import IOSModal from './components/IOSModal';
 import { EpisodeLink } from './lib/providers/types';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
@@ -56,7 +56,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import useAppModeStore from './lib/zustand/appModeStore';
 import DoodleTVStack from './navigation/DoodleTVStack';
 
-import useSettingsStore from './lib/zustand/settingsStore';
+// import useSettingsStore from './lib/zustand/settingsStore';
 
 // Lazy-load Firebase modules so app runs without google-services files
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -226,7 +226,16 @@ const App = () => {
       Linking.openURL(updateData.play_store_url || 'https://doodlemovies.vercel.app');
     }
   };
-  const showTabBarLabels = settingsStorage.showTabBarLabels();
+  const [showTabBarLabels, setShowTabBarLabels] = React.useState(settingsStorage.showTabBarLabels());
+
+  React.useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('onUpdateTabBarLabels', () => {
+      setShowTabBarLabels(settingsStorage.showTabBarLabels());
+    });
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   SystemUI.setBackgroundColorAsync('black');
 
@@ -504,6 +513,8 @@ const App = () => {
               bottom: 0, // <--- Re-add
               left: 0, // <--- Ensure coverage
               right: 0, // <--- Ensure coverage
+              height: showTabBarLabels ? 75 : 60,
+              paddingBottom: showTabBarLabels ? 5 : 0,
 
               backgroundColor: 'transparent',
               borderRadius: 0,

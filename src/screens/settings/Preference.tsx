@@ -7,6 +7,7 @@ import {
   ToastAndroid,
   StatusBar,
   Linking,
+  DeviceEventEmitter,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
@@ -67,7 +68,9 @@ const Preferences = () => {
   );
 
 
-  const { showTabBarLabels, setShowTabBarLabels: setGlobalShowTabBarLabels } = useSettingsStore();
+  const [showTabBarLabels, setShowTabBarLabels] = useState<boolean>(
+    settingsStorage.showTabBarLabels(),
+  );
 
   const [OpenExternalPlayer, setOpenExternalPlayer] = useState(
     settingsStorage.getBool('useExternalPlayer', false),
@@ -230,14 +233,9 @@ const Preferences = () => {
               className="flex-row items-center justify-between p-4 border-b border-[#262626]"
               onPress={() => {
                 const newValue = !showTabBarLabels;
-                setGlobalShowTabBarLabels(newValue);
-                ToastAndroid.show(
-                  'Restart App to Apply Changes',
-                  ToastAndroid.SHORT,
-                );
-                setTimeout(() => {
-                  try { DevSettings.reload(); } catch (e) { }
-                }, 1000);
+                settingsStorage.setShowTabBarLabels(newValue);
+                setShowTabBarLabels(newValue);
+                DeviceEventEmitter.emit('onUpdateTabBarLabels');
               }}>
               <Text className="text-white text-base">Show Tab Bar Labels</Text>
               <Switch
@@ -245,14 +243,9 @@ const Preferences = () => {
                 value={showTabBarLabels}
                 onValueChange={() => {
                   const newValue = !showTabBarLabels;
-                  setGlobalShowTabBarLabels(newValue);
-                  ToastAndroid.show(
-                    'Restart App to Apply Changes',
-                    ToastAndroid.SHORT,
-                  );
-                  setTimeout(() => {
-                    try { DevSettings.reload(); } catch (e) { }
-                  }, 1000);
+                  settingsStorage.setShowTabBarLabels(newValue);
+                  setShowTabBarLabels(newValue);
+                  DeviceEventEmitter.emit('onUpdateTabBarLabels');
                 }}
               />
             </TouchableOpacity>
