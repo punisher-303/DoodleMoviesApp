@@ -44,9 +44,15 @@ const VoiceChatControl = ({ channelId, style }: VoiceChatControlProps) => {
     const resetIdleTimer = useCallback(() => {
         'worklet';
         cancelAnimation(localOpacity);
-        localOpacity.value = withTiming(1, { duration: 200 }); // Wake up
-        // Auto-dim after 3000ms
-        localOpacity.value = withDelay(3000, withTiming(0.3, { duration: 500 }));
+        // Instant wake up on Android for responsiveness
+        const wakeDuration = Platform.OS === 'android' ? 0 : 200;
+        localOpacity.value = withTiming(1, { duration: wakeDuration });
+
+        // Faster dimming on Android
+        const dimDuration = Platform.OS === 'android' ? 0 : 500;
+        const dimDelay = 3000;
+
+        localOpacity.value = withDelay(dimDelay, withTiming(0.3, { duration: dimDuration }));
     }, []);
 
     const { width: screenW, height: screenH } = Dimensions.get('window');
@@ -77,12 +83,15 @@ const VoiceChatControl = ({ channelId, style }: VoiceChatControlProps) => {
             // Left Edge Snap
             if (currentAbsX < threshold) {
                 const targetTranslateX = -initialAbsX - (BUTTON_SIZE - PEEK_OFFSET); // Snap to left edge + peek
-                translateX.value = withSpring(targetTranslateX, { damping: 15 });
+                // Simpler spring on Android
+                const damping = Platform.OS === 'android' ? 20 : 15;
+                translateX.value = withSpring(targetTranslateX, { damping });
             }
             // Right Edge Snap
             else if (currentAbsX > screenW - BUTTON_SIZE - threshold) {
                 const targetTranslateX = (screenW - initialAbsX - BUTTON_SIZE) + (BUTTON_SIZE - PEEK_OFFSET); // Snap to right edge + peek
-                translateX.value = withSpring(targetTranslateX, { damping: 15 });
+                const damping = Platform.OS === 'android' ? 20 : 15;
+                translateX.value = withSpring(targetTranslateX, { damping });
             }
 
             resetIdleTimer();
@@ -151,7 +160,8 @@ const VoiceChatControl = ({ channelId, style }: VoiceChatControlProps) => {
         // Wake up UI
         cancelAnimation(localOpacity);
         localOpacity.value = 1;
-        localOpacity.value = withDelay(3000, withTiming(0.3));
+        const dimDuration = Platform.OS === 'android' ? 0 : 500;
+        localOpacity.value = withDelay(3000, withTiming(0.3, { duration: dimDuration }));
 
         if (!webViewRef.current) return;
         const newMuteState = !isMuted;

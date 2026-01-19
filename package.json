@@ -1,6 +1,6 @@
 {
   "name": "doodle",
-  "version": "10.0.5",
+  "version": "10.0.6",
   "private": true,
   "scripts": {
     "android": "expo run:android",

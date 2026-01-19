@@ -1,7 +1,7 @@
-import React, {useEffect, useRef} from 'react';
-import {Animated, StyleSheet, View} from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, View, Platform } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {Easing} from 'react-native-reanimated';
+import { Easing } from 'react-native-reanimated';
 
 type SkeletonLoaderProps = {
   width: number;
@@ -31,7 +31,9 @@ const SkeletonLoader = ({
       ).start();
     };
 
-    startShimmer();
+    if (Platform.OS !== 'android') {
+      startShimmer();
+    }
   }, [animatedValue]);
 
   const lightColors = ['#E0E0E0', '#F5F5F5', '#E0E0E0'];
@@ -44,17 +46,18 @@ const SkeletonLoader = ({
   });
 
   return (
-    <View style={[styles.skeleton, {width, height, marginVertical}, style]}>
+    <View style={[styles.skeleton, { width, height, marginVertical }, style]}>
       <Animated.View
         style={{
           flex: 1,
-          transform: [{translateX}],
+          transform: [{ translateX }],
+          opacity: Platform.OS === 'android' ? 0.3 : 1, // Static opacity for Android
         }}>
         <LinearGradient
           colors={colors}
-          start={{x: 0, y: 0.5}}
-          end={{x: 1, y: 0.5}}
-          style={[{width: '100%', height: '100%'}]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={[{ width: '100%', height: '100%' }]}
         />
       </Animated.View>
     </View>

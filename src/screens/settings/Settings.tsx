@@ -312,6 +312,18 @@ const Settings = ({ navigation }: Props) => {
     }
   }, [watchTogetherMode]);
 
+  const toggleAppMode = useCallback(() => {
+    const newMode = appMode === 'doodleTv' ? 'video' : 'doodleTv';
+    setAppMode(newMode);
+
+    if (settingsStorage.isHapticFeedbackEnabled()) {
+      ReactNativeHapticFeedback.trigger('virtualKey', {
+        enableVibrateFallback: true,
+        ignoreAndroidSystemSettings: false,
+      });
+    }
+  }, [appMode, setAppMode]);
+
   // --- PROXY TOGGLE ---
   const toggleNetworkProxy = useCallback(() => {
     const newState = !networkProxyMode;
@@ -552,40 +564,27 @@ const Settings = ({ navigation }: Props) => {
           <View className="mb-6 flex-col gap-3">
             <Text className="text-gray-400 text-sm mb-1">App Mode</Text>
             <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-              <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-                <TouchableOpacity
-                  className="flex-row items-center justify-between p-4"
-                  onPress={() => {
-                    setAppMode('doodleTv');
-                    if (settingsStorage.isHapticFeedbackEnabled()) {
-                      ReactNativeHapticFeedback.trigger('impactLight', {
-                        enableVibrateFallback: true,
-                        ignoreAndroidSystemSettings: false,
-                      });
-                    }
-                  }}>
-                  <View className="flex-row items-center">
-                    <MaterialCommunityIcons
-                      name="television-play"
-                      size={22}
-                      color={primary}
-                    />
-                    <Text className="text-white ml-3 text-base">
-                      Doodle-TV Mode
-                    </Text>
-                  </View>
-                  <Switch
-                    trackColor={{ false: '#767577', true: primary }}
-                    thumbColor={appMode === 'doodleTv' ? '#f4f3f4' : '#f4f3f4'}
-                    ios_backgroundColor="#3e3e3e"
-                    value={appMode === 'doodleTv'}
-                    onValueChange={() => { }}
-                    style={{ transform: [{ scale: 0.8 }] }}
-                    focusable={false} // Disable focus on switch itself
-                    pointerEvents="none" // Let parent handle touch
+              <TouchableOpacity
+                className="flex-row items-center justify-between p-4"
+                onPress={toggleAppMode}>
+                <View className="flex-row items-center">
+                  <MaterialCommunityIcons
+                    name="television-play"
+                    size={22}
+                    color={primary}
                   />
-                </TouchableOpacity>
-              </View>
+                  <Text className="text-white ml-3 text-base">
+                    Doodle-TV Mode
+                  </Text>
+                </View>
+                <Switch
+                  trackColor={{ false: '#3f3f46', true: primary }}
+                  thumbColor={'white'}
+                  ios_backgroundColor="#3e3e3e"
+                  value={appMode === 'doodleTv'}
+                  onValueChange={toggleAppMode}
+                />
+              </TouchableOpacity>
             </View>
           </View>
         </AnimatedSection>

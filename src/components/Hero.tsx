@@ -8,6 +8,7 @@ import {
   TextInput,
   TouchableOpacity,
   GestureResponderEvent,
+  Platform,
 } from 'react-native';
 
 import LinearGradient from 'react-native-linear-gradient';
@@ -154,10 +155,10 @@ const Hero = memo(({ isDrawerOpen, drawerRef }: HeroProps) => {
 
         {searchActive && (
           <MotiView
-            from={{ opacity: 0, scale: 0.5 }}
+            from={Platform.OS === 'android' ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             //@ts-ignore
-            transition={{ type: 'timing', duration: 300 }}
+            transition={Platform.OS === 'android' ? { type: 'timing', duration: 0 } : { type: 'timing', duration: 300 }}
             className="w-full items-center justify-center">
             <TextInput
               onBlur={() => setSearchActive(false)}

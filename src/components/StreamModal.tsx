@@ -1,11 +1,11 @@
-import {View, Text, ToastAndroid, Clipboard} from 'react-native';
+import { View, Text, ToastAndroid, Clipboard, Platform } from 'react-native';
 import React from 'react';
-import {Modal, TouchableOpacity} from 'react-native';
+import { Modal, TouchableOpacity } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import {Skeleton} from 'moti/skeleton';
+import { Skeleton } from 'moti/skeleton';
 import useThemeStore from '../lib/zustand/themeStore';
-import {settingsStorage} from '../lib/storage';
+import { settingsStorage } from '../lib/storage';
 
 const StreamModal = ({
   downloadModal,
@@ -16,13 +16,13 @@ const StreamModal = ({
 }: {
   downloadModal: boolean;
   setDownloadModal: (value: boolean) => void;
-  servers: Array<{server: string; link: string}>;
+  servers: Array<{ server: string; link: string }>;
   serverLoading: boolean;
   downloadFile: (link: string) => void;
 }) => {
-  const {primary} = useThemeStore(state => state);
+  const { primary } = useThemeStore(state => state);
   return (
-    <Modal animationType="fade" visible={downloadModal} transparent={true}>
+    <Modal animationType={Platform.OS === 'android' ? 'none' : 'fade'} visible={downloadModal} transparent={true}>
       <View className="flex-1 bg-black/10 justify-center items-center p-4">
         <View className="bg-tertiary p-3 w-full rounded-md justify-center items-center">
           <Text className="text-lg font-semibold my-3 text-white">
@@ -31,41 +31,41 @@ const StreamModal = ({
           <View className="flex-row items-center flex-wrap gap-1 justify-evenly w-full my-5">
             {!serverLoading
               ? servers?.map((server, index) => (
-                  <TouchableOpacity
-                    key={server.server + index}
-                    onPress={() => {
-                      setDownloadModal(false);
-                      downloadFile(server.link);
-                    }}
-                    onLongPress={() => {
-                      if (settingsStorage.getBool('hapticFeedback') !== false) {
-                        ReactNativeHapticFeedback.trigger('effectHeavyClick', {
-                          enableVibrateFallback: true,
-                          ignoreAndroidSystemSettings: false,
-                        });
-                      }
-                      Clipboard.setString(server.link);
-                      ToastAndroid.show(
-                        'Link copied to clipboard',
-                        ToastAndroid.SHORT,
-                      );
-                    }}
-                    className="p-2 rounded-md m-1"
-                    style={{backgroundColor: primary}}>
-                    <Text className="text-white text-xs rounded-md capitalize px-1">
-                      {server.server}
-                    </Text>
-                  </TouchableOpacity>
-                ))
-              : Array.from({length: 3}).map((_, index) => (
-                  <Skeleton
-                    key={index}
-                    show={true}
-                    colorMode="dark"
-                    height={30}
-                    width={90}
-                  />
-                ))}
+                <TouchableOpacity
+                  key={server.server + index}
+                  onPress={() => {
+                    setDownloadModal(false);
+                    downloadFile(server.link);
+                  }}
+                  onLongPress={() => {
+                    if (settingsStorage.getBool('hapticFeedback') !== false) {
+                      ReactNativeHapticFeedback.trigger('effectHeavyClick', {
+                        enableVibrateFallback: true,
+                        ignoreAndroidSystemSettings: false,
+                      });
+                    }
+                    Clipboard.setString(server.link);
+                    ToastAndroid.show(
+                      'Link copied to clipboard',
+                      ToastAndroid.SHORT,
+                    );
+                  }}
+                  className="p-2 rounded-md m-1"
+                  style={{ backgroundColor: primary }}>
+                  <Text className="text-white text-xs rounded-md capitalize px-1">
+                    {server.server}
+                  </Text>
+                </TouchableOpacity>
+              ))
+              : Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  show={true}
+                  colorMode="dark"
+                  height={30}
+                  width={90}
+                />
+              ))}
           </View>
           <View className="flex-row items-center gap-2 w-full">
             <MaterialIcons

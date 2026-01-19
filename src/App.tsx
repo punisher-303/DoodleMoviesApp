@@ -391,8 +391,8 @@ const App = () => {
       <HomeStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios_from_right',
-          animationDuration: 200,
+          animation: Platform.OS === 'android' ? 'none' : 'ios_from_right',
+          animationDuration: Platform.OS === 'android' ? 0 : 200,
           freezeOnBlur: true,
         }}>
         <HomeStack.Screen name="Home" component={Home} />
@@ -409,8 +409,8 @@ const App = () => {
       <SearchStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios_from_right',
-          animationDuration: 200,
+          animation: Platform.OS === 'android' ? 'none' : 'ios_from_right',
+          animationDuration: Platform.OS === 'android' ? 0 : 200,
           freezeOnBlur: true,
         }}>
         <SearchStack.Screen name="Search" component={Search} />
@@ -429,8 +429,8 @@ const App = () => {
       <WatchListStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios_from_right',
-          animationDuration: 200,
+          animation: Platform.OS === 'android' ? 'none' : 'ios_from_right',
+          animationDuration: Platform.OS === 'android' ? 0 : 200,
           freezeOnBlur: true,
         }}>
         <WatchListStack.Screen name="WatchList" component={WatchList} />
@@ -444,8 +444,8 @@ const App = () => {
       <WatchHistoryStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios_from_right',
-          animationDuration: 200,
+          animation: Platform.OS === 'android' ? 'none' : 'ios_from_right',
+          animationDuration: Platform.OS === 'android' ? 0 : 200,
           freezeOnBlur: true,
         }}>
         <WatchHistoryStack.Screen
@@ -466,8 +466,8 @@ const App = () => {
       <SettingsStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios_from_right',
-          animationDuration: 200,
+          animation: Platform.OS === 'android' ? 'none' : 'ios_from_right',
+          animationDuration: Platform.OS === 'android' ? 0 : 200,
           freezeOnBlur: true,
         }}>
         <SettingsStack.Screen name="Settings" component={Settings} />
@@ -496,7 +496,7 @@ const App = () => {
       <Tab.Navigator
         detachInactiveScreens={true}
         screenOptions={{
-          animation: 'shift',
+          animation: Platform.OS === 'android' ? undefined : 'shift',
           tabBarLabelPosition: 'below-icon',
           tabBarVariant: isLargeScreen ? 'material' : 'uikit',
           popToTopOnBlur: false,
@@ -559,7 +559,7 @@ const App = () => {
             tabBarIcon: ({ focused, color, size }) => (
               <Animated.View
                 style={{
-                  transform: [{ scale: focused ? 1.1 : 1 }],
+                  transform: [{ scale: Platform.OS === 'android' ? 1 : (focused ? 1.1 : 1) }],
                 }}>
                 {focused ? (
                   <Ionicons name="home" color={color} size={size} />
@@ -578,7 +578,7 @@ const App = () => {
             tabBarIcon: ({ focused, color, size }) => (
               <Animated.View
                 style={{
-                  transform: [{ scale: focused ? 1.1 : 1 }],
+                  transform: [{ scale: Platform.OS === 'android' ? 1 : (focused ? 1.1 : 1) }],
                 }}>
                 {focused ? (
                   <Ionicons name="search" color={color} size={size} />
@@ -597,7 +597,7 @@ const App = () => {
             tabBarIcon: ({ focused, color, size }) => (
               <Animated.View
                 style={{
-                  transform: [{ scale: focused ? 1.1 : 1 }],
+                  transform: [{ scale: Platform.OS === 'android' ? 1 : (focused ? 1.1 : 1) }],
                 }}>
                 {focused ? (
                   <Entypo name="folder-video" color={color} size={size} />
@@ -616,7 +616,7 @@ const App = () => {
             tabBarIcon: ({ focused, color, size }) => (
               <Animated.View
                 style={{
-                  transform: [{ scale: focused ? 1.1 : 1 }],
+                  transform: [{ scale: Platform.OS === 'android' ? 1 : (focused ? 1.1 : 1) }],
                 }}>
                 {focused ? (
                   <Ionicons name="settings" color={color} size={size} />
@@ -646,8 +646,8 @@ const App = () => {
       <DoodleTVRootStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios_from_right',
-          animationDuration: 200,
+          animation: Platform.OS === 'android' ? 'none' : 'ios_from_right',
+          animationDuration: Platform.OS === 'android' ? 0 : 200,
           freezeOnBlur: true,
           contentStyle: { backgroundColor: 'transparent' },
         }}>
@@ -664,8 +664,8 @@ const App = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios_from_right',
-          animationDuration: 200,
+          animation: Platform.OS === 'android' ? 'none' : 'ios_from_right',
+          animationDuration: Platform.OS === 'android' ? 0 : 200,
           freezeOnBlur: true,
           contentStyle: { backgroundColor: 'transparent' },
         }}>
