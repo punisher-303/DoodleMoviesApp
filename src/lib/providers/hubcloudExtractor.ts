@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import {Stream} from './types';
-import {headers} from './headers';
+import { Stream } from './types';
+import { headers } from './headers';
 
 const decode = function (value: string) {
   if (value === undefined) {
@@ -15,7 +15,7 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
     console.log('hubcloudExtracter', link);
     const baseUrl = link.split('/').slice(0, 3).join('/');
     const streamLinks: Stream[] = [];
-    const vLinkRes = await axios(`${link}`, {headers, signal});
+    const vLinkRes = await axios(`${link}`, { headers, signal });
     const vLinkText = vLinkRes.data;
     const $vLink = cheerio.load(vLinkText);
     const vLinkRedirect = vLinkText.match(/var\s+url\s*=\s*'([^']+)';/) || [];
@@ -43,19 +43,6 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
       let link = itm.attr('href') || '';
 
       switch (true) {
-        case link?.includes('.dev') && !link?.includes('/?id='):
-          streamLinks.push({server: 'Cf Worker', link: link, type: 'mkv'});
-          break;
-
-        case link?.includes('pixeld'):
-          if (!link?.includes('api')) {
-            const token = link.split('/').pop();
-            const baseUrl = link.split('/').slice(0, -2).join('/');
-            link = `${baseUrl}/api/file/${token}?download`;
-          }
-          streamLinks.push({server: 'Pixeldrain', link: link, type: 'mkv'});
-          break;
-
         case link?.includes('hubcloud') || link?.includes('/?id='):
           try {
             const newLinkRes = await fetch(link, {
@@ -110,12 +97,16 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
           }
           break;
 
+        case link?.includes('.dev') && !link?.includes('/?id='):
+          streamLinks.push({ server: 'Cf Worker', link: link, type: 'mkv' });
+          break;
+
         case link?.includes('cloudflarestorage'):
-          streamLinks.push({server: 'CfStorage', link: link, type: 'mkv'});
+          streamLinks.push({ server: 'CfStorage', link: link, type: 'mkv' });
           break;
 
         case link?.includes('fastdl') || link?.includes('fsl.'):
-          streamLinks.push({server: 'FastDl', link: link, type: 'mkv'});
+          streamLinks.push({ server: 'FastDl', link: link, type: 'mkv' });
           break;
 
         case link.includes('hubcdn') && !link.includes('/?id='):
@@ -132,7 +123,7 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
               link
                 .match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/i)?.[1]
                 ?.replace(/\./g, ' ') || 'Unknown';
-            streamLinks.push({server: serverName, link: link, type: 'mkv'});
+            streamLinks.push({ server: serverName, link: link, type: 'mkv' });
           }
           break;
       }

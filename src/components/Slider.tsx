@@ -74,58 +74,14 @@ export default function Slider({
           horizontal
           contentContainerStyle={{ paddingHorizontal: 3, paddingTop: 7 }}
           renderItem={({ item }) => (
-            <View className="flex flex-col mx-2">
-              <TouchableOpacity
-                onLongPress={e => {
-                  e.stopPropagation();
-                  // if (filter === 'recent') {
-                  //   console.log('long press', filter);
-                  //   ReactNativeHapticFeedback.trigger('effectClick', {
-                  //     enableVibrateFallback: true,
-                  //     ignoreAndroidSystemSettings: false,
-                  //   });
-                  //   setSelected(item.link);
-                  // }
-                }}
-                onPress={e => {
-                  e.stopPropagation && e.stopPropagation();
-                  setSelected('');
-                  navigation.navigate('Info', {
-                    link: item.link,
-                    provider: item.provider || providerValue || provider?.value,
-                    poster: item?.image,
-                  });
-                }}>
-                <Image
-                  className="rounded-md"
-                  source={{
-                    uri:
-                      item?.image ||
-                      'https://placehold.jp/24/363636/ffffff/100x150.png?text=doodle',
-                  }}
-                  style={{ width: 100, height: 150 }}
-                />
-                {/* {isSelected === item.link && (
-                  <View className="absolute top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
-                    <AntDesign
-                      name="delete"
-                      size={24}
-                      color="white"
-                      onPress={() => {
-                        console.log('remove', item);
-                        setSelected('');
-                        removeItem(item);
-                      }}
-                    />
-                  </View>
-                )} */}
-              </TouchableOpacity>
-              <Text className="text-white text-center truncate w-24 text-xs">
-                {item.title.length > 24
-                  ? `${item.title.slice(0, 24)}...`
-                  : item.title}
-              </Text>
-            </View>
+            <SliderItem
+              item={item}
+              isSelected={isSelected}
+              setSelected={setSelected}
+              navigation={navigation}
+              providerValue={providerValue}
+              provider={provider}
+            />
           )}
           ListFooterComponent={
             !isLoading && posts.length === 0 ? (

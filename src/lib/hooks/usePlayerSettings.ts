@@ -1,11 +1,12 @@
-import {useCallback, useRef, useState} from 'react';
-import {cacheStorage, mainStorage} from '../storage';
+import { useCallback, useRef, useState } from 'react';
+import { cacheStorage, mainStorage } from '../storage';
 
 interface UsePlayerProgressOptions {
   activeEpisode: any;
   routeParams: any;
   playbackRate: number;
   updatePlaybackInfo: (link: string, data: any) => void;
+  doNotTrack?: boolean;
 }
 
 export const usePlayerProgress = ({
@@ -13,38 +14,41 @@ export const usePlayerProgress = ({
   routeParams,
   playbackRate,
   updatePlaybackInfo,
+  doNotTrack = false,
 }: UsePlayerProgressOptions) => {
-  const videoPositionRef = useRef({position: 0, duration: 0});
+  const videoPositionRef = useRef({ position: 0, duration: 0 });
   const lastSavedPositionRef = useRef(0);
 
   // Memoized progress handler
   const handleProgress = useCallback(
-    (e: {currentTime: number; seekableDuration: number}) => {
-      const {currentTime, seekableDuration} = e;
+    (e: { currentTime: number; seekableDuration: number }) => {
+      const { currentTime, seekableDuration } = e;
 
       videoPositionRef.current = {
         position: currentTime,
         duration: seekableDuration,
       };
 
-      // Update playback info for watch history
-      if (routeParams?.episodeList && routeParams?.linkIndex !== undefined) {
-        updatePlaybackInfo(
+      if (!doNotTrack) {
+        // Update playback info for watch history
+        if (routeParams?.episodeList && routeParams?.linkIndex !== undefined) {
+          updatePlaybackInfo(
+            routeParams.episodeList[routeParams.linkIndex].link,
+            {
+              currentTime,
+              duration: seekableDuration,
+              playbackRate,
+            },
+          );
+        }
+
+        // Store progress data for watch history display
+        storeWatchProgressForHistory(
           routeParams.episodeList[routeParams.linkIndex].link,
-          {
-            currentTime,
-            duration: seekableDuration,
-            playbackRate,
-          },
+          currentTime,
+          seekableDuration,
         );
       }
-
-      // Store progress data for watch history display
-      storeWatchProgressForHistory(
-        routeParams.episodeList[routeParams.linkIndex].link,
-        currentTime,
-        seekableDuration,
-      );
 
       // Save progress periodically (every 5 seconds)
       if (
@@ -140,10 +144,10 @@ export const usePlayerSettings = () => {
   // Memoized resize mode handler
   const handleResizeMode = useCallback(() => {
     const modes = [
-      {mode: 'none', name: 'Fit'},
-      {mode: 'cover', name: 'Cover'},
-      {mode: 'stretch', name: 'Stretch'},
-      {mode: 'contain', name: 'Contain'},
+      { mode: 'none', name: 'Fit' },
+      { mode: 'cover', name: 'Cover' },
+      { mode: 'stretch', name: 'Stretch' },
+      { mode: 'contain', name: 'Contain' },
     ];
     const index = modes.findIndex(mode => mode.mode === resizeMode);
     const nextMode = modes[(index + 1) % modes.length];

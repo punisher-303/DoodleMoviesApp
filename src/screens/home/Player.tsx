@@ -1080,6 +1080,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
       routeParams: route.params,
       playbackRate: finalPlaybackRate,
       updatePlaybackInfo,
+      doNotTrack: route.params?.doNotTrack,
     });
 
   const lastSyncSendRef = useRef<number>(0);

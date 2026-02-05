@@ -1,6 +1,6 @@
 {
   "name": "doodle",
-  "version": "10.0.6",
+  "version": "10.0.7",
   "private": true,
   "scripts": {
     "android": "expo run:android",
@@ -44,6 +44,7 @@
     "expo-build-properties": "~0.13.3",
     "expo-clipboard": "~7.0.1",
     "expo-crypto": "~14.0.2",
+    "expo-dev-client": "~5.0.0",
     "expo-document-picker": "~13.0.3",
     "expo-intent-launcher": "~12.0.2",
     "expo-linear-gradient": "~14.0.2",
@@ -63,6 +64,7 @@
     "react-native-base64": "^0.2.2",
     "react-native-blob-util": "^0.22.2",
     "react-native-bootsplash": "^6.3.2",
+    "react-native-drawer-layout": "^3.3.0",
     "react-native-edge-to-edge": "^1.6.2",
     "react-native-element-dropdown": "^2.12.0",
     "react-native-fullscreen-chz": "^4.0.13",

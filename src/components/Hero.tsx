@@ -1,4 +1,5 @@
-import { Image, MotiView, View } from 'moti';
+import { Image, View } from 'moti';
+import Animated, { ZoomIn, FadeOut } from 'react-native-reanimated';
 import React, { memo, useState, useCallback } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -27,10 +28,10 @@ import { useHeroMetadata } from '../lib/hooks/useHomePageData';
 
 interface HeroProps {
   isDrawerOpen: boolean;
-  drawerRef: React.RefObject<DrawerLayout>;
+  onOpenDrawer: () => void;
 }
 
-const Hero = memo(({ isDrawerOpen, drawerRef }: HeroProps) => {
+const Hero = memo(({ isDrawerOpen, onOpenDrawer }: HeroProps) => {
   const [searchActive, setSearchActive] = useState(false);
   const { provider } = useContentStore(state => state);
   const { hero } = useHeroStore(state => state);
@@ -147,19 +148,22 @@ const Hero = memo(({ isDrawerOpen, drawerRef }: HeroProps) => {
               }`}>
             <TouchableOpacity
               style={{ opacity: isDrawerOpen ? 0 : 1 }}
-              onPress={() => drawerRef.current?.openDrawer()}>
+              onPress={onOpenDrawer}>
               <Ionicons name="menu-sharp" size={27} color="white" />
             </TouchableOpacity>
           </View>
         )}
 
         {searchActive && (
-          <MotiView
-            from={Platform.OS === 'android' ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            //@ts-ignore
-            transition={Platform.OS === 'android' ? { type: 'timing', duration: 0 } : { type: 'timing', duration: 300 }}
-            className="w-full items-center justify-center">
+          <Animated.View
+            entering={Platform.OS === 'android' ? undefined : ZoomIn}
+            exiting={Platform.OS === 'android' ? undefined : FadeOut}
+            style={{
+              width: '100%',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <TextInput
               onBlur={() => setSearchActive(false)}
               autoFocus={true}
@@ -168,7 +172,7 @@ const Hero = memo(({ isDrawerOpen, drawerRef }: HeroProps) => {
               className="w-[95%] px-4 h-10 rounded-full border-white border"
               placeholderTextColor="#999"
             />
-          </MotiView>
+          </Animated.View>
         )}
 
         {!searchActive && (

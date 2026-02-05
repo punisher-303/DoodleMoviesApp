@@ -14,6 +14,7 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
   Dimensions,
+  Switch,
 } from 'react-native';
 
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -63,6 +64,14 @@ const Extensions = ({ navigation }: Props) => {
   const [updateInfos, setUpdateInfos] = useState<UpdateInfo[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [isPerformingBulkAction, setIsPerformingBulkAction] = useState(false);
+
+  const [useCustomBaseUrl, setUseCustomBaseUrl] = useState(
+    settingsStorage.isUsingCustomProviderBaseUrl(),
+  );
+  const [customBaseUrl, setCustomBaseUrl] = useState(
+    settingsStorage.getCustomProviderBaseUrl(),
+  );
+  const [showBaseUrlSettings, setShowBaseUrlSettings] = useState(false);
 
   // New States
   const [searchQuery, setSearchQuery] = useState('');
@@ -282,6 +291,58 @@ const Extensions = ({ navigation }: Props) => {
       });
     }
     setActiveExtensionProvider(provider);
+  };
+
+  const handleToggleCustomBaseUrl = (enabled: boolean) => {
+    if (enabled) {
+      // Show warning when enabling custom URL
+      Alert.alert(
+        '⚠️ Security Warning',
+        'Custom provider sources can run arbitrary code in the app. Only use provider URLs from sources you absolutely trust.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'I Understand',
+            style: 'destructive',
+            onPress: () => {
+              setUseCustomBaseUrl(true);
+              settingsStorage.setUseCustomProviderBaseUrl(true);
+            },
+          },
+        ],
+      );
+    } else {
+      setUseCustomBaseUrl(false);
+      settingsStorage.setUseCustomProviderBaseUrl(false);
+    }
+  };
+
+  const handleSaveCustomBaseUrl = () => {
+    if (!customBaseUrl.trim()) {
+      Alert.alert('Error', 'Please enter a valid URL');
+      return;
+    }
+
+    // Basic URL validation
+    const isValidUrl = (url: string): boolean => {
+      try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    };
+
+    if (!isValidUrl(customBaseUrl)) {
+      Alert.alert('Error', 'Please enter a valid URL');
+      return;
+    }
+
+    settingsStorage.setCustomProviderBaseUrl(customBaseUrl.trim());
+    Alert.alert(
+      'Success',
+      'Provider base URL updated. Pull to refresh to load providers from the new source.',
+    );
   };
 
   const handleRefresh = async () => {
@@ -630,6 +691,99 @@ const Extensions = ({ navigation }: Props) => {
             <Feather name="refresh-cw" size={24} color={primary} />
           </TouchableOpacity>
         </View>
+      </View>
+
+      {/* Custom Provider Base URL Settings */}
+      <View className="mx-4 mt-4">
+        <TouchableOpacity
+          className="flex-row items-center justify-between bg-tertiary rounded-xl px-4 py-3 border border-quaternary"
+          onPress={() => setShowBaseUrlSettings(!showBaseUrlSettings)}>
+          <View className="flex-row items-center">
+            <MaterialCommunityIcons
+              name="cog-outline"
+              size={22}
+              color="#9CA3AF"
+            />
+            <Text className="text-white ml-3 font-medium">
+              Provider Source Settings
+            </Text>
+          </View>
+          <MaterialIcons
+            name={showBaseUrlSettings ? 'expand-less' : 'expand-more'}
+            size={24}
+            color="#9CA3AF"
+          />
+        </TouchableOpacity>
+
+        {showBaseUrlSettings && (
+          <View className="bg-tertiary rounded-xl mt-2 p-4 border border-quaternary">
+            {/* Warning Banner */}
+            <View className="bg-yellow-900/30 border border-yellow-600/50 rounded-lg p-3 mb-4">
+              <View className="flex-row items-center mb-2">
+                <MaterialCommunityIcons
+                  name="alert-outline"
+                  size={20}
+                  color="#F59E0B"
+                />
+                <Text className="text-yellow-500 font-bold ml-2">
+                  Security Warning
+                </Text>
+              </View>
+              <Text className="text-yellow-600/90 text-xs leading-5">
+                Providers can execute arbitrary code in the app. Only use
+                sources you trust.
+              </Text>
+            </View>
+
+            {/* Toggle for Custom URL */}
+            <View className="flex-row items-center justify-between mb-4">
+              <View className="flex-1">
+                <Text className="text-white font-medium">
+                  Use Custom Provider Source
+                </Text>
+                <Text className="text-gray-400 text-xs mt-1">
+                  Override the default provider repository
+                </Text>
+              </View>
+              <Switch
+                value={useCustomBaseUrl}
+                onValueChange={handleToggleCustomBaseUrl}
+                trackColor={{ false: '#374151', true: primary }}
+                thumbColor={useCustomBaseUrl ? '#fff' : '#9CA3AF'}
+              />
+            </View>
+
+            {/* Custom URL Input */}
+            {useCustomBaseUrl && (
+              <View>
+                <Text className="text-gray-400 text-sm mb-2">
+                  Provider Base URL
+                </Text>
+                <View className="flex-row items-center">
+                  <TextInput
+                    className="flex-1 bg-quaternary rounded-lg px-4 py-3 text-white border border-gray-700"
+                    placeholder="https://example.com/providers"
+                    placeholderTextColor="#6B7280"
+                    value={customBaseUrl}
+                    onChangeText={setCustomBaseUrl}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="url"
+                  />
+                  <TouchableOpacity
+                    onPress={handleSaveCustomBaseUrl}
+                    className="ml-2 px-4 py-3 rounded-lg"
+                    style={{ backgroundColor: primary }}>
+                    <Text className="text-white font-medium">Save</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text className="text-gray-500 text-xs mt-2">
+                  URL should point to a repository containing manifest.json
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
       </View>
 
       {/* Tabs */}

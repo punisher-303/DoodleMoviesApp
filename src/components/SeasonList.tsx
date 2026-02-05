@@ -19,6 +19,14 @@ import Feather from '@expo/vector-icons/Feather';
 import { Dropdown } from 'react-native-element-dropdown';
 import { MotiView } from 'moti';
 import { Skeleton } from 'moti/skeleton';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+  Easing,
+  cancelAnimation,
+} from 'react-native-reanimated';
 import * as IntentLauncher from 'expo-intent-launcher';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import { EpisodeLink, Link } from '../lib/providers/types';
@@ -130,6 +138,31 @@ const SeasonList: React.FC<SeasonListProps> = ({
 
   // UI state
   const [vlcLoading, setVlcLoading] = useState<boolean>(false);
+
+  // Reanimated shared value for VLC loading
+  const rotation = useSharedValue(0);
+
+  const animatedStyles = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${rotation.value}deg` }],
+    };
+  });
+
+  useEffect(() => {
+    if (vlcLoading) {
+      rotation.value = withRepeat(
+        withTiming(360, {
+          duration: 1000,
+          easing: Easing.linear,
+        }),
+        -1,
+      );
+    } else {
+      cancelAnimation(rotation);
+      rotation.value = 0;
+    }
+  }, [vlcLoading]);
+
   const [stickyMenu, setStickyMenu] = useState<StickyMenuState>({
     active: false,
   });
@@ -755,6 +788,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
               offset: 60 * index,
               index,
             })}
+            contentContainerStyle={{ paddingBottom: 150 }}
           />
         )}
 
@@ -790,23 +824,12 @@ const SeasonList: React.FC<SeasonListProps> = ({
       {/* VLC Loading Indicator */}
       {vlcLoading && (
         <View className="absolute top-0 left-0 w-full h-full bg-black/60 bg-opacity-50 justify-center items-center">
-          <MotiView
-            from={{ rotate: '0deg' }}
-            animate={{ rotate: '360deg' }}
-            //@ts-ignore
-            transition={{
-              type: 'timing',
-              duration: 800,
-              loop: true,
-              repeatReverse: false,
-            }}>
-            <MaterialCommunityIcons name="vlc" size={70} color={primary} />
-          </MotiView>
-          <Text className="text-white text-lg font-semibold mt-2">
-            Loading available servers...
-          </Text>
+          <Animated.View style={animatedStyles}>
+            <MaterialCommunityIcons name="loading" size={48} color={primary} />
+          </Animated.View>
         </View>
       )}
+
 
       {/* Server Selection Modal */}
       <Modal
@@ -889,7 +912,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
           </View>
         </Pressable>
       </Modal>
-    </View>
+    </View >
   );
 };
 

@@ -11,9 +11,9 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 
 const ProviderDrawer = ({
-  drawerRef,
+  closeDrawer,
 }: {
-  drawerRef: React.RefObject<DrawerLayout>;
+  closeDrawer: () => void;
 }) => {
   const { provider, setProvider, installedProviders } = useContentStore(
     state => state,
@@ -38,7 +38,7 @@ const ProviderDrawer = ({
             key={item.value}
             onPress={() => {
               setProvider(item);
-              drawerRef.current?.closeDrawer();
+              closeDrawer();
             }}
             style={{
               flexDirection: 'row',

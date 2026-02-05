@@ -118,6 +118,7 @@ export type RootStackParamList = {
     roomId?: string;
     syncLink?: boolean;
     server?: any;
+    doNotTrack?: boolean;
   };
 };
 

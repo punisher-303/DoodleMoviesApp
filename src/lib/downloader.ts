@@ -1,3 +1,4 @@
+
 import { ifExists } from './file/ifExists';
 import * as RNFS from '@dr.pogodin/react-native-fs';
 import { Alert, Platform } from 'react-native';
@@ -40,11 +41,11 @@ notifee.onForegroundEvent(async ({ type, detail }) => {
 
 // 🧠 Persist Download State - Your friend's addition
 async function saveTaskState(task: DownloadTask) {
-  await AsyncStorage.setItem(`download_${task.fileName}`, JSON.stringify(task));
+  await AsyncStorage.setItem(`download_${task.fileName} `, JSON.stringify(task));
 }
 
 async function removeTaskState(fileName: string) {
-  await AsyncStorage.removeItem(`download_${fileName}`);
+  await AsyncStorage.removeItem(`download_${fileName} `);
 }
 
 // 🧩 Load previous state (for future resume support) - Your friend's addition
@@ -89,10 +90,10 @@ export const downloadManager = async ({
   await requestStoragePermission();
   await initDownloadChannel();
 
-  const oldState = await AsyncStorage.getItem(`download_${fileName}`);
+  const oldState = await AsyncStorage.getItem(`download_${fileName} `);
   if (oldState) {
     const prev: DownloadTask = JSON.parse(oldState);
-    if (prev.canceled === true) await AsyncStorage.removeItem(`download_${fileName}`);
+    if (prev.canceled === true) await AsyncStorage.removeItem(`download_${fileName} `);
   }
 
   if (await ifExists(fileName)) {

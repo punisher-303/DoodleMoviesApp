@@ -193,7 +193,7 @@ const Preferences = () => {
                 settingsStorage.setHapticFeedbackEnabled(!hapticFeedback);
                 setHapticFeedback(!hapticFeedback);
               }}>
-              <Text className="text-white text-base">Haptic Feedback</Text>
+              <Text className="text-white text-base flex-1">Haptic Feedback</Text>
               <Switch
                 thumbColor={hapticFeedback ? primary : 'gray'}
                 value={hapticFeedback}
@@ -216,7 +216,7 @@ const Preferences = () => {
                   } catch { }
                 }
               }}>
-              <Text className="text-white text-base">
+              <Text className="text-white text-base flex-1">
                 Usage & Crash Reports
               </Text>
               <Switch
@@ -237,7 +237,7 @@ const Preferences = () => {
                 setShowTabBarLabels(newValue);
                 DeviceEventEmitter.emit('onUpdateTabBarLabels');
               }}>
-              <Text className="text-white text-base">Show Tab Bar Labels</Text>
+              <Text className="text-white text-base flex-1">Show Tab Bar Labels</Text>
               <Switch
                 thumbColor={showTabBarLabels ? primary : 'gray'}
                 value={showTabBarLabels}
@@ -257,7 +257,7 @@ const Preferences = () => {
                 settingsStorage.setShowHamburgerMenu(!showHamburgerMenu);
                 setShowHamburgerMenu(!showHamburgerMenu);
               }}>
-              <Text className="text-white text-base">Show Hamburger Menu</Text>
+              <Text className="text-white text-base flex-1">Show Hamburger Menu</Text>
               <Switch
                 thumbColor={showHamburgerMenu ? primary : 'gray'}
                 value={showHamburgerMenu}
@@ -277,7 +277,7 @@ const Preferences = () => {
                 );
                 setShowRecentlyWatched(!showRecentlyWatched);
               }}>
-              <Text className="text-white text-base">
+              <Text className="text-white text-base flex-1">
                 Show Recently Watched
               </Text>
               <Switch
@@ -296,7 +296,7 @@ const Preferences = () => {
                 settingsStorage.setBool('disableDrawer', !disableDrawer);
                 setDisableDrawer(!disableDrawer);
               }}>
-              <Text className="text-white text-base">Disable Drawer</Text>
+              <Text className="text-white text-base flex-1">Disable Drawer</Text>
               <Switch
                 thumbColor={disableDrawer ? primary : 'gray'}
                 value={disableDrawer}
@@ -316,7 +316,7 @@ const Preferences = () => {
                 );
                 setAlwaysUseExternalDownload(!alwaysUseExternalDownload);
               }}>
-              <Text className="text-white text-base">
+              <Text className="text-white text-base flex-1">
                 Always Use External Downloader
               </Text>
               <Switch

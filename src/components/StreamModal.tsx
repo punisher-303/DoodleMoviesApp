@@ -3,7 +3,7 @@ import React from 'react';
 import { Modal, TouchableOpacity } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import { Skeleton } from 'moti/skeleton';
+import { ActivityIndicator } from 'react-native';
 import useThemeStore from '../lib/zustand/themeStore';
 import { settingsStorage } from '../lib/storage';
 
@@ -57,15 +57,11 @@ const StreamModal = ({
                   </Text>
                 </TouchableOpacity>
               ))
-              : Array.from({ length: 3 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  show={true}
-                  colorMode="dark"
-                  height={30}
-                  width={90}
-                />
-              ))}
+              : (
+                <View className="flex-row gap-2 justify-center w-full">
+                  <ActivityIndicator size="small" color={primary} />
+                </View>
+              )}
           </View>
           <View className="flex-row items-center gap-2 w-full">
             <MaterialIcons

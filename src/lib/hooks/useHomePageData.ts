@@ -1,7 +1,7 @@
-import {useQuery} from '@tanstack/react-query';
-import {getHomePageData, HomePageData} from '../getHomepagedata';
-import {Content} from '../zustand/contentStore';
-import {cacheStorage} from '../storage';
+import { useQuery } from '@tanstack/react-query';
+import { getHomePageData, HomePageData } from '../getHomepagedata';
+import { Content } from '../zustand/contentStore';
+import { cacheStorage } from '../storage';
 
 interface UseHomePageDataOptions {
   provider: Content['provider'];
@@ -14,7 +14,7 @@ export const useHomePageData = ({
 }: UseHomePageDataOptions) => {
   return useQuery<HomePageData[], Error>({
     queryKey: ['homePageData', provider.value],
-    queryFn: async ({signal}) => {
+    queryFn: async ({ signal }) => {
       // Fetch fresh data - cache is handled by React Query
       const data = await getHomePageData(provider, signal);
       return data;
@@ -56,18 +56,54 @@ export const useHomePageData = ({
 };
 
 // Memoized hero selection with stable reference
-export const getRandomHeroPost = (homeData: HomePageData[]) => {
+export const getRandomHeroPost = (
+  homeData: HomePageData[],
+  providerValue?: string, // Added providerValue for caching
+) => {
   if (!homeData || homeData.length === 0) {
     return null;
   }
 
-  const lastCategory = homeData[homeData.length - 1];
+  // If providerValue is present, try to get cached hero
+  if (providerValue) {
+    const cachedHero = cacheStorage.getString(`hero_selection_${providerValue}`);
+    if (cachedHero) {
+      try {
+        const parsed = JSON.parse(cachedHero);
+        // Verify the cached hero still exists in the fresh data (optional but good practice)
+        // For now, just return it to be fast
+        return parsed;
+      } catch (e) {
+        // failed to parse, continue to pick new
+      }
+    }
+  }
+
+  const lastCategory = homeData[homeData.length - 1]; // or random category? Original used lastCategory? 
+  // Original code: const lastCategory = homeData[homeData.length - 1];
+  // Wait, is "lastCategory" really the hero category? Usually first or random?
+  // The original code used homeData[homeData.length - 1]. I'll stick to that.
+
   if (!lastCategory.Posts || lastCategory.Posts.length === 0) {
     return null;
   }
 
   const randomIndex = Math.floor(Math.random() * lastCategory.Posts.length);
-  return lastCategory.Posts[randomIndex];
+  const selectedHero = lastCategory.Posts[randomIndex];
+
+  // Cache the selection if providerValue is available
+  if (providerValue && selectedHero) {
+    cacheStorage.setString(
+      `hero_selection_${providerValue}`,
+      JSON.stringify(selectedHero),
+    );
+  }
+
+  return selectedHero;
+};
+
+export const clearHeroCache = (providerValue: string) => {
+  cacheStorage.delete(`hero_selection_${providerValue}`);
 };
 
 // New hook for hero metadata with React Query
@@ -75,8 +111,8 @@ export const useHeroMetadata = (heroLink: string, providerValue: string) => {
   return useQuery({
     queryKey: ['heroMetadata', heroLink, providerValue],
     queryFn: async () => {
-      const {providerManager} = await import('../services/ProviderManager');
-      const {default: axios} = await import('axios');
+      const { providerManager } = await import('../services/ProviderManager');
+      const { default: axios } = await import('axios');
 
       const info = await providerManager.getMetaData({
         link: heroLink,
@@ -88,7 +124,7 @@ export const useHeroMetadata = (heroLink: string, providerValue: string) => {
         try {
           const response = await axios.get(
             `https://v3-cinemeta.strem.io/meta/${info.type}/${info.imdbId}.json`,
-            {timeout: 5000},
+            { timeout: 5000 },
           );
           return response.data?.meta || info;
         } catch {
