@@ -243,7 +243,7 @@ export class SettingsStorage {
 
   getCustomProviderBaseUrl(): string {
     return mainStorage.getString(SettingsKeys.CUSTOM_PROVIDER_BASE_URL) ||
-      'https://raw.githubusercontent.com/Zenda-Cross/vega-providers/refs/heads/main';
+      'https://raw.githubusercontent.com/punisher-303/doodle-providers/refs/heads/main';
   }
 
   setCustomProviderBaseUrl(url: string): void {
