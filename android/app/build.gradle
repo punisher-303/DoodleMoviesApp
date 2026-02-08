@@ -110,8 +110,8 @@ android {
         applicationId 'com.doodle.movies'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 189 // INCREMENTED VERSION CODE
-        versionName "10.0.7"
+        versionCode 188 // INCREMENTED VERSION CODE
+        versionName "10.0.6"
         multiDexEnabled true
         
         // ADDED FOR 16KB PAGE SIZE SUPPORT

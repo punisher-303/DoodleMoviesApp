@@ -89,27 +89,14 @@ module.exports = () => {
   return {
     expo: {
       name: 'Doodle',
-      scheme: 'com.doodle.movies',
       displayName: 'Doodle',
-      jsEngine: 'hermes',
       newArchEnabled: true,
       autolinking: { exclude: ['expo-splash-screen'] },
       plugins,
       slug: 'doodle-movies',
-      version: '10.0.7', // UPDATED VERSION TO MATCH GRADLE
+      version: '10.0.6', // UPDATED VERSION TO MATCH GRADLE
       sdkVersion: '52.0.0',
       userInterfaceStyle: 'dark',
-      experiments: {
-        reactCompiler: true,
-      },
-      orientation: 'portrait',
-      icon: './assets/icon.png',
-      splash: {
-        image: './assets/splash.png',
-        resizeMode: 'contain',
-        backgroundColor: '#000000',
-      },
-      assetBundlePatterns: ['**/*'],
       // NEW: EAS Update configuration
       updates: {
         enabled: true,
@@ -124,7 +111,7 @@ module.exports = () => {
         minSdkVersion: 24,
         edgeToEdgeEnabled: true,
         package: 'com.doodle.movies',
-        versionCode: 189,
+        versionCode: 188, // UPDATED TO MATCH GRADLE
         permissions: [
           'FOREGROUND_SERVICE',
           'FOREGROUND_SERVICE_MEDIA_PLAYBACK',
