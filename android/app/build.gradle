@@ -110,7 +110,7 @@ android {
         applicationId 'com.doodle.movies'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 189 // INCREMENTED VERSION CODE
+        versionCode 190 // INCREMENTED VERSION CODE
         versionName "10.0.7"
         multiDexEnabled true
         
