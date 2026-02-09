@@ -98,3 +98,49 @@ export default function Slider({
     </Pressable>
   );
 }
+
+const SliderItem = React.memo(({
+  item,
+  isSelected,
+  setSelected,
+  navigation,
+  providerValue,
+  provider
+}: {
+  item: Post;
+  isSelected: string;
+  setSelected: (link: string) => void;
+  navigation: any;
+  providerValue?: string;
+  provider: any;
+}) => {
+  return (
+    <View className="flex flex-col mx-2">
+      <TouchableOpacity
+        onPress={e => {
+          e.stopPropagation && e.stopPropagation();
+          setSelected('');
+          navigation.navigate('Info', {
+            link: item.link,
+            provider: item.provider || providerValue || provider?.value,
+            poster: item?.image,
+          });
+        }}>
+        <Image
+          className="rounded-md"
+          source={{
+            uri:
+              item?.image ||
+              'https://placehold.jp/24/363636/ffffff/100x150.png?text=doodle',
+          }}
+          style={{ width: 100, height: 150 }}
+        />
+      </TouchableOpacity>
+      <Text className="text-white text-center truncate w-24 text-xs">
+        {item.title.length > 24
+          ? `${item.title.slice(0, 24)}...`
+          : item.title}
+      </Text>
+    </View>
+  );
+});
