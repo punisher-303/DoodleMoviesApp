@@ -89,9 +89,68 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
     const initialLoading = new Set(installedProviders.map(p => p.value));
     setLoadingProviders(initialLoading);
 
+    const verifyStreamExistence = async (
+      post: any,
+      providerValue: string,
+      signal: AbortSignal,
+    ): Promise<boolean> => {
+      try {
+        // 1. Fetch metadata to get linkList or episodes
+        const meta = await providerManager.getMetaData({
+          link: post.link,
+          provider: providerValue,
+        });
+
+        if (signal.aborted || !isMounted.current) return false;
+
+        if (!meta || !meta.linkList || meta.linkList.length === 0) {
+          return false;
+        }
+
+        // 2. Check direct links first (fastest)
+        const hasDirectLinks = meta.linkList.some(
+          (linkItem: any) =>
+            linkItem.directLinks && linkItem.directLinks.length > 0,
+        );
+
+        if (hasDirectLinks) {
+          return true;
+        }
+
+        // 3. Fallback to checking episodes/streams
+        // We just need ONE valid stream to prove it's playable
+        for (const linkItem of meta.linkList) {
+          if (signal.aborted) break;
+
+          if (linkItem.episodesLink) {
+            try {
+              const episodes = await providerManager.getEpisodes({
+                url: linkItem.episodesLink,
+                providerValue: providerValue,
+              });
+
+              if (episodes && episodes.length > 0 && episodes[0].link) {
+                // Technically, we should fetch streams for the episode, 
+                // but just having an episode link is a very strong indicator
+                // of playability compared to empty results.
+                return true;
+              }
+            } catch (epError) {
+              console.warn(`Error checking episode for ${post.title}:`, epError);
+            }
+          }
+        }
+
+        return false;
+      } catch (err) {
+        console.warn(`Stream verification failed for ${post.title}:`, err);
+        return false;
+      }
+    };
+
     const fetchProviderData = async (item: (typeof installedProviders)[0]) => {
       try {
-        const data = await providerManager.getSearchPosts({
+        const rawData = await providerManager.getSearchPosts({
           searchQuery: route.params.filter,
           page: 1,
           providerValue: item.value,
@@ -100,30 +159,69 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
 
         if (signal.aborted || !isMounted.current) return;
 
-        // Mark this specific provider as finished loading immediately
-        setLoadingProviders(prev => {
-          const next = new Set(prev);
-          next.delete(item.value);
-          return next;
-        });
-
-        if (data && data.length > 0) {
-          const newData: SearchPageData = {
+        if (rawData && rawData.length > 0) {
+          // Initialize empty provider block so it shows up in UI as tracking
+          const newDataBlock: SearchPageData = {
             title: item.display_name,
-            Posts: data,
+            Posts: [],
             filter: route.params.filter,
             providerValue: item.value,
             value: item.value,
             name: item.display_name,
           };
 
-          // Functional update to ensure we don't miss concurrent updates
-          setSearchData(prev => [...prev, newData]);
+          // Add empty block to state so users see something is happening
+          setSearchData(prev => {
+            const exists = prev.find(p => p.value === item.value);
+            if (exists) return prev;
+            return [...prev, newDataBlock];
+          });
+
+          // Process in small batches to avoid overloading device/network
+          const CONCURRENCY_LIMIT = 3;
+          const verifiedPosts: any[] = [];
+
+          for (let i = 0; i < rawData.length; i += CONCURRENCY_LIMIT) {
+            if (signal.aborted || !isMounted.current) break;
+
+            const batch = rawData.slice(i, i + CONCURRENCY_LIMIT);
+            const batchPromises = batch.map(async post => {
+              const isPlayable = await verifyStreamExistence(
+                post,
+                item.value,
+                signal,
+              );
+              return { post, isPlayable };
+            });
+
+            const results = await Promise.all(batchPromises);
+
+            const validPosts = results
+              .filter(r => r.isPlayable)
+              .map(r => r.post);
+
+            verifiedPosts.push(...validPosts);
+
+            // Incrementally update UI as items clear verification
+            setSearchData(prev => {
+              return prev.map(providerBlock => {
+                if (providerBlock.value === item.value) {
+                  return {
+                    ...providerBlock,
+                    Posts: [...verifiedPosts],
+                  };
+                }
+                return providerBlock;
+              });
+            });
+          }
         }
       } catch (error) {
         if (!signal.aborted && isMounted.current) {
           console.error(`Error fetching ${item.display_name}:`, error);
-          // Even on error, stop loading spinner for this provider
+        }
+      } finally {
+        if (!signal.aborted && isMounted.current) {
           setLoadingProviders(prev => {
             const next = new Set(prev);
             next.delete(item.value);
@@ -145,14 +243,19 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
 
   const renderItem: ListRenderItem<SearchPageData> = useCallback(
     ({ item }) => {
-      // Logic Fix: No need to search 'searchData' or 'loading' arrays here.
-      // 'item' already contains the Posts.
-      // We pass specific loading state if needed, or just false since we only render results when data exists.
+      // Check if this specific provider is still loading / verifying streams
+      const isProviderLoading = loadingProviders.has(item.providerValue);
+
+      // Only hide the slider entirely if it's done loading AND has no results.
+      // If it's still loading but has no results *yet*, we want to show the Skeletons.
+      if (!isProviderLoading && item.Posts.length === 0) {
+        return null;
+      }
 
       return (
         <View className="mb-4">
           <Slider
-            isLoading={false} // Data is present, so it's not loading anymore
+            isLoading={isProviderLoading}
             key={`${item.value}-slider`}
             title={item.name}
             posts={item.Posts}
@@ -163,7 +266,7 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
         </View>
       );
     },
-    [route.params.filter],
+    [route.params.filter, loadingProviders],
   );
 
   const isAllLoaded = loadingProviders.size === 0;
