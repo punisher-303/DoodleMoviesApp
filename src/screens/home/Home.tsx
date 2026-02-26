@@ -163,7 +163,7 @@ const Home = ({ }: Props) => {
             onClose={() => setOpen(false)}
             drawerType="front"
             drawerStyle={{ backgroundColor: 'transparent', width: '70%' }}
-            swipeEdgeWidth={Dimensions.get('window').width}
+            swipeEdgeWidth={50}
             swipeEnabled={!disableDrawer}
             renderDrawerContent={() =>
               !disableDrawer && <ProviderDrawer closeDrawer={() => setOpen(false)} />
