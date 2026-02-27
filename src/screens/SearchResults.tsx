@@ -269,33 +269,37 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
         const titleLower = post.title ? post.title.toLowerCase() : '';
         const providerNameLower = providerBlock.name.toLowerCase();
 
-        // Providers are notoriously bad at tagging content. 
-        // 1. Anime overrides: If the provider is explicitly an anime provider, 
-        // force it into the Anime category regardless of its missing tags.
+        // 1. ANIME: Strict collection of Anime and Cartoons
         const isAnimeProvider = providerNameLower.includes('anime') || providerNameLower.includes('gogo') || providerNameLower.includes('zoro');
+        const isAnimeContent = postTypeLower.includes('anime') || postTypeLower.includes('cartoon') || postTypeLower.includes('animation') || titleLower.includes('dub') || titleLower.includes('sub');
+        const isActuallyAnime = isAnimeProvider || isAnimeContent;
+
+        // 2. SERIES: Strict collection of episodic content
+        // We use title strings as fallbacks because providers often leave postType empty
+        const isSeriesContent = postTypeLower.includes('tv') || postTypeLower.includes('series') || postTypeLower.includes('season') || postTypeLower.includes('episode') || postTypeLower.includes('show') || titleLower.includes('season') || titleLower.includes('episode');
+
+        // 3. MOVIES: Single films
+        const isMovieContent = postTypeLower.includes('movie') || postTypeLower.includes('film') || postTypeLower === '';
 
         if (activeCategory === 'Anime') {
-          if (isAnimeProvider) return true;
-          if (postTypeLower.includes('anime')) return true;
-          // Fallback for badly tagged anime scraping
-          if (titleLower.includes('dub') || titleLower.includes('sub')) return true;
-          return false;
+          return isActuallyAnime;
         }
 
-        // If we get here and the provider is strictly an Anime provider, and the user 
-        // clicked "Movies" or "Series", drop it so anime doesn't pollute western UI searches
-        if (isAnimeProvider) return false;
-
-        if (activeCategory === 'Movies') {
-          // If no type is provided, we lean towards showing it rather than hiding it, 
-          // but if it explicitly says tv/series/episode we drop it.
-          if (postTypeLower.includes('tv') || postTypeLower.includes('series') || postTypeLower.includes('season') || postTypeLower.includes('episode')) return false;
-
-          return postTypeLower.includes('movie') || postTypeLower === '';
-        }
+        // CRITICAL STRICT GATES: If we are sorting for Western Movies or Series, 
+        // completely block ANY content that was flagged as Anime or Cartoon.
+        if (isActuallyAnime) return false;
 
         if (activeCategory === 'Series') {
-          return postTypeLower.includes('tv') || postTypeLower.includes('series') || postTypeLower.includes('season') || postTypeLower.includes('episode') || postTypeLower.includes('show');
+          // Series MUST strictly contain series/episodic tags.
+          return isSeriesContent;
+        }
+
+        if (activeCategory === 'Movies') {
+          // Movies MUST strictly NOT contain series/episodic tags.
+          if (isSeriesContent) return false;
+
+          // Return explicit movies or untagged western content (fallback)
+          return isMovieContent;
         }
 
         return false;
