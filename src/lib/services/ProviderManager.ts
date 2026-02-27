@@ -138,7 +138,16 @@ export class ProviderManager {
         signal,
         providerContext,
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (
+        signal.aborted ||
+        error?.name === 'AbortError' ||
+        error?.name === 'CanceledError' ||
+        error?.message?.includes('aborted')
+      ) {
+        console.log(`[ProviderManager] Silently caught abort for: ${providerValue}`);
+        return [];
+      }
       console.error('Error creating posts function:', error);
       console.error('Module content:', getPostsModule);
       throw new Error(`Invalid posts module for provider: ${providerValue}`);
@@ -179,7 +188,16 @@ export class ProviderManager {
         signal,
         providerContext,
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (
+        signal.aborted ||
+        error?.name === 'AbortError' ||
+        error?.name === 'CanceledError' ||
+        error?.message?.includes('aborted')
+      ) {
+        console.log(`[ProviderManager] Silently caught search abort for: ${providerValue}`);
+        return [];
+      }
       console.error('Error creating search posts function:', error);
       console.error('Module content:', getPostsModule);
       throw new Error(`Invalid posts module for provider: ${providerValue}`);

@@ -1,10 +1,11 @@
-import { View, Text, Platform, Image, Dimensions, FlatList } from 'react-native';
+import { View, Text, Platform, Dimensions, FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { WatchListStackParamList } from '../App';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 
 import useThemeStore from '../lib/zustand/themeStore';
 import useWatchListStore from '../lib/zustand/watchListStore';
@@ -53,13 +54,13 @@ const WatchList = () => {
       <View className="relative overflow-hidden">
         <Image
           className="rounded-xl"
-          resizeMode="cover"
           style={{
             width: itemWidth,
             height: 155,
             borderRadius: 10,
           }}
           source={{ uri: item.poster }}
+          cachePolicy="memory-disk"
         />
         <Text
           className="text-white text-xs truncate text-center mt-1"

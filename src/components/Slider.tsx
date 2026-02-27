@@ -1,12 +1,13 @@
-import { Image, Pressable, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, Text, View, FlatList } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import React from 'react';
 import type { Post } from '../lib/providers/types';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { HomeStackParamList } from '../App';
 import useContentStore from '../lib/zustand/contentStore';
-import { FlashList } from '@shopify/flash-list';
 import SkeletonLoader from './Skeleton';
+import { Image } from 'expo-image';
 
 // import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
@@ -66,12 +67,12 @@ export default function Slider({
           ))}
         </View>
       ) : (
-        <FlashList
-          estimatedItemSize={30}
+        <FlatList
           showsHorizontalScrollIndicator={false}
           data={posts}
           extraData={isSelected}
           horizontal
+          removeClippedSubviews={false}
           contentContainerStyle={{ paddingHorizontal: 3, paddingTop: 7 }}
           renderItem={({ item }) => (
             <SliderItem
@@ -118,7 +119,9 @@ const SliderItem = React.memo(({
     <View className="flex flex-col mx-2">
       <TouchableOpacity
         onPress={e => {
-          e.stopPropagation && e.stopPropagation();
+          if (e && e.stopPropagation) {
+            e.stopPropagation();
+          }
           setSelected('');
           navigation.navigate('Info', {
             link: item.link,
@@ -134,6 +137,7 @@ const SliderItem = React.memo(({
               'https://placehold.jp/24/363636/ffffff/100x150.png?text=doodle',
           }}
           style={{ width: 100, height: 150 }}
+          cachePolicy="memory-disk"
         />
       </TouchableOpacity>
       <Text className="text-white text-center truncate w-24 text-xs">

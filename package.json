@@ -1,6 +1,6 @@
 {
   "name": "doodle",
-  "version": "10.0.7",
+  "version": "10.0.8",
   "private": true,
   "scripts": {
     "android": "expo run:android",
@@ -46,6 +46,7 @@
     "expo-crypto": "~14.0.2",
     "expo-dev-client": "~5.0.0",
     "expo-document-picker": "~13.0.3",
+    "expo-image": "~2.0.7",
     "expo-intent-launcher": "~12.0.2",
     "expo-linear-gradient": "~14.0.2",
     "expo-navigation-bar": "~4.0.9",

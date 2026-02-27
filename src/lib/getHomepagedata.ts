@@ -1,6 +1,6 @@
-import {Content} from './zustand/contentStore';
-import {Post} from './providers/types';
-import {providerManager} from './services/ProviderManager';
+import { Content } from './zustand/contentStore';
+import { Post } from './providers/types';
+import { providerManager } from './services/ProviderManager';
 
 export interface HomePageData {
   title: string;
@@ -31,7 +31,11 @@ export const getHomePageDataOptimized = async (
       });
 
       if (signal.aborted) {
-        throw new Error('Request aborted');
+        return {
+          title: item.title,
+          Posts: [],
+          filter: item.filter,
+        };
       }
 
       console.log(`✅ Fetched ${data?.length || 0} posts for: ${item.title}`);
@@ -42,6 +46,15 @@ export const getHomePageDataOptimized = async (
         filter: item.filter,
       };
     } catch (error) {
+      if (signal.aborted || (error instanceof Error && error.name === 'AbortError')) {
+        // Silently handle expected abortions during fast navigation
+        return {
+          title: item.title,
+          Posts: [],
+          filter: item.filter,
+        };
+      }
+
       console.error(`❌ Failed to fetch ${item.title}:`, error);
 
       // Return partial data with error info instead of failing completely

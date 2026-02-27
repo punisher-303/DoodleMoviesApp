@@ -1,17 +1,16 @@
-import { View, Text, TouchableOpacity, GestureResponderEvent } from 'react-native';
+import { View, Text, TouchableOpacity, GestureResponderEvent, FlatList } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useEffect, useState, useRef, ReactElement } from 'react';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeStackParamList, SearchStackParamList } from '../App';
 import { Post } from '../lib/providers/types';
-import { Image } from 'react-native';
+import { Image } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import useContentStore from '../lib/zustand/contentStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import { settingsStorage } from '../lib/storage';
-import { FlashList } from '@shopify/flash-list';
 import SkeletonLoader from '../components/Skeleton';
 import useThemeStore from '../lib/zustand/themeStore';
 import { providerManager } from '../lib/services/ProviderManager';
@@ -162,8 +161,7 @@ const ScrollList = ({ route }: Props): ReactElement => {
         </TouchableOpacity>
       </View>
       <View className="justify-center flex-row w-full flex-1">
-        <FlashList
-          estimatedItemSize={300}
+        <FlatList
           ListFooterComponent={
             <>
               {isLoading && (
@@ -178,6 +176,7 @@ const ScrollList = ({ route }: Props): ReactElement => {
           }
           data={posts}
           numColumns={viewType === 1 ? 3 : 1}
+          removeClippedSubviews={false}
           key={`view-type-${viewType}`}
           contentContainerStyle={{ paddingBottom: 80 }}
           keyExtractor={(item, i) => `${item.title}-${i}`}
@@ -207,6 +206,7 @@ const ScrollList = ({ route }: Props): ReactElement => {
                     ? { width: 100, height: 150 }
                     : { width: 70, height: 100 }
                 }
+                cachePolicy="memory-disk"
               />
               <Text
                 className={

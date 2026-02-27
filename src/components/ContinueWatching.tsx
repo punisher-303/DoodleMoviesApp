@@ -1,21 +1,21 @@
-import React, {useEffect, useState, useCallback} from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   FlatList,
   Pressable,
 } from 'react-native';
+import { Image } from 'expo-image';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
-import {mainStorage as MMKV} from '../lib/storage/StorageService';
-import {useNavigation} from '@react-navigation/native';
+import { mainStorage as MMKV } from '../lib/storage/StorageService';
+import { useNavigation } from '@react-navigation/native';
 import useThemeStore from '../lib/zustand/themeStore';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {TabStackParamList} from '../App';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { TabStackParamList } from '../App';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import {MaterialCommunityIcons} from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 // --- Sub-Component for Individual Items (Handles Image Logic) ---
 const MovieCard = React.memo(
@@ -81,22 +81,27 @@ const MovieCard = React.memo(
         activeOpacity={0.8}
         className="max-w-[100px] mx-2"
         onLongPress={e => {
-          e.stopPropagation();
+          if (e && e.stopPropagation) {
+            e.stopPropagation();
+          }
           onLongPress();
         }}
         onPress={e => {
-          e.stopPropagation();
+          if (e && e.stopPropagation) {
+            e.stopPropagation();
+          }
           onPress();
         }}>
         <View className="relative">
           {/* Poster Image with Fallback */}
           <Image
             source={
-              imageUri ? {uri: imageUri} : undefined // Replace with your local placeholder if needed, or remove generic source
+              imageUri ? { uri: imageUri } : undefined // Replace with your local placeholder if needed, or remove generic source
             }
             className="rounded-md bg-gray-800"
-            style={{width: 100, height: 150}}
-            resizeMode="cover"
+            style={{ width: 100, height: 150 }}
+            contentFit="cover"
+            cachePolicy="memory-disk"
             onError={() => {
               // If the original link fails, try IMDb
               if (!imageError) {
@@ -110,9 +115,8 @@ const MovieCard = React.memo(
           {selectionMode && (
             <View className="absolute top-2 right-2 z-50">
               <View
-                className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                  isSelected ? '' : 'bg-white/30'
-                }`}
+                className={`w-5 h-5 rounded-full flex items-center justify-center ${isSelected ? '' : 'bg-white/30'
+                  }`}
                 style={{
                   borderWidth: 1,
                   borderColor: 'white',
@@ -133,7 +137,7 @@ const MovieCard = React.memo(
           {/* Progress Bar */}
           <View
             className="absolute bottom-0 left-0 right-0 h-1"
-            style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+            style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
             <View
               style={{
                 position: 'absolute',
@@ -158,10 +162,10 @@ const MovieCard = React.memo(
 
 // --- Main Component ---
 const ContinueWatching = () => {
-  const {primary} = useThemeStore(state => state);
+  const { primary } = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<TabStackParamList>>();
-  const {history, removeItem} = useWatchHistoryStore(state => state);
+  const { history, removeItem } = useWatchHistoryStore(state => state);
   const [progressData, setProgressData] = useState<Record<string, number>>({});
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState<boolean>(false);
@@ -311,7 +315,7 @@ const ContinueWatching = () => {
       onPress={() => selectionMode && exitSelectionMode()}
       className="mt-3 mb-8">
       <View className="flex flex-row justify-between items-center px-2 mb-3">
-        <Text className="text-2xl font-semibold" style={{color: primary}}>
+        <Text className="text-2xl font-semibold" style={{ color: primary }}>
           Continue Watching
         </Text>
 
@@ -338,8 +342,8 @@ const ContinueWatching = () => {
         horizontal
         showsHorizontalScrollIndicator={false}
         keyExtractor={item => item.link}
-        contentContainerStyle={{paddingHorizontal: 12}}
-        renderItem={({item}) => (
+        contentContainerStyle={{ paddingHorizontal: 12 }}
+        renderItem={({ item }) => (
           <MovieCard
             item={item}
             progress={progressData[item.link] || 0}

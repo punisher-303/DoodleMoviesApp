@@ -2,8 +2,8 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Text,
-  View,
   FlatList,
+  View,
   ListRenderItem,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -89,64 +89,10 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
     const initialLoading = new Set(installedProviders.map(p => p.value));
     setLoadingProviders(initialLoading);
 
-    const verifyStreamExistence = async (
-      post: any,
-      providerValue: string,
-      signal: AbortSignal,
-    ): Promise<boolean> => {
-      try {
-        // 1. Fetch metadata to get linkList or episodes
-        const meta = await providerManager.getMetaData({
-          link: post.link,
-          provider: providerValue,
-        });
-
-        if (signal.aborted || !isMounted.current) return false;
-
-        if (!meta || !meta.linkList || meta.linkList.length === 0) {
-          return false;
-        }
-
-        // 2. Check direct links first (fastest)
-        const hasDirectLinks = meta.linkList.some(
-          (linkItem: any) =>
-            linkItem.directLinks && linkItem.directLinks.length > 0,
-        );
-
-        if (hasDirectLinks) {
-          return true;
-        }
-
-        // 3. Fallback to checking episodes/streams
-        // We just need ONE valid stream to prove it's playable
-        for (const linkItem of meta.linkList) {
-          if (signal.aborted) break;
-
-          if (linkItem.episodesLink) {
-            try {
-              const episodes = await providerManager.getEpisodes({
-                url: linkItem.episodesLink,
-                providerValue: providerValue,
-              });
-
-              if (episodes && episodes.length > 0 && episodes[0].link) {
-                // Technically, we should fetch streams for the episode, 
-                // but just having an episode link is a very strong indicator
-                // of playability compared to empty results.
-                return true;
-              }
-            } catch (epError) {
-              console.warn(`Error checking episode for ${post.title}:`, epError);
-            }
-          }
-        }
-
-        return false;
-      } catch (err) {
-        console.warn(`Stream verification failed for ${post.title}:`, err);
-        return false;
-      }
-    };
+    // Removed verifyStreamExistence function here to vastly accelerate search speeds.
+    // Making deep metadata/episode queries for every single search result caused massive
+    // UI latency and network throttling on the providers. We will assume search results
+    // are valid until the user clicks into them.
 
     const fetchProviderData = async (item: (typeof installedProviders)[0]) => {
       try {
@@ -160,6 +106,17 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
         if (signal.aborted || !isMounted.current) return;
 
         if (rawData && rawData.length > 0) {
+          // Filter out dummy error posts injected by providers
+          const cleanRawData = rawData.filter((post) => {
+            if (!post || !post.title) return false;
+            const titleLower = post.title.toLowerCase();
+            return (
+              !titleLower.includes('no stream') &&
+              !titleLower.includes('no result') &&
+              !titleLower.includes('not found')
+            );
+          });
+
           // Initialize empty provider block so it shows up in UI as tracking
           const newDataBlock: SearchPageData = {
             title: item.display_name,
@@ -177,44 +134,19 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
             return [...prev, newDataBlock];
           });
 
-          // Process in small batches to avoid overloading device/network
-          const CONCURRENCY_LIMIT = 3;
-          const verifiedPosts: any[] = [];
-
-          for (let i = 0; i < rawData.length; i += CONCURRENCY_LIMIT) {
-            if (signal.aborted || !isMounted.current) break;
-
-            const batch = rawData.slice(i, i + CONCURRENCY_LIMIT);
-            const batchPromises = batch.map(async post => {
-              const isPlayable = await verifyStreamExistence(
-                post,
-                item.value,
-                signal,
-              );
-              return { post, isPlayable };
+          // Instead of batching and verifying streams which takes awful amounts of time,
+          // instantly push the cleaned raw search results to the screen.
+          setSearchData(prev => {
+            return prev.map(providerBlock => {
+              if (providerBlock.value === item.value) {
+                return {
+                  ...providerBlock,
+                  Posts: cleanRawData, // Instantly inject the cleaned payload
+                };
+              }
+              return providerBlock;
             });
-
-            const results = await Promise.all(batchPromises);
-
-            const validPosts = results
-              .filter(r => r.isPlayable)
-              .map(r => r.post);
-
-            verifiedPosts.push(...validPosts);
-
-            // Incrementally update UI as items clear verification
-            setSearchData(prev => {
-              return prev.map(providerBlock => {
-                if (providerBlock.value === item.value) {
-                  return {
-                    ...providerBlock,
-                    Posts: [...verifiedPosts],
-                  };
-                }
-                return providerBlock;
-              });
-            });
-          }
+          });
         }
       } catch (error) {
         if (!signal.aborted && isMounted.current) {
@@ -241,14 +173,39 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
     };
   }, [route.params.filter, installedProviders]);
 
+  // Memoize and sort the data so loaded providers appear first, 
+  // currently loading providers are in the middle, and empty providers are hidden/discarded.
+  const sortedSearchData = useMemo(() => {
+    return [...searchData].sort((a, b) => {
+      const aLoading = loadingProviders.has(a.providerValue);
+      const bLoading = loadingProviders.has(b.providerValue);
+
+      const aHasPosts = a.Posts && a.Posts.length > 0;
+      const bHasPosts = b.Posts && b.Posts.length > 0;
+
+      // 1. If A has posts and B does not, A goes first (Prioritize loaded content)
+      if (aHasPosts && !bHasPosts) return -1;
+      if (!aHasPosts && bHasPosts) return 1;
+
+      // 2. If both have posts OR both do not have posts, sort by loading state
+      // (Prioritize currently loading skeletons over finished empty results)
+      if (aLoading && !bLoading) return -1;
+      if (!aLoading && bLoading) return 1;
+
+      // 3. If they are equal in both categories, sort alphabetically by provider name
+      // This prevents the arrays from randomly jumping around the screen during React re-renders
+      return a.name.localeCompare(b.name);
+    });
+  }, [searchData, loadingProviders]);
+
   const renderItem: ListRenderItem<SearchPageData> = useCallback(
     ({ item }) => {
       // Check if this specific provider is still loading / verifying streams
       const isProviderLoading = loadingProviders.has(item.providerValue);
 
-      // Only hide the slider entirely if it's done loading AND has no results.
-      // If it's still loading but has no results *yet*, we want to show the Skeletons.
-      if (!isProviderLoading && item.Posts.length === 0) {
+      // Never hide a slider that is still loading, so we can see the skeleton!
+      // Only hide it if it explicitly finished loading and found 0 posts.
+      if (!isProviderLoading && (!item.Posts || item.Posts.length === 0)) {
         return null;
       }
 
@@ -272,15 +229,14 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
   const isAllLoaded = loadingProviders.size === 0;
 
   return (
-    <View className="bg-black h-full w-full">
+    <View className="bg-black flex-1 w-full relative">
       <FlatList
-        data={searchData}
+        data={sortedSearchData}
         keyExtractor={(item, index) =>
-          `${item.providerValue}-${item.title}-${index}`
+          `${item.providerValue}-${index}`
         }
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
-        // Header Component containing the title and global loader
         ListHeaderComponent={
           <SearchHeader
             filter={route.params.filter}
@@ -289,14 +245,13 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
             topPadding={insets.top + 16}
           />
         }
-        // Padding for the bottom
         ListFooterComponent={<View className="h-16" />}
         contentContainerStyle={{ paddingHorizontal: 16 }}
-        // Performance settings for FlatList
-        initialNumToRender={3}
+        initialNumToRender={5}
         maxToRenderPerBatch={5}
-        windowSize={5}
-        removeClippedSubviews={true}
+        windowSize={11}
+        updateCellsBatchingPeriod={50}
+        removeClippedSubviews={false}
       />
     </View>
   );

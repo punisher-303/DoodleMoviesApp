@@ -9,11 +9,11 @@ import {
   Dimensions,
   StyleSheet,
   ActivityIndicator,
-  Image,
   TextInput,
   Alert,
   BackHandler,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { DoodleTVStackParamList } from '../../App';
 import { useNavigation } from '@react-navigation/native';
@@ -399,7 +399,8 @@ const LiveTVScreen: React.FC = () => {
               <Image
                 source={{ uri: heroChannel.logo }}
                 style={styles.heroLogo}
-                resizeMode="cover"
+                contentFit="cover"
+                cachePolicy="memory-disk"
               />
               <Text style={styles.heroChannelName} numberOfLines={1}>
                 {heroChannel.name}
@@ -457,7 +458,12 @@ const LiveTVScreen: React.FC = () => {
                     })
                   }
                   style={[styles.channelItem, styles.channelItemContainer]}>
-                  <Image source={{ uri: item.logo }} style={styles.channelLogo} />
+                  <Image
+                    source={{ uri: item.logo }}
+                    style={styles.channelLogo}
+                    contentFit="contain"
+                    cachePolicy="memory-disk"
+                  />
                   <Text style={styles.channelName} numberOfLines={1}>
                     {item.name}
                   </Text>

@@ -1,8 +1,7 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity, FlatList } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FlashList } from '@shopify/flash-list';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 // import * as FileSystem from 'expo-file-system';
@@ -66,9 +65,8 @@ const SeriesEpisodes = ({ navigation, route }: SeriesEpisodesRouteProp) => {
           <Text className="text-gray-400">{episodes.length} episodes</Text>
         </View>
 
-        <FlashList
+        <FlatList
           data={sortedEpisodes}
-          estimatedItemSize={100}
           renderItem={({ item }) => {
             const fileName = item.uri.split('/').pop() || '';
             const episodeNumber = getEpisodeNumber(fileName);

@@ -1,5 +1,4 @@
 import {
-  Image,
   Text,
   View,
   StatusBar,
@@ -16,6 +15,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { Image } from 'expo-image';
 import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import {
   NativeStackNavigationProp,
@@ -216,7 +216,9 @@ const FlipHeader = ({
           <Image
             source={{ uri: posterImage }}
             className="h-[256] w-full"
-            resizeMode="cover"
+            contentFit="cover"
+            transition={300}
+            cachePolicy="memory-disk"
             onError={e => console.warn('Background image failed:', e)}
           />
         </Skeleton>
@@ -229,7 +231,8 @@ const FlipHeader = ({
             <Image
               onError={() => setLogoError(true)}
               source={{ uri: meta?.logo }}
-              style={{ width: 200, height: 100, resizeMode: 'contain' }}
+              style={{ width: 200, height: 100 }}
+              contentFit="contain"
             />
           ) : (
             <Text className="text-white text-2xl mt-3 capitalize font-semibold w-3/4 truncate">
@@ -608,10 +611,10 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                             <Text
                               key={actor}
                               className={`text-xs bg-tertiary p-1 px-2 rounded-md ${index % 3 === 0
-                                  ? 'text-red-500'
-                                  : index % 3 === 1
-                                    ? 'text-blue-500'
-                                    : 'text-green-500'
+                                ? 'text-red-500'
+                                : index % 3 === 1
+                                  ? 'text-blue-500'
+                                  : 'text-green-500'
                                 }`}>
                               {actor}
                             </Text>
@@ -622,10 +625,10 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                             <Text
                               key={actor}
                               className={`text-xs bg-tertiary p-1 px-2 rounded-md ${index % 3 === 0
-                                  ? 'text-red-500'
-                                  : index % 3 === 1
-                                    ? 'text-blue-500'
-                                    : 'text-green-500'
+                                ? 'text-red-500'
+                                : index % 3 === 1
+                                  ? 'text-blue-500'
+                                  : 'text-green-500'
                                 }`}>
                               {actor}
                             </Text>

@@ -2,15 +2,15 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   StatusBar,
   Platform,
+  FlatList,
 } from 'react-native';
+import { Image } from 'expo-image';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
-import { FlashList } from '@shopify/flash-list';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { WatchHistoryStackParamList } from '../App';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -168,10 +168,10 @@ const WatchHistory = ({ navigation }: Props) => {
         )}
       </View>
 
-      <FlashList
+      <FlatList
         data={uniqueHistory}
-        estimatedItemSize={150}
         numColumns={3}
+        removeClippedSubviews={false}
         ListEmptyComponent={() => (
           <View className="flex-1 justify-center items-center mt-10">
             <MaterialCommunityIcons name="history" size={80} color={primary} />
@@ -194,6 +194,7 @@ const WatchHistory = ({ navigation }: Props) => {
                   <Image
                     source={{ uri: item.poster }}
                     className="w-full aspect-[2/3] rounded-lg"
+                    cachePolicy="memory-disk"
                   />
 
                   {/* Enhanced Progress Bar */}

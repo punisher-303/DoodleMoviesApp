@@ -1,4 +1,4 @@
-import { View, Text, Image, Platform, TouchableOpacity } from 'react-native';
+import { View, Text, Image, Platform, TouchableOpacity, FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import requestStoragePermission from '../../lib/file/getStoragePermission';
 import * as FileSystem from 'expo-file-system';
@@ -13,7 +13,6 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../App';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import { FlashList } from '@shopify/flash-list';
 import * as DocumentPicker from 'expo-document-picker';
 
 // Define supported video extensions
@@ -450,10 +449,9 @@ const Downloads = () => {
         </View>
       </View>
 
-      <FlashList
+      <FlatList
         data={allMediaItems}
         numColumns={3}
-        estimatedItemSize={200}
         ListEmptyComponent={() =>
           !loading && (
             <View className="flex-1 justify-center items-center mt-10">

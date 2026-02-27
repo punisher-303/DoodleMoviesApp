@@ -1,5 +1,5 @@
 import {
-  ScrollView,
+  FlatList,
   RefreshControl,
   View,
   Text,
@@ -94,37 +94,7 @@ const Home = ({ }: Props) => {
     }
   }, [refetch, provider?.value]);
 
-  // Memoized loading skeleton
-  const loadingSliders = useMemo(() => {
-    if (!provider?.value) {
-      return [];
-    }
-
-    return providerManager
-      .getCatalog({ providerValue: provider.value })
-      .map((item, index) => (
-        <Slider
-          isLoading={true}
-          key={`loading-${item.filter}-${index}`}
-          title={item.title}
-          posts={[]}
-          filter={item.filter}
-        />
-      ));
-  }, [provider?.value]);
-
-  // Memoized content sliders
-  const contentSliders = useMemo(() => {
-    return homeData.map((item, index) => (
-      <Slider
-        isLoading={false}
-        key={`content-${item.filter}-${index}`}
-        title={item.title}
-        posts={item.Posts}
-        filter={item.filter}
-      />
-    ));
-  }, [homeData]);
+  // Virualized sliders handled directly in FlatList's renderItem
 
   // Memoized error message
   const errorComponent = useMemo(() => {
@@ -175,9 +145,9 @@ const Home = ({ }: Props) => {
               backgroundColor={backgroundColor}
             />
 
-            <ScrollView
+            <FlatList
               onScroll={handleScroll}
-              scrollEventThrottle={16} // Optimize scroll performance
+              scrollEventThrottle={16}
               showsVerticalScrollIndicator={false}
               className="bg-black"
               refreshControl={
@@ -188,21 +158,40 @@ const Home = ({ }: Props) => {
                   refreshing={isRefetching}
                   onRefresh={handleRefresh}
                 />
-              }>
-              <HeroOptimized
-                onOpenDrawer={() => setOpen(true)}
-                isDrawerOpen={open}
-              />
-
-              <ContinueWatching />
-
-              <View className="-mt-6 relative z-20">
-                {isLoading ? loadingSliders : contentSliders}
-                {errorComponent}
-              </View>
-
-              <View className="h-16" />
-            </ScrollView>
+              }
+              ListHeaderComponent={
+                <>
+                  <HeroOptimized
+                    onOpenDrawer={() => setOpen(true)}
+                    isDrawerOpen={open}
+                  />
+                  <ContinueWatching />
+                </>
+              }
+              data={isLoading && provider?.value ? providerManager.getCatalog({ providerValue: provider.value }) : homeData}
+              keyExtractor={(item, index) => `${item.filter}-${index}`}
+              renderItem={({ item, index }) => (
+                <View className={index === 0 ? '-mt-6 relative z-20' : 'relative z-20'}>
+                  <Slider
+                    isLoading={isLoading}
+                    title={item.title}
+                    posts={isLoading ? [] : (item as any).Posts}
+                    filter={item.filter}
+                  />
+                </View>
+              )}
+              ListFooterComponent={
+                <>
+                  {errorComponent}
+                  <View className="h-16" />
+                </>
+              }
+              windowSize={11}
+              initialNumToRender={5}
+              maxToRenderPerBatch={5}
+              updateCellsBatchingPeriod={50}
+              removeClippedSubviews={false}
+            />
           </Drawer>
         </View>
       </GestureHandlerRootView>

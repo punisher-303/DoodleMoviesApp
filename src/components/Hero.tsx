@@ -1,7 +1,8 @@
-import { Image, View } from 'moti';
+import { Image as MotiImage, View } from 'moti';
 import Animated, { ZoomIn, FadeOut } from 'react-native-reanimated';
 import React, { memo, useState, useCallback } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import {
   Keyboard,
   Pressable,
@@ -188,7 +189,9 @@ const Hero = memo(({ isDrawerOpen, onOpenDrawer }: HeroProps) => {
           source={imageSource}
           onError={handleImageError}
           className="h-full w-full"
-          style={{ resizeMode: 'cover' }}
+          contentFit="cover"
+          transition={500}
+          cachePolicy="memory-disk"
         />
       </Skeleton>
 
@@ -203,8 +206,8 @@ const Hero = memo(({ isDrawerOpen, onOpenDrawer }: HeroProps) => {
                 style={{
                   width: 200,
                   height: 100,
-                  resizeMode: 'contain',
                 }}
+                contentFit="contain"
                 onError={() => console.warn('Logo failed to load')}
               />
             ) : (
