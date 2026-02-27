@@ -37,6 +37,7 @@ import { ifExists } from '../lib/file/ifExists';
 import { useEpisodes, useStreamData } from '../lib/hooks/useEpisodes';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
+import { BlurView } from 'expo-blur';
 
 
 interface SeasonListProps {
@@ -466,7 +467,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
         `}>
           <View className="flex-row w-full justify-between gap-2 items-center">
             <TouchableOpacity
-              className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-1 flex-row gap-x-2 relative ${titleAlignment}`}
+              className={`bg-zinc-900 rounded-xl h-12 px-4 flex-row items-center gap-x-2 border border-white/40 ${titleAlignment}`}
               style={{ width: '80%' }}
               onPress={() =>
                 playHandler({
@@ -480,7 +481,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
               }
               onLongPress={() => onLongPressHandler(true, item.link, 'series')}>
               <Ionicons name="play-circle" size={28} color={primary} />
-              <Text className="text-white">
+              <Text className="text-white z-10 font-medium">
                 {item.title.length > 30
                   ? item.title.slice(0, 30) + '...'
                   : item.title}
@@ -538,7 +539,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
         `}>
           <View className="flex-row w-full justify-between gap-2 items-center">
             <TouchableOpacity
-              className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-2 flex-row gap-x-2 relative ${titleAlignment}`}
+              className={`bg-zinc-900 rounded-xl h-12 px-4 flex-row items-center gap-x-2 border border-white/40 ${titleAlignment}`}
               style={{ width: '80%' }}
               onPress={() =>
                 playHandler({
@@ -554,7 +555,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
                 onLongPressHandler(true, item.link, item?.type || 'series')
               }>
               <Ionicons name="play-circle" size={28} color={primary} />
-              <Text className="text-white">
+              <Text className="text-white z-10 font-medium">
                 {activeSeason?.directLinks?.length &&
                   activeSeason?.directLinks?.length > 1
                   ? item.title?.length > 27

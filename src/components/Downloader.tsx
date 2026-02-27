@@ -18,6 +18,7 @@ import { downloadFolder } from '../lib/constants';
 import useThemeStore from '../lib/zustand/themeStore';
 import DownloadBottomSheet from './DownloadBottomSheet';
 import { settingsStorage } from '../lib/storage';
+import { BlurView } from 'expo-blur';
 import { providerManager } from '../lib/services/ProviderManager';
 
 const DownloadComponent = ({
@@ -126,7 +127,7 @@ const DownloadComponent = ({
   return (
     <>
       <TouchableOpacity
-        className={`${className ? className : 'p-2'} rounded-full bg-white/30 items-center justify-center border border-zinc-700`}
+        className={`${className ? className : 'p-2 h-12 w-12'} bg-zinc-900 rounded-full border border-white/40 items-center justify-center`}
         onPress={() => {
           if (alreadyDownloaded) {
             setDeleteModal(true);
