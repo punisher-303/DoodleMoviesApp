@@ -333,7 +333,7 @@ const Suggestion = () => {
         {/* Remove button - Separate focusable for TV */}
         <TouchableOpacity
           onPress={() => handleRemoveSuggestion(item.imdbID)}
-          className="p-3 bg-[#141414] rounded-xl border border-white/10 justify-center items-center h-full">
+          className="p-3 bg-[#141414] rounded-xl border border-white/10 justify-center items-center">
           <Ionicons name="close" size={24} color="#FF6347" />
         </TouchableOpacity>
       </View>

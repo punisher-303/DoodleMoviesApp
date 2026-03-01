@@ -157,10 +157,10 @@ const RenderMovieItem = ({ item, index, primary, handleSearch }: any) => (
             color={primary}
             style={{ marginRight: 12 }}
           />
-          <View>
-            <Text className="text-white text-base">{item.Title || item.l}</Text>
+          <View className="flex-1">
+            <Text className="text-white text-base" numberOfLines={1}>{item.Title || item.l}</Text>
             {/* FIX: Ensure subtitle is a single concatenated string inside Text */}
-            <Text className="text-white/50 text-xs">
+            <Text className="text-white/50 text-xs" numberOfLines={1}>
               {((item.Type || item.q) === 'series' || item.q === 'tv_series'
                 ? 'TV Show'
                 : 'Movie') +
@@ -479,8 +479,9 @@ const Search = () => {
           <Text className="text-white text-xl font-bold">Search</Text>
           <TouchableOpacity
             onPress={() => navigation.navigate('Suggestion')}
-            className="bg-white/5 rounded-full p-2 border border-white/10">
+            className="flex-row items-center bg-white/5 rounded-full px-4 py-2 border border-white/10">
             <MaterialCommunityIcons name="movie-star-outline" size={20} color={primary} />
+            <Text className="text-white/90 text-sm font-medium ml-2">Suggestions</Text>
           </TouchableOpacity>
         </View>
         <View className="flex-row items-center space-x-3 mb-2">
