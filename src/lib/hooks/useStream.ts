@@ -1,11 +1,11 @@
-import {useQuery} from '@tanstack/react-query';
-import {useState, useEffect} from 'react';
-import {ToastAndroid} from 'react-native';
-import {providerManager} from '../services/ProviderManager';
-import {settingsStorage} from '../storage';
-import {ifExists} from '../file/ifExists';
-import {Stream} from '../providers/types';
-import {debridService} from '../services/DebridService';
+import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { ToastAndroid } from 'react-native';
+import { providerManager } from '../services/ProviderManager';
+import { settingsStorage } from '../storage';
+import { ifExists } from '../file/ifExists';
+import { Stream } from '../providers/types';
+import { debridService } from '../services/DebridService';
 
 interface UseStreamOptions {
   activeEpisode: any;
@@ -29,7 +29,7 @@ export const useStream = ({
     type: '',
   });
   const [externalSubs, setExternalSubs] = useState<any[]>([]);
-  
+
   // State to manage automatic skipping attempts for the current selected stream
   const [skipAttemptCount, setSkipAttemptCount] = useState(0);
 
@@ -40,7 +40,7 @@ export const useStream = ({
     refetch,
   } = useQuery<Stream[], Error>({
     queryKey: ['stream', activeEpisode?.link, routeParams?.type, provider],
-    queryFn: async ({signal}) => {
+    queryFn: async ({ signal }) => {
       if (!activeEpisode?.link) {
         return [];
       }
@@ -50,7 +50,7 @@ export const useStream = ({
       // Handle direct URL (downloaded content)
       if (routeParams?.directUrl) {
         return [
-          {server: 'Downloaded', link: routeParams.directUrl, type: 'mp4'},
+          { server: 'Downloaded', link: routeParams.directUrl, type: 'mp4' },
         ];
       }
 
@@ -64,14 +64,14 @@ export const useStream = ({
 
         const exists = await ifExists(file);
         if (exists) {
-          return [{server: 'downloaded', link: exists, type: 'mp4'}];
+          return [{ server: 'downloaded', link: exists, type: 'mp4' }];
         }
       }
 
       // Fetch streams from provider with a timeout
       const fetchController = new AbortController();
       // Use the useQuery signal in case the query is cancelled
-      signal.addEventListener('abort', () => fetchController.abort()); 
+      signal.addEventListener('abort', () => fetchController.abort());
 
       const timeoutId = setTimeout(() => {
         fetchController.abort();
@@ -84,7 +84,7 @@ export const useStream = ({
           signal: fetchController.signal,
           providerValue: routeParams?.providerValue || provider,
         });
-        
+
         clearTimeout(timeoutId); // Clear timeout on successful fetch
 
         // Filter out excluded qualities
@@ -102,7 +102,7 @@ export const useStream = ({
 
         // Handle magnet links by wrapping with TorrServer
         let torrServerUrl = settingsStorage.getTorrServerUrl();
-        
+
         // Zero-Config: If URL is empty/default, try to ensure localhost is used
         if (!torrServerUrl) {
           torrServerUrl = 'http://127.0.0.1:8090';
@@ -139,7 +139,7 @@ export const useStream = ({
     gcTime: 30 * 60 * 1000, // 30 minutes
     // We remove the automatic retry logic in favor of manual server switching/refetch
     // by the component when a stream fails/times out.
-    retry: false, 
+    retry: false,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
   });
@@ -164,12 +164,14 @@ export const useStream = ({
 
       if (initialStream) {
         setSelectedStream(initialStream);
-        setSkipAttemptCount(0); // Reset attempt count for new stream data
-        
+        setSkipAttemptCount(0);
+
         if (skippedHubcloud) {
           ToastAndroid.show('Skipped hubcloud server', ToastAndroid.SHORT);
         }
       }
+    }
+  }, [streamData]);
 
   // Debrid resolution logic
   useEffect(() => {
@@ -192,7 +194,7 @@ export const useStream = ({
         } catch (error: any) {
           console.error('Debrid resolution failed:', error);
           ToastAndroid.show('Debrid failed, falling back to TorrServer', ToastAndroid.SHORT);
-          
+
           // Fallback to TorrServer
           const torrServerUrl = settingsStorage.getTorrServerUrl() || 'http://127.0.0.1:8090';
           const encodedMagnet = encodeURIComponent(selectedStream.link);
@@ -236,7 +238,7 @@ export const useStream = ({
       const currentIndex = streamData.findIndex(
         (s) => s.link === selectedStream.link && s.server === selectedStream.server,
       );
-      
+
       // We need to handle the hubcloud skip here too, just in case the streamData list has 
       // other 'hubcloud' entries further down.
       let nextIndex = currentIndex + 1;
@@ -256,7 +258,7 @@ export const useStream = ({
       if (nextStream) {
         setSelectedStream(nextStream);
         setSkipAttemptCount(0); // Reset attempt count for the new stream
-        
+
         if (showToast) {
           ToastAndroid.show(
             'Video could not be played, Trying next server',
