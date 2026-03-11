@@ -41,6 +41,15 @@ export enum SettingsKeys {
   // Custom Provider Source
   CUSTOM_PROVIDER_BASE_URL = 'customProviderBaseUrl',
   USE_CUSTOM_PROVIDER_BASE_URL = 'useCustomProviderBaseUrl',
+
+  // TorrServer / Debrid
+  TORR_SERVER_URL = 'torrServerUrl',
+  USE_DEBRID = 'useDebrid',
+  DEBRID_SERVICE = 'debridService',
+  RD_ACCESS_TOKEN = 'rdAccessToken',
+  RD_REFRESH_TOKEN = 'rdRefreshToken',
+  RD_TOKEN_EXPIRY = 'rdTokenExpiry',
+  TORBOX_KEY = 'torboxKey',
 }
 
 /**
@@ -265,6 +274,62 @@ export class SettingsStorage {
 
   setBool(key: string, value: boolean): void {
     mainStorage.setBool(key, value);
+  }
+
+  getTorrServerUrl(): string {
+    return mainStorage.getString(SettingsKeys.TORR_SERVER_URL) || 'http://localhost:8090';
+  }
+
+  setTorrServerUrl(url: string): void {
+    mainStorage.setString(SettingsKeys.TORR_SERVER_URL, url);
+  }
+
+  isDebridEnabled(): boolean {
+    return mainStorage.getBool(SettingsKeys.USE_DEBRID) === true;
+  }
+
+  setDebridEnabled(enabled: boolean): void {
+    mainStorage.setBool(SettingsKeys.USE_DEBRID, enabled);
+  }
+
+  getDebridService(): string {
+    return mainStorage.getString(SettingsKeys.DEBRID_SERVICE) || 'None';
+  }
+
+  setDebridService(service: string): void {
+    mainStorage.setString(SettingsKeys.DEBRID_SERVICE, service);
+  }
+
+  getRealDebridToken(): string | null {
+    return mainStorage.getString(SettingsKeys.RD_ACCESS_TOKEN);
+  }
+
+  setRealDebridToken(token: string): void {
+    mainStorage.setString(SettingsKeys.RD_ACCESS_TOKEN, token);
+  }
+
+  getRealDebridRefreshToken(): string | null {
+    return mainStorage.getString(SettingsKeys.RD_REFRESH_TOKEN);
+  }
+
+  setRealDebridRefreshToken(token: string): void {
+    mainStorage.setString(SettingsKeys.RD_REFRESH_TOKEN, token);
+  }
+
+  getRealDebridExpiry(): string | null {
+    return mainStorage.getString(SettingsKeys.RD_TOKEN_EXPIRY);
+  }
+
+  setRealDebridExpiry(expiry: string): void {
+    mainStorage.setString(SettingsKeys.RD_TOKEN_EXPIRY, expiry);
+  }
+
+  getTorBoxKey(): string | null {
+    return mainStorage.getString(SettingsKeys.TORBOX_KEY);
+  }
+
+  setTorBoxKey(key: string): void {
+    mainStorage.setString(SettingsKeys.TORBOX_KEY, key);
   }
 }
 

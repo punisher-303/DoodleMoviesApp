@@ -38,6 +38,7 @@ export interface Stream {
   quality?: '360' | '480' | '720' | '1080' | '2160';
   subtitles?: TextTracks;
   headers?: any;
+  isDebrid?: boolean;
 }
 
 // getInfo

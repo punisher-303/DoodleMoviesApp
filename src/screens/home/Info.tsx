@@ -24,6 +24,7 @@ import {
 import { HomeStackParamList, TabStackParamList } from '../../App';
 import LinearGradient from 'react-native-linear-gradient';
 import SeasonList from '../../components/SeasonList';
+import TorrentList from '../../components/TorrentList';
 import { Skeleton } from 'moti/skeleton';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { settingsStorage, watchListStorage } from '../../lib/storage';
@@ -345,6 +346,8 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
   const [alwaysUseExternalDownload, setAlwaysUseExternalDownload] = useState(
     settingsStorage.getBool('alwaysExternalDownloader', false),
   );
+  const [selectedTorrentLink, setSelectedTorrentLink] = useState<string | null>(null);
+  const [selectedTorrentTitle, setSelectedTorrentTitle] = useState<string>('');
 
   // Trailer State
   const [ytVideoId, setYtVideoId] = useState<string | null>(null);
@@ -857,19 +860,57 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                       ))}
                     </View>
                   ) : (
-                    <SeasonList
-                      refreshing={false}
-                      providerValue={route.params.provider || provider.value}
-                      LinkList={filteredLinkList}
-                      poster={{
-                        logo: meta?.logo,
-                        poster: posterImage,
-                        background: backgroundImage,
-                      }}
-                      type={info?.type || 'series'}
-                      metaTitle={displayTitle}
-                      routeParams={route.params}
-                    />
+                    <View>
+                        {selectedTorrentLink ? (
+                            <View className="p-1">
+                                <TouchableOpacity 
+                                    onPress={() => setSelectedTorrentLink(null)}
+                                    className="flex-row items-center mb-3 px-2 py-1 bg-zinc-900 border border-white/10 rounded-lg self-start"
+                                >
+                                    <Ionicons name="arrow-back" size={18} color={primary} />
+                                    <Text className="text-white ml-2 text-xs font-bold">Back to Seasons</Text>
+                                </TouchableOpacity>
+                                <TorrentList
+                                    providerValue={route.params.provider || provider.value}
+                                    link={selectedTorrentLink}
+                                    type={info?.type || 'series'}
+                                    tmdbId={String(route.params.tmdbId || '')}
+                                    imdbId={info?.imdbId || ''}
+                                    title={selectedTorrentTitle}
+                                    onPlay={(stream) => {
+                                        navigation.navigate('Player', {
+                                            linkIndex: 0,
+                                            episodeList: [{ title: stream.name, link: stream.link }], // Constructing dummy list for player
+                                            type: info?.type || 'series',
+                                            primaryTitle: displayTitle,
+                                            secondaryTitle: selectedTorrentTitle,
+                                            poster: posterImage,
+                                            providerValue: route.params.provider || provider.value,
+                                            infoUrl: route.params.link,
+                                        });
+                                    }}
+                                />
+                            </View>
+                        ) : (
+                            <SeasonList
+                            refreshing={false}
+                            providerValue={route.params.provider || provider.value}
+                            LinkList={filteredLinkList}
+                            poster={{
+                                logo: meta?.logo,
+                                poster: posterImage,
+                                background: backgroundImage,
+                            }}
+                            type={info?.type || 'series'}
+                            metaTitle={displayTitle}
+                            routeParams={route.params}
+                            onSelectTorrent={(link, title) => {
+                                setSelectedTorrentLink(link);
+                                setSelectedTorrentTitle(title);
+                            }}
+                            />
+                        )}
+                    </View>
                   )}
                 </View>
               </>

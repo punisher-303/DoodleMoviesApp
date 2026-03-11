@@ -15,10 +15,10 @@ import {
 
 import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import {
-  settingsStorage,
-  cacheStorageService,
   ProviderExtension,
+  SettingsKeys,
 } from '../../lib/storage';
+import { debridService } from '../../lib/services/DebridService';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import { socialLinks } from '../../lib/constants';
@@ -148,6 +148,78 @@ const Settings = ({ navigation }: Props) => {
   const { clearHistory } = useWatchHistoryStore(state => state);
   const { appMode, setAppMode } = useAppModeStore(state => state);
 
+  const saveTorrServerUrl = useCallback((url: string) => {
+    setTorrServerUrl(url);
+    settingsStorage.setTorrServerUrl(url);
+  }, []);
+
+  const checkEngine = useCallback(async (url: string) => {
+    if (!url) return;
+    setEngineStatus('checking');
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(`${url}/echo`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        setEngineStatus('active');
+      } else {
+        setEngineStatus('offline');
+      }
+    } catch (e) {
+      setEngineStatus('offline');
+    }
+  }, []);
+
+  useEffect(() => {
+    checkEngine(torrServerUrl);
+  }, [torrServerUrl, checkEngine]);
+
+  // Real-Debrid Polling
+  useEffect(() => {
+    let interval: any;
+    if (isPollingRD && rdUserCode) {
+      interval = setInterval(async () => {
+        const success = await debridService.pollRDCredentials(rdUserCode);
+        if (success) {
+          setIsRDLoggedIn(true);
+          setRdUserCode(null);
+          setIsPollingRD(false);
+          ToastAndroid.show('Real-Debrid Login Successful!', ToastAndroid.SHORT);
+          clearInterval(interval);
+        }
+      }, 5000);
+    }
+    return () => clearInterval(interval);
+  }, [isPollingRD, rdUserCode]);
+
+  const handleRDLogin = async () => {
+    try {
+      const data = await debridService.startRDLogin();
+      if (data) {
+        setRdUserCode(data.user_code);
+        setIsPollingRD(true);
+        Clipboard.setString(data.user_code);
+        ToastAndroid.show(`Code ${data.user_code} copied to clipboard!`, ToastAndroid.SHORT);
+      }
+    } catch (error) {
+       ToastAndroid.show('Failed to start login', ToastAndroid.SHORT);
+    }
+  };
+
+  const logoutRD = () => {
+    settingsStorage.setRealDebridToken('');
+    settingsStorage.setRealDebridRefreshToken('');
+    settingsStorage.setRealDebridExpiry('');
+    setIsRDLoggedIn(false);
+    ToastAndroid.show('Logged out from Real-Debrid', ToastAndroid.SHORT);
+  };
+
+  const handleTorBoxSave = () => {
+    settingsStorage.setTorBoxKey(torboxKey);
+    ToastAndroid.show('TorBox Key Saved', ToastAndroid.SHORT);
+  };
+
   const [watchTogetherMode, setWatchTogetherMode] = useState(
     getWatchTogetherMode(),
   );
@@ -155,6 +227,18 @@ const Settings = ({ navigation }: Props) => {
     getNetworkProxyMode(),
   );
   const [syncLink, setSyncLink] = useState('');
+  const [torrServerUrl, setTorrServerUrl] = useState(
+    settingsStorage.getTorrServerUrl(),
+  );
+  const [engineStatus, setEngineStatus] = useState<'checking' | 'active' | 'offline'>('checking');
+  
+  // Debrid State
+  const [useDebrid, setUseDebrid] = useState(settingsStorage.isDebridEnabled());
+  const [selectedDebrid, setSelectedDebrid] = useState(settingsStorage.getDebridService());
+  const [torboxKey, setTorboxKey] = useState(settingsStorage.getTorBoxKey() || '');
+  const [rdUserCode, setRdUserCode] = useState<string | null>(null);
+  const [isRDLoggedIn, setIsRDLoggedIn] = useState(!!settingsStorage.getRealDebridToken());
+  const [isPollingRD, setIsPollingRD] = useState(false);
   // ---------------------------------
 
   // --- PROVIDER LATENCY Check ---
@@ -590,7 +674,7 @@ const Settings = ({ navigation }: Props) => {
         </AnimatedSection>
 
         {/* Watch Together Section */}
-        <AnimatedSection delay={200}>
+        <AnimatedSection delay={150}>
           <View className="mb-6 flex-col gap-3">
             <Text className="text-gray-400 text-sm mb-1">Watch Together</Text>
             <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
@@ -640,15 +724,144 @@ const Settings = ({ navigation }: Props) => {
                       <Text className="text-white font-semibold">Join</Text>
                     </TouchableOpacity>
                   </View>
-                  <Text className="text-gray-500 text-xs mt-2">
-                    Enabling this mode allows you to create and join
-                    synchronized playback sessions.
-                  </Text>
                 </View>
               )}
             </View>
           </View>
         </AnimatedSection>
+        <AnimatedSection delay={200}>
+          <View className="mb-6 flex-col gap-3">
+            <View className="flex-row items-center justify-between px-1">
+                <Text className="text-gray-400 text-sm">Torrent Engine (TorrServer)</Text>
+                <View className="flex-row items-center">
+                    <View 
+                       style={{ 
+                         width: 8, 
+                         height: 8, 
+                         borderRadius: 4, 
+                         backgroundColor: engineStatus === 'active' ? '#22C55E' : (engineStatus === 'checking' ? '#EAB308' : '#EF4444')
+                       }} 
+                    />
+                    <Text className="text-[10px] ml-1.5" style={{ color: engineStatus === 'active' ? '#22C55E' : (engineStatus === 'checking' ? '#EAB308' : '#EF4444') }}>
+                        {engineStatus === 'active' ? 'Engine Active' : (engineStatus === 'checking' ? 'Checking...' : 'Engine Undetected')}
+                    </Text>
+                </View>
+            </View>
+            <View className="bg-[#1A1A1A] rounded-xl p-4">
+              <Text className="text-gray-400 text-xs mb-2">
+                Base URL (Auto-detected if local)
+              </Text>
+              <View className="flex-row items-center bg-white/5 rounded-lg border border-white/10 px-3">
+                <MaterialCommunityIcons name="server" size={20} color={primary} />
+                <TextInput
+                  className="flex-1 text-white p-2 h-11"
+                  placeholder="http://127.0.0.1:8090"
+                  placeholderTextColor="#666"
+                  value={torrServerUrl}
+                  onChangeText={saveTorrServerUrl}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+              <Text className="text-gray-500 text-[10px] mt-2 italic">
+                {engineStatus === 'active' 
+                   ? 'Successfully connected to the torrent engine.' 
+                   : 'Ensure TorrServer (Matrix) is running for local streaming.'}
+              </Text>
+            </View>
+          </View>
+        </AnimatedSection>
+        <AnimatedSection delay={210}>
+          <View className="mb-6 flex-col gap-3">
+            <View className="flex-row items-center justify-between px-1">
+                <Text className="text-gray-400 text-sm">Debrid Support</Text>
+                <Switch
+                  trackColor={{ false: '#3f3f46', true: primary }}
+                  thumbColor={'white'}
+                  value={useDebrid}
+                  onValueChange={(val) => {
+                    setUseDebrid(val);
+                    settingsStorage.setDebridEnabled(val);
+                  }}
+                />
+            </View>
+            
+            {useDebrid && (
+              <View className="bg-[#1A1A1A] rounded-xl p-4 gap-y-4">
+                <View className="flex-row items-center justify-between bg-white/5 p-3 rounded-lg">
+                    <Text className="text-white">Service</Text>
+                    <View className="flex-row gap-2">
+                        {['None', 'Real-Debrid', 'TorBox'].map(s => (
+                            <TouchableOpacity 
+                                key={s}
+                                onPress={() => {
+                                    setSelectedDebrid(s);
+                                    settingsStorage.setDebridService(s);
+                                }}
+                                className={`px-3 py-1.5 rounded-md ${selectedDebrid === s ? 'bg-blue-600' : 'bg-zinc-800'}`}
+                            >
+                                <Text className="text-white text-xs font-bold">{s}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+
+                {selectedDebrid === 'Real-Debrid' && (
+                  <View className="gap-y-3">
+                    {isRDLoggedIn ? (
+                        <TouchableOpacity 
+                            onPress={logoutRD}
+                            className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg flex-row items-center justify-center"
+                        >
+                            <MaterialCommunityIcons name="logout" size={18} color="#EF4444" />
+                            <Text className="text-[#EF4444] ml-2 font-bold">Logout from Real-Debrid</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <View className="gap-y-3">
+                            {rdUserCode ? (
+                                <View className="bg-white/5 p-4 rounded-lg items-center">
+                                    <Text className="text-gray-400 text-xs mb-1">Enter this code at real-debrid.com/device:</Text>
+                                    <Text className="text-white text-3xl font-bold tracking-[8px] my-2">{rdUserCode}</Text>
+                                    <ActivityIndicator color={primary} size="small" className="mt-2" />
+                                    <Text className="text-gray-500 text-[10px] mt-2 italic">Waiting for approval...</Text>
+                                </View>
+                            ) : (
+                                <TouchableOpacity 
+                                    onPress={handleRDLogin}
+                                    className="bg-blue-600 p-3 rounded-lg flex-row items-center justify-center"
+                                >
+                                    <MaterialCommunityIcons name="login" size={18} color="white" />
+                                    <Text className="text-white ml-2 font-bold">Login with Real-Debrid</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    )}
+                  </View>
+                )}
+
+                {selectedDebrid === 'TorBox' && (
+                  <View className="gap-y-2">
+                    <Text className="text-gray-400 text-xs">TorBox API Key</Text>
+                    <View className="flex-row items-center bg-white/5 rounded-lg px-3">
+                        <TextInput
+                            className="flex-1 text-white p-2 h-11"
+                            placeholder="Enter API Key"
+                            placeholderTextColor="#666"
+                            value={torboxKey}
+                            onChangeText={setTorboxKey}
+                            secureTextEntry
+                        />
+                        <TouchableOpacity onPress={handleTorBoxSave} className="bg-blue-600 px-3 py-1.5 rounded-md">
+                            <Text className="text-white text-xs font-bold">Save</Text>
+                        </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        </AnimatedSection>
+
         <AnimatedSection delay={250}>
           <View className="mb-6">
             <Text className="text-gray-400 text-sm mb-3">Options</Text>
@@ -668,21 +881,6 @@ const Settings = ({ navigation }: Props) => {
                 onPress={() => navigation.navigate('SubTitlesPreferences')}
                 primaryColor={primary}
               />
-
-              {/* Disable Providers */}
-              {/* <TouchableNativeFeedback
-                onPress={() => navigation.navigate('DisableProviders')}
-                background={TouchableNativeFeedback.Ripple('#333333', false)}>
-                <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-                  <View className="flex-row items-center">
-                    <MaterialIcons name="block" size={22} color={primary} />
-                    <Text className="text-white ml-3 text-base">
-                      Disable Providers in Search
-                    </Text>
-                  </View>
-                  <Feather name="chevron-right" size={20} color="gray" />
-                </View>
-              </TouchableNativeFeedback> */}
 
               {/* Watch History */}
               <InternalOptionRow

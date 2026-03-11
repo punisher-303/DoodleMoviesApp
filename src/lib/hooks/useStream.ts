@@ -5,6 +5,7 @@ import {providerManager} from '../services/ProviderManager';
 import {settingsStorage} from '../storage';
 import {ifExists} from '../file/ifExists';
 import {Stream} from '../providers/types';
+import {debridService} from '../services/DebridService';
 
 interface UseStreamOptions {
   activeEpisode: any;
@@ -99,7 +100,35 @@ export const useStream = ({
           throw new Error('No streams available');
         }
 
-        return filteredData;
+        // Handle magnet links by wrapping with TorrServer
+        let torrServerUrl = settingsStorage.getTorrServerUrl();
+        
+        // Zero-Config: If URL is empty/default, try to ensure localhost is used
+        if (!torrServerUrl) {
+          torrServerUrl = 'http://127.0.0.1:8090';
+        }
+
+        const resolvedData = filteredData.map(stream => {
+          if (stream.link.startsWith('magnet:')) {
+            // If debrid is enabled, we keep the magnet but mark it
+            if (settingsStorage.isDebridEnabled() && settingsStorage.getDebridService() !== 'None') {
+              return {
+                ...stream,
+                isDebrid: true,
+              };
+            }
+
+            const encodedMagnet = encodeURIComponent(stream.link);
+            return {
+              ...stream,
+              link: `${torrServerUrl}/stream/video.mp4?link=${encodedMagnet}&play`,
+              type: 'mp4',
+            };
+          }
+          return stream;
+        });
+
+        return resolvedData;
       } catch (err: any) {
         clearTimeout(timeoutId);
         throw err;
@@ -142,7 +171,46 @@ export const useStream = ({
         }
       }
 
-      // Extract external subtitles (existing logic)
+  // Debrid resolution logic
+  useEffect(() => {
+    const resolveDebrid = async () => {
+      if (selectedStream?.isDebrid && selectedStream.link.startsWith('magnet:')) {
+        try {
+          ToastAndroid.show('Resolving via Debrid...', ToastAndroid.SHORT);
+          const files = await debridService.resolveMagnet(selectedStream.link);
+          if (files && files.length > 0) {
+            // Find the best file (usually the largest one or the first one)
+            // For now, take the first file
+            const bestFile = files[0];
+            setSelectedStream({
+              ...selectedStream,
+              link: bestFile.downloadUrl,
+              isDebrid: false, // Mark as resolved
+            });
+            ToastAndroid.show('Debrid Link Ready', ToastAndroid.SHORT);
+          }
+        } catch (error: any) {
+          console.error('Debrid resolution failed:', error);
+          ToastAndroid.show('Debrid failed, falling back to TorrServer', ToastAndroid.SHORT);
+          
+          // Fallback to TorrServer
+          const torrServerUrl = settingsStorage.getTorrServerUrl() || 'http://127.0.0.1:8090';
+          const encodedMagnet = encodeURIComponent(selectedStream.link);
+          setSelectedStream({
+            ...selectedStream,
+            link: `${torrServerUrl}/stream/video.mp4?link=${encodedMagnet}&play`,
+            isDebrid: false,
+          });
+        }
+      }
+    };
+
+    resolveDebrid();
+  }, [selectedStream]);
+
+  // Extract external subtitles (existing logic)
+  useEffect(() => {
+    if (streamData && streamData.length > 0) {
       const subs: any[] = [];
       streamData.forEach(track => {
         if (track?.subtitles?.length && track.subtitles.length > 0) {

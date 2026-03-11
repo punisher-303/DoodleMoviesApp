@@ -56,6 +56,7 @@ interface SeasonListProps {
     provider?: string;
     poster?: string;
   }>;
+  onSelectTorrent?: (link: string, title: string) => void;
 }
 
 interface PlayHandlerProps {
@@ -81,6 +82,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
   providerValue,
   refreshing: _refreshing,
   routeParams,
+  onSelectTorrent,
 }) => {
   const { primary } = useThemeStore(state => state);
   const navigation =
@@ -372,7 +374,18 @@ const SeasonList: React.FC<SeasonListProps> = ({
           );
           return;
         }
+
+        if (onSelectTorrent && providerValue === 'Torrent') {
+          onSelectTorrent(link, secondaryTitle || primaryTitle);
+          return;
+        }
+
         handleExternalPlayer(link, type);
+        return;
+      }
+
+      if (onSelectTorrent && providerValue === 'Torrent') {
+        onSelectTorrent(link, secondaryTitle || primaryTitle);
         return;
       }
 
