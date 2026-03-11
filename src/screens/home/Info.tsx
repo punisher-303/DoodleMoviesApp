@@ -452,6 +452,18 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
     return filtered.length > 0 ? filtered : info.linkList;
   }, [info?.linkList]);
 
+  // Auto-select torrent search for movies (PlayTorrio style)
+  useEffect(() => {
+    const isTorrentProvider = (route.params.provider || provider.value) === 'torrent';
+    if (isTorrentProvider && info?.type === 'movie' && !selectedTorrentLink && filteredLinkList.length > 0) {
+      const movieItem = filteredLinkList.find((item: any) => item.title === 'Movie');
+      if (movieItem && movieItem.directLinks && movieItem.directLinks[0]) {
+        setSelectedTorrentLink(movieItem.directLinks[0].link);
+        setSelectedTorrentTitle(displayTitle);
+      }
+    }
+  }, [info, filteredLinkList, selectedTorrentLink, route.params.provider, provider.value, displayTitle]);
+
   // Optimized refresh handler
   const handleRefresh = useCallback(async () => {
     try {

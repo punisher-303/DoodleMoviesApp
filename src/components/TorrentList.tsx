@@ -11,6 +11,10 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Skeleton } from 'moti/skeleton';
 import useThemeStore from '../lib/zustand/themeStore';
 import { useStreamData } from '../lib/hooks/useEpisodes';
+import { debridService } from '../lib/services/DebridService';
+import { settingsStorage } from '../lib/storage';
+import TorrentFileModal from './TorrentFileModal';
+import { ToastAndroid, ActivityIndicator } from 'react-native';
 
 interface TorrentListProps {
   tmdbId: string;
@@ -32,23 +36,35 @@ const TorrentList: React.FC<TorrentListProps> = ({
 }) => {
   const { primary } = useThemeStore(state => state);
   const [searchText, setSearchText] = useState('');
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [sortOrder, setSortOrder] = useState<'seeders' | 'size' | 'quality'>('seeders');
   const [streams, setStreams] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isResolving, setIsResolving] = useState(false);
+  const [selectedTorrent, setSelectedTorrent] = useState<any>(null);
+  const [resolvedFiles, setResolvedFiles] = useState<any[]>([]);
+  const [showFileModal, setShowFileModal] = useState(false);
   const { fetchStreams } = useStreamData();
 
-  useEffect(() => {
-    const loadStreams = async () => {
-      setIsLoading(true);
-      try {
-        const results = await fetchStreams(link, type, providerValue);
-        setStreams(results);
-      } catch (err) {
-        console.error("Failed to load torrent streams:", err);
-      } finally {
-        setIsLoading(false);
+  const loadStreams = async (searchKeyword?: string) => {
+    setIsLoading(true);
+    setStreams([]); // Clear previous results
+    try {
+      let finalLink = link;
+      if (searchKeyword) {
+          const payload = JSON.parse(link);
+          finalLink = JSON.stringify({ ...payload, keyword: searchKeyword });
       }
-    };
+      const results = await fetchStreams(finalLink, type, providerValue);
+      setStreams(results);
+    } catch (err) {
+      console.error("Failed to load torrent streams:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadStreams();
   }, [link, type, providerValue]);
 
@@ -121,9 +137,43 @@ const TorrentList: React.FC<TorrentListProps> = ({
     return '#A1A1AA'; // Zinc
   };
 
+  const handlePlayPress = async (item: any) => {
+    // If Debrid is enabled and it's a magnet, resolve it first to check for multiple files
+    if (item.link.startsWith('magnet:') && settingsStorage.isDebridEnabled()) {
+        setIsResolving(true);
+        setSelectedTorrent(item);
+        try {
+            ToastAndroid.show('Resolving torrent...', ToastAndroid.SHORT);
+            const files = await debridService.resolveMagnet(item.link);
+            
+            if (files && files.length > 0) {
+                if (files.length === 1) {
+                    // Just one file, play it
+                    onPlay({ ...item, link: files[0].downloadUrl, isResolved: true });
+                } else {
+                    // Multiple files, show modal
+                    setResolvedFiles(files);
+                    setShowFileModal(true);
+                }
+            } else {
+                ToastAndroid.show('No playable files found in torrent', ToastAndroid.SHORT);
+            }
+        } catch (error) {
+            console.error("Resolution failed:", error);
+            ToastAndroid.show('Debrid resolution failed, playing via Engine', ToastAndroid.SHORT);
+            onPlay(item); // Fallback to TorrServer
+        } finally {
+            setIsResolving(false);
+        }
+    } else {
+        onPlay(item);
+    }
+  };
+
   const renderTorrentItem = ({ item }: { item: any }) => (
     <TouchableOpacity 
-      onPress={() => onPlay(item)}
+      onPress={() => handlePlayPress(item)}
+      disabled={isResolving}
       className="bg-zinc-900/50 border border-white/10 rounded-xl p-3 mb-2 flex-row items-center"
     >
       <View className="flex-1">
@@ -150,7 +200,11 @@ const TorrentList: React.FC<TorrentListProps> = ({
       </View>
       
       <View className="ml-2 bg-white/5 p-2 rounded-full">
-        <Ionicons name="play" size={20} color={primary} />
+        {isResolving && selectedTorrent?.link === item.link ? (
+            <ActivityIndicator size="small" color={primary} />
+        ) : (
+            <Ionicons name="play" size={20} color={primary} />
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -178,39 +232,84 @@ const TorrentList: React.FC<TorrentListProps> = ({
 
   return (
     <View className="flex-1">
-      <View className="flex-row justify-between items-center mb-3 px-1">
+      <View className="flex-row justify-between items-center mb-1 px-1">
         <Text className="text-white font-bold text-lg">Torrent Results</Text>
-        <View className="flex-row gap-2">
+        <View className="flex-row items-center gap-2">
+            <TouchableOpacity 
+                onPress={() => setIsSearchVisible(!isSearchVisible)}
+                className="p-1.5 bg-white/5 rounded-full mr-1"
+            >
+                <Ionicons name="search" size={18} color={isSearchVisible ? primary : '#A1A1AA'} />
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => setSortOrder('seeders')}>
-                <Text style={{ color: sortOrder === 'seeders' ? primary : '#A1A1AA' }} className="text-xs font-bold">Seeders</Text>
+                <Text style={{ color: sortOrder === 'seeders' ? primary : '#A1A1AA' }} className="text-[10px] font-bold uppercase">Seeders</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setSortOrder('quality')}>
-                <Text style={{ color: sortOrder === 'quality' ? primary : '#A1A1AA' }} className="text-xs font-bold">Quality</Text>
+                <Text style={{ color: sortOrder === 'quality' ? primary : '#A1A1AA' }} className="text-[10px] font-bold uppercase">Quality</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setSortOrder('size')}>
-                <Text style={{ color: sortOrder === 'size' ? primary : '#A1A1AA' }} className="text-xs font-bold">Size</Text>
+                <Text style={{ color: sortOrder === 'size' ? primary : '#A1A1AA' }} className="text-[10px] font-bold uppercase">Size</Text>
             </TouchableOpacity>
         </View>
       </View>
 
-      <TextInput
-        placeholder="Filter results..."
-        placeholderTextColor="#52525B"
-        className="bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm mb-3"
-        value={searchText}
-        onChangeText={setSearchText}
-      />
+      {isSearchVisible && (
+        <View className="flex-row items-center mb-3">
+            <TextInput
+            placeholder="Search keywords or filter..."
+            placeholderTextColor="#52525B"
+            autoFocus
+            className="flex-1 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+            value={searchText}
+            onChangeText={setSearchText}
+            onSubmitEditing={() => loadStreams(searchText)}
+            />
+            <TouchableOpacity 
+                onPress={() => loadStreams(searchText)}
+                className="ml-2 bg-white/10 p-2 rounded-lg items-center justify-center"
+            >
+                <Ionicons name="globe-outline" size={20} color={primary} />
+            </TouchableOpacity>
+        </View>
+      )}
 
       <FlatList
         data={filteredAndSortedStreams}
         renderItem={renderTorrentItem}
         keyExtractor={(item, index) => index.toString()}
         ListEmptyComponent={
-          <View className="items-center justify-center py-20">
-            <Text className="text-zinc-500">No torrents found matching search.</Text>
+          <View className="items-center justify-center py-20 px-10">
+            <MaterialCommunityIcons name="magnify-scan" size={48} color="#3F3F46" />
+            <Text className="text-zinc-500 text-center mt-4 mb-6">
+                {isLoading ? "Fetching streams..." : "No torrents found for this title automatically."}
+            </Text>
+            {!isLoading && (
+                <TouchableOpacity 
+                    onPress={() => {
+                        setIsSearchVisible(true);
+                        if (searchText) loadStreams(searchText);
+                    }}
+                    style={{ backgroundColor: primary }}
+                    className="px-6 py-3 rounded-xl flex-row items-center"
+                >
+                    <Ionicons name="search" size={20} color="black" />
+                    <Text className="text-black font-bold ml-2">Manual Search</Text>
+                </TouchableOpacity>
+            )}
           </View>
         }
         scrollEnabled={false} // Since it's inside ScrollView in Info.tsx
+      />
+
+      <TorrentFileModal 
+        visible={showFileModal}
+        files={resolvedFiles}
+        torrentName={selectedTorrent?.name || ''}
+        onClose={() => setShowFileModal(false)}
+        onSelect={(file) => {
+            setShowFileModal(false);
+            onPlay({ ...selectedTorrent, link: file.downloadUrl, isResolved: true });
+        }}
       />
     </View>
   );

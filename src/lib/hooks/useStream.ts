@@ -176,7 +176,7 @@ export const useStream = ({
   // Debrid resolution logic
   useEffect(() => {
     const resolveDebrid = async () => {
-      if (selectedStream?.isDebrid && selectedStream.link.startsWith('magnet:')) {
+      if (selectedStream?.isDebrid && selectedStream.link.startsWith('magnet:') && !selectedStream.isResolved) {
         try {
           ToastAndroid.show('Resolving via Debrid...', ToastAndroid.SHORT);
           const files = await debridService.resolveMagnet(selectedStream.link);
