@@ -11,10 +11,13 @@ import {
 
   Clipboard,
   ToastAndroid,
+  ActivityIndicator,
 } from 'react-native';
 
 import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import {
+  settingsStorage,
+  cacheStorageService,
   ProviderExtension,
   SettingsKeys,
 } from '../../lib/storage';
