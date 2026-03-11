@@ -5,6 +5,7 @@ import {
   ProviderExtension,
   ProviderModule,
 } from '../storage/extensionStorage';
+import { settingsStorage } from '../storage/settingsStorage';
 /**
  * Extension manager service for handling dynamic provider loading
  */
@@ -106,6 +107,7 @@ export class ExtensionManager {
       const downloadPromises = allFiles.map(async fileName => {
         try {
           const url = `${this.baseUrl}/dist/${providerValue}/${fileName}.js`;
+          
           console.log(`Downloading: ${url}`);
 
           const response = await axios.get(url, {
