@@ -902,7 +902,6 @@ const SeasonList: React.FC<SeasonListProps> = ({
               No stream found
             </Text>
           )}
-      </View>
 
       {/* VLC Loading Indicator */}
       {vlcLoading && (
