@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -38,6 +38,7 @@ import { useEpisodes, useStreamData } from '../lib/hooks/useEpisodes';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
 import { BlurView } from 'expo-blur';
+import MarqueeText from './MarqueeText';
 
 
 interface SeasonListProps {
@@ -175,6 +176,10 @@ const SeasonList: React.FC<SeasonListProps> = ({
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(() =>
     mainStorage.getString('episodeSortOrder') === 'desc' ? 'desc' : 'asc',
   );
+
+  // Horizontal state
+  const [selectedEpisodeIndex, setSelectedEpisodeIndex] = useState<number | null>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   // External player state
   const [showServerModal, setShowServerModal] = useState<boolean>(false);
@@ -478,10 +483,10 @@ const SeasonList: React.FC<SeasonListProps> = ({
               : ''
             }
         `}>
-          <View className="flex-row w-full justify-between gap-2 items-center">
+          <View className="flex-row w-full justify-between gap-1 items-center">
             <TouchableOpacity
               className={`bg-zinc-900 rounded-xl h-12 px-4 flex-row items-center gap-x-2 border border-white/40 ${titleAlignment}`}
-              style={{ width: '80%' }}
+              style={{ flex: 1 }}
               onPress={() =>
                 playHandler({
                   linkIndex: index,
@@ -493,17 +498,27 @@ const SeasonList: React.FC<SeasonListProps> = ({
                 })
               }
               onLongPress={() => onLongPressHandler(true, item.link, 'series')}>
-              <Ionicons name="play-circle" size={28} color={primary} />
-              <Text className="text-white z-10 font-medium">
-                {item.title.length > 30
-                  ? item.title.slice(0, 30) + '...'
-                  : item.title}
-              </Text>
+              <Ionicons name="play-circle" size={26} color={primary} />
+              <View className="flex-1 ml-1">
+                <MarqueeText 
+                    text={item.title} 
+                    style={{ color: 'white', fontWeight: '500', fontSize: 13 }} 
+                />
+              </View>
             </TouchableOpacity>
+
+            <TouchableOpacity 
+              onPress={() => handleExternalPlayer(item.link, 'series')}
+              className="bg-zinc-900 h-12 w-11 rounded-xl border border-white/40 items-center justify-center"
+            >
+              <MaterialCommunityIcons name="rocket-launch-outline" size={20} color="#A1A1AA" />
+            </TouchableOpacity>
+
             <Downloader
               providerValue={providerValue}
               link={item.link}
               type={type}
+              className="h-12 w-11"
               title={
                 metaTitle.length > 30
                   ? metaTitle.slice(0, 30) + '... ' + item.title
@@ -550,10 +565,10 @@ const SeasonList: React.FC<SeasonListProps> = ({
               : ''
             }
         `}>
-          <View className="flex-row w-full justify-between gap-2 items-center">
+          <View className="flex-row w-full justify-between gap-1 items-center">
             <TouchableOpacity
               className={`bg-zinc-900 rounded-xl h-12 px-4 flex-row items-center gap-x-2 border border-white/40 ${titleAlignment}`}
-              style={{ width: '80%' }}
+              style={{ flex: 1 }}
               onPress={() =>
                 playHandler({
                   linkIndex: index,
@@ -567,20 +582,27 @@ const SeasonList: React.FC<SeasonListProps> = ({
               onLongPress={() =>
                 onLongPressHandler(true, item.link, item?.type || 'series')
               }>
-              <Ionicons name="play-circle" size={28} color={primary} />
-              <Text className="text-white z-10 font-medium">
-                {activeSeason?.directLinks?.length &&
-                  activeSeason?.directLinks?.length > 1
-                  ? item.title?.length > 27
-                    ? item.title.slice(0, 27) + '...'
-                    : item.title
-                  : 'Play'}
-              </Text>
+              <Ionicons name="play-circle" size={26} color={primary} />
+              <View className="flex-1 ml-1">
+                <MarqueeText
+                    text={activeSeason?.directLinks?.length && activeSeason?.directLinks?.length > 1 ? item.title : 'Play'}
+                    style={{ color: 'white', fontWeight: '500', fontSize: 13 }}
+                />
+              </View>
             </TouchableOpacity>
+
+            <TouchableOpacity 
+              onPress={() => handleExternalPlayer(item.link, item?.type || type)}
+              className="bg-zinc-900 h-12 w-11 rounded-xl border border-white/40 items-center justify-center"
+            >
+              <MaterialCommunityIcons name="rocket-launch-outline" size={20} color="#A1A1AA" />
+            </TouchableOpacity>
+
             <Downloader
               providerValue={providerValue}
               link={item.link}
-              type={type}
+              type={item?.type || type}
+              className="h-12 w-11"
               title={
                 metaTitle.length > 30
                   ? metaTitle.slice(0, 30) + '... ' + item.title
@@ -787,43 +809,90 @@ const SeasonList: React.FC<SeasonListProps> = ({
         )}
 
       {/* Episode/Direct Links List */}
-      <View className="flex-row flex-wrap justify-center gap-x-2 gap-y-2">
-        {/* Episodes List */}
-        {filteredAndSortedEpisodes.length > 0 && (
-          <FlatList
-            data={filteredAndSortedEpisodes}
-            keyExtractor={(item, index) => `episode-${item.link}-${index}`}
-            renderItem={renderEpisodeItem}
-            maxToRenderPerBatch={10}
-            windowSize={10}
-            removeClippedSubviews={true}
-            getItemLayout={(data, index) => ({
-              length: 60,
-              offset: 60 * index,
-              index,
-            })}
-            contentContainerStyle={{ paddingBottom: 150 }}
-          />
-        )}
-
-        {/* Direct Links List */}
-        {filteredAndSortedDirectLinks.length > 0 && (
-          <View className="w-full justify-center items-center gap-y-2 mt-3 p-2">
+      <View className="mt-4">
+        {providerValue.toLowerCase() === 'torrent' ? (
+          <View>
             <FlatList
-              data={filteredAndSortedDirectLinks}
-              keyExtractor={(item, index) => `direct-${item.link}-${index}`}
-              renderItem={renderDirectLinkItem}
-              maxToRenderPerBatch={10}
-              windowSize={10}
-              removeClippedSubviews={true}
-              getItemLayout={(data, index) => ({
-                length: 68,
-                offset: 68 * index,
-                index,
-              })}
+              ref={flatListRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={filteredAndSortedEpisodes.length > 0 ? filteredAndSortedEpisodes : filteredAndSortedDirectLinks}
+              keyExtractor={(item, index) => `ep-chip-${item.link}-${index}`}
+              contentContainerStyle={{ paddingHorizontal: 4, gap: 10 }}
+              renderItem={({ item, index }) => {
+                const isSelected = selectedEpisodeIndex === index;
+                return (
+                  <TouchableOpacity
+                    onPress={() => {
+                        setSelectedEpisodeIndex(index);
+                        playHandler({
+                            linkIndex: index,
+                            type: item.episodesLink ? 'series' : type,
+                            primaryTitle: metaTitle,
+                            secondaryTitle: item.title,
+                            seasonTitle: activeSeason?.title || '',
+                            episodeData: filteredAndSortedEpisodes.length > 0 ? filteredAndSortedEpisodes : filteredAndSortedDirectLinks,
+                        });
+                    }}
+                    style={{ 
+                        backgroundColor: isSelected ? primary : '#18181b',
+                        borderColor: isSelected ? primary : '#27272a',
+                        borderWidth: 1,
+                        paddingHorizontal: 12,
+                        paddingVertical: 10,
+                        borderRadius: 12,
+                        width: 85,
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}
+                  >
+                    <MarqueeText 
+                        text={item.title.match(/Episode (\d+)/i) ? `E${item.title.match(/Episode (\d+)/i)![1]}` : item.title}
+                        style={{ color: isSelected ? 'black' : 'white', fontWeight: 'bold', fontSize: 12 }}
+                    />
+                  </TouchableOpacity>
+                );
+              }}
             />
           </View>
+        ) : (
+          <View className="flex-row flex-wrap justify-center gap-x-2 gap-y-2">
+            {/* Episodes List */}
+            {filteredAndSortedEpisodes.length > 0 && (
+              <FlatList
+                data={filteredAndSortedEpisodes}
+                keyExtractor={(item, index) => `episode-${item.link}-${index}`}
+                renderItem={renderEpisodeItem}
+                maxToRenderPerBatch={10}
+                windowSize={10}
+                removeClippedSubviews={true}
+                getItemLayout={(data, index) => ({
+                    length: 60,
+                    offset: 60 * index,
+                    index,
+                })}
+              />
+            )}
+            
+            {/* Direct Links List */}
+            {filteredAndSortedDirectLinks.length > 0 && (
+              <FlatList
+                data={filteredAndSortedDirectLinks}
+                keyExtractor={(item, index) => `direct-${item.link}-${index}`}
+                renderItem={renderDirectLinkItem}
+                maxToRenderPerBatch={10}
+                windowSize={10}
+                removeClippedSubviews={true}
+                getItemLayout={(data, index) => ({
+                    length: 60,
+                    offset: 60 * index,
+                    index,
+                })}
+              />
+            )}
+          </View>
         )}
+      </View>
 
         {/* No Content Available */}
         {filteredAndSortedEpisodes.length === 0 &&

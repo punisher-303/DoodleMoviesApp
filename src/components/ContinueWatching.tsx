@@ -226,21 +226,11 @@ const ContinueWatching = () => {
 
   const handleNavigateToInfo = (item: any) => {
     try {
-      // Parse the link if it's a JSON string
-      let linkData = item.link;
-      if (typeof item.link === 'string' && item.link.startsWith('{')) {
-        try {
-          linkData = JSON.parse(item.link);
-        } catch (e) {
-          console.error('Failed to parse link:', e);
-        }
-      }
-
       // Navigate to Info screen
       navigation.navigate('HomeStack', {
         screen: 'Info',
         params: {
-          link: linkData,
+          link: item.link,
           provider: item.provider,
           poster: item.poster,
         },

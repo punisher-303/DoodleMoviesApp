@@ -109,6 +109,11 @@ export const useStream = ({
         }
 
         const resolvedData = filteredData.map(stream => {
+          // If stream is already resolved (e.g. direct HTTP link from provider or file selection)
+          if (stream.isResolved) {
+             return stream;
+          }
+
           if (stream.link.startsWith('magnet:')) {
             // If debrid is enabled, we keep the magnet but mark it
             if (settingsStorage.isDebridEnabled() && settingsStorage.getDebridService() !== 'None') {

@@ -42,6 +42,13 @@ export interface Stream {
 }
 
 // getInfo
+export interface Cast {
+  id: string | number;
+  name: string;
+  character?: string;
+  image?: string;
+}
+
 export interface Info {
   title: string;
   image: string;
@@ -49,7 +56,7 @@ export interface Info {
   imdbId: string;
   type: string;
   tags?: string[];
-  cast?: string[];
+  cast?: Cast[] | string[];
   rating?: string;
   linkList: Link[];
 }

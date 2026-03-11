@@ -122,6 +122,16 @@ const SliderItem = React.memo(({
           if (e && e.stopPropagation) {
             e.stopPropagation();
           }
+          if (item.type === 'person') {
+            //@ts-ignore
+            navigation.navigate('SearchStack', {
+              screen: 'SearchResults',
+              params: {
+                filter: item.link, // For people, link is already the person_id string
+              },
+            });
+            return;
+          }
           setSelected('');
           navigation.navigate('Info', {
             link: item.link,

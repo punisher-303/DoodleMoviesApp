@@ -12,9 +12,12 @@ import { Skeleton } from 'moti/skeleton';
 import useThemeStore from '../lib/zustand/themeStore';
 import { useStreamData } from '../lib/hooks/useEpisodes';
 import { debridService } from '../lib/services/DebridService';
-import { settingsStorage } from '../lib/storage';
+import { settingsStorage, cacheStorage } from '../lib/storage';
 import TorrentFileModal from './TorrentFileModal';
-import { ToastAndroid, ActivityIndicator } from 'react-native';
+import { ToastAndroid, ActivityIndicator, Alert, Linking } from 'react-native';
+import axios from 'axios';
+import MarqueeText from './MarqueeText';
+import * as Clipboard from 'expo-clipboard';
 
 interface TorrentListProps {
   tmdbId: string;
@@ -139,29 +142,67 @@ const TorrentList: React.FC<TorrentListProps> = ({
 
   const handlePlayPress = async (item: any) => {
     // If Debrid is enabled and it's a magnet, resolve it first to check for multiple files
-    if (item.link.startsWith('magnet:') && settingsStorage.isDebridEnabled()) {
+    if (item.link.startsWith('magnet:')) {
+        const isDebrid = settingsStorage.isDebridEnabled() && settingsStorage.getDebridService() !== 'None';
+        
         setIsResolving(true);
         setSelectedTorrent(item);
+        
         try {
-            ToastAndroid.show('Resolving torrent...', ToastAndroid.SHORT);
-            const files = await debridService.resolveMagnet(item.link);
-            
-            if (files && files.length > 0) {
-                if (files.length === 1) {
-                    // Just one file, play it
-                    onPlay({ ...item, link: files[0].downloadUrl, isResolved: true });
+            if (isDebrid) {
+                ToastAndroid.show('Resolving via Debrid...', ToastAndroid.SHORT);
+                const files = await debridService.resolveMagnet(item.link);
+                if (files && files.length > 0) {
+                    if (files.length === 1) {
+                        onPlay({ ...item, link: files[0].downloadUrl, isResolved: true });
+                    } else {
+                        setResolvedFiles(files);
+                        setShowFileModal(true);
+                    }
                 } else {
-                    // Multiple files, show modal
-                    setResolvedFiles(files);
-                    setShowFileModal(true);
+                    ToastAndroid.show('No playable files found', ToastAndroid.SHORT);
                 }
             } else {
-                ToastAndroid.show('No playable files found in torrent', ToastAndroid.SHORT);
+                // TorrServer Logic: Check if it's a pack and get files
+                const torrServerUrl = settingsStorage.getTorrServerUrl() || 'http://127.0.0.1:8090';
+                ToastAndroid.show('Checking torrent files...', ToastAndroid.SHORT);
+                
+                // Add to TorrServer but don't play yet to get file list
+                const res = await axios.post(`${torrServerUrl}/torrent/add`, {
+                    link: item.link,
+                    save: true
+                }, { timeout: 10000 });
+                
+                if (res.data?.hash) {
+                    const hash = res.data.hash;
+                    // Get files list
+                    const statsRes = await axios.post(`${torrServerUrl}/torrent/view`, {
+                        hash: hash
+                    });
+                    
+                    const files = statsRes.data?.file_stats || [];
+                    const videoFiles = files.filter((f: any) => /\.(mp4|mkv|avi|mov|m4v|flv|wmv)$/i.test(f.path));
+                    
+                    if (videoFiles.length > 1) {
+                        setResolvedFiles(videoFiles.map((f: any) => ({
+                            filename: f.path.split('/').pop() || f.path,
+                            filesize: f.size,
+                            downloadUrl: `${torrServerUrl}/stream/video.mp4?link=${encodeURIComponent(item.link)}&index=${f.id}&play`,
+                            id: f.id
+                        })));
+                        setShowFileModal(true);
+                    } else {
+                        // Just one file or too complex, let the engine handle it
+                        onPlay(item);
+                    }
+                } else {
+                    onPlay(item); // Fallback
+                }
             }
         } catch (error) {
             console.error("Resolution failed:", error);
-            ToastAndroid.show('Debrid resolution failed, playing via Engine', ToastAndroid.SHORT);
-            onPlay(item); // Fallback to TorrServer
+            ToastAndroid.show('Engine resolution failed, playing direct', ToastAndroid.SHORT);
+            onPlay(item); 
         } finally {
             setIsResolving(false);
         }
@@ -176,10 +217,11 @@ const TorrentList: React.FC<TorrentListProps> = ({
       disabled={isResolving}
       className="bg-zinc-900/50 border border-white/10 rounded-xl p-3 mb-2 flex-row items-center"
     >
-      <View className="flex-1">
-        <Text className="text-white font-medium text-sm mb-1 leading-tight" numberOfLines={2}>
-          {item.name}
-        </Text>
+      <View className="flex-1 mr-2">
+        <MarqueeText 
+            text={item.name} 
+            style={{ color: 'white', fontWeight: '500', fontSize: 13 }} 
+        />
         
         <View className="flex-row flex-wrap mt-1">
           {renderBadge(item.qualityTag, getQualityColor(item.qualityTag))}
@@ -195,16 +237,57 @@ const TorrentList: React.FC<TorrentListProps> = ({
                 <MaterialCommunityIcons name="arrow-up" size={12} color="#22C55E" />
                 <Text className="text-green-500 text-[11px] ml-0.5">{item.seeders}</Text>
             </View>
-            <Text className="text-zinc-500 text-[11px] font-bold">Source: {item.source}</Text>
+            <View className="flex-1">
+                <MarqueeText 
+                    text={`Source: ${item.source}`}
+                    style={{ color: '#71717A', fontSize: 10, fontWeight: 'bold' }}
+                />
+            </View>
         </View>
       </View>
       
-      <View className="ml-2 bg-white/5 p-2 rounded-full">
-        {isResolving && selectedTorrent?.link === item.link ? (
-            <ActivityIndicator size="small" color={primary} />
-        ) : (
-            <Ionicons name="play" size={20} color={primary} />
-        )}
+      <View className="ml-2 flex-row items-center gap-1.5">
+        <TouchableOpacity 
+            onPress={async () => {
+                await Clipboard.setStringAsync(item.link);
+                ToastAndroid.show('Magnet copied to clipboard', ToastAndroid.SHORT);
+            }}
+            className="bg-white/5 p-2 rounded-full"
+        >
+            <Ionicons name="copy-outline" size={16} color="#A1A1AA" />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+            onPress={() => {
+                Linking.openURL(item.link).catch(() => {
+                    ToastAndroid.show('No app found to handle this link', ToastAndroid.SHORT);
+                });
+            }}
+            className="bg-white/5 p-2 rounded-full"
+        >
+            <MaterialCommunityIcons name="rocket-launch-outline" size={16} color="#A1A1AA" />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+            onPress={() => {
+                // If it's a resolved HTTP link, open in browser/downloader
+                // If magnet, open in torrent app
+                Linking.openURL(item.link).catch(() => {
+                    ToastAndroid.show('Download failed to start', ToastAndroid.SHORT);
+                });
+            }}
+            className="bg-white/5 p-2 rounded-full"
+        >
+            <Ionicons name="download-outline" size={16} color="#A1A1AA" />
+        </TouchableOpacity>
+
+        <View className="bg-white/5 p-2 rounded-full ml-1">
+            {isResolving && selectedTorrent?.link === item.link ? (
+                <ActivityIndicator size="small" color={primary} />
+            ) : (
+                <Ionicons name="play" size={18} color={primary} />
+            )}
+        </View>
       </View>
     </TouchableOpacity>
   );

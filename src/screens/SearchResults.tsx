@@ -51,7 +51,9 @@ const SearchHeader = React.memo(
         <View className="flex flex-row justify-between items-center gap-x-3 mb-4">
           <Text className="text-white text-xl font-bold ">
             {isAllLoaded ? 'Searched for' : 'Searching for'}{' '}
-            <Text style={{ color: primary }}>"{filter}"</Text>
+            <Text style={{ color: primary }}>
+              "{filter.startsWith('person_id:') ? filter.split(':')[2] : filter}"
+            </Text>
           </Text>
           {!isAllLoaded && (
             <View className="flex justify-center items-center h-10">
