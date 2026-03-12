@@ -277,7 +277,17 @@ export class SettingsStorage {
   }
 
   getTorrServerUrl(): string {
-    return mainStorage.getString(SettingsKeys.TORR_SERVER_URL) || 'http://localhost:8090';
+    const savedUrl = mainStorage.getString(SettingsKeys.TORR_SERVER_URL);
+    if (savedUrl && savedUrl !== 'http://localhost:8090') {
+      return savedUrl;
+    }
+    // Zero-Config Fallback: If local is default or empty, return localhost but hint at bridge
+    return savedUrl || 'http://127.0.0.1:8090';
+  }
+
+  getPublicTorrServerBridge(): string {
+    // Return a reliable public bridge as a fallback
+    return 'https://torr.pw'; // Example public bridge
   }
 
   setTorrServerUrl(url: string): void {

@@ -123,12 +123,13 @@ const SliderItem = React.memo(({
             e.stopPropagation();
           }
           if (item.type === 'person') {
+            const name = item.title;
             //@ts-ignore
-            navigation.navigate('SearchStack', {
-              screen: 'SearchResults',
-              params: {
-                filter: item.link, // For people, link is already the person_id string
-              },
+            navigation.navigate('ScrollList', {
+              filter: item.link, // For people, link is already the person_id string
+              title: name,
+              isSearch: true,
+              providerValue: item.provider || providerValue || provider?.value,
             });
             return;
           }

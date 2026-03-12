@@ -625,7 +625,14 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                         initialNumToRender={10}
                         maxToRenderPerBatch={20}
                         windowSize={5}
-                        data={(meta?.cast || info?.cast) as any[]}
+                        data={(() => {
+                          const providerCast = info?.cast && Array.isArray(info.cast) && info.cast.length > 0 ? info.cast : [];
+                          const cinemetaCast = meta?.cast && Array.isArray(meta.cast) ? meta.cast : [];
+                          
+                          // If provider cast has detailed objects (images), prioritize it
+                          const hasDetailedProviderCast = providerCast.some((c: any) => typeof c === 'object' && c.image);
+                          return hasDetailedProviderCast ? providerCast : (cinemetaCast.length > 0 ? cinemetaCast : providerCast);
+                        })() as any[]}
                         keyExtractor={(actor, index) => (typeof actor === 'object' ? String(actor.id || index) : String(index))}
                         renderItem={({ item: actor }) => {
                           const isDetailed = typeof actor === 'object';

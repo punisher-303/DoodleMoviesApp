@@ -201,8 +201,15 @@ const TorrentList: React.FC<TorrentListProps> = ({
             }
         } catch (error) {
             console.error("Resolution failed:", error);
-            ToastAndroid.show('Engine resolution failed, playing direct', ToastAndroid.SHORT);
-            onPlay(item); 
+            const externalPlayer = settingsStorage.getBool('useExternalPlayer');
+            
+            if (externalPlayer && item.link.startsWith('magnet:')) {
+                ToastAndroid.show('Engine failed, trying external player...', ToastAndroid.SHORT);
+                handleExternalPlayer(item.link, type);
+            } else {
+                ToastAndroid.show('Engine resolution failed, check settings', ToastAndroid.SHORT);
+                onPlay(item); 
+            }
         } finally {
             setIsResolving(false);
         }
@@ -231,9 +238,9 @@ const TorrentList: React.FC<TorrentListProps> = ({
         </View>
 
         <View className="flex-row items-center mt-2 space-x-4">
-            <View className="flex-row items-center bg-white/5 px-2 py-0.5 rounded-md">
+            <View className="flex-1 flex-row items-center bg-white/5 px-2 py-0.5 rounded-md min-w-0">
                 <MaterialCommunityIcons name="database-outline" size={13} color="#A1A1AA" />
-                <Text className="text-zinc-400 text-[11px] ml-1.5 font-medium">{item.size}</Text>
+                <Text className="text-zinc-400 text-[11px] ml-1.5 font-medium flex-1" numberOfLines={1}>{item.size}</Text>
             </View>
             <View className="flex-row items-center bg-green-500/10 px-2 py-0.5 rounded-md">
                 <MaterialCommunityIcons name="arrow-up-bold" size={13} color="#22C55E" />

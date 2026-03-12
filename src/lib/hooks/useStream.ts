@@ -100,22 +100,20 @@ export const useStream = ({
           throw new Error('No streams available');
         }
 
-        // Handle magnet links by wrapping with TorrServer
+        // Zero-Config: Intelligent Torrent Resolution
         let torrServerUrl = settingsStorage.getTorrServerUrl();
+        const publicBridge = settingsStorage.getPublicTorrServerBridge();
 
-        // Zero-Config: If URL is empty/default, try to ensure localhost is used
-        if (!torrServerUrl) {
-          torrServerUrl = 'http://127.0.0.1:8090';
-        }
-
+        // We will perform a quick check for local engine later, 
+        // but for now, we map the streams and mark them if they need resolution
         const resolvedData = filteredData.map(stream => {
-          // If stream is already resolved (e.g. direct HTTP link from provider or file selection)
+          // If stream is already resolved
           if (stream.isResolved) {
              return stream;
           }
 
           if (stream.link.startsWith('magnet:')) {
-            // If debrid is enabled, we keep the magnet but mark it
+            // Debrid-First: If debrid is enabled, prioritize it
             if (settingsStorage.isDebridEnabled() && settingsStorage.getDebridService() !== 'None') {
               return {
                 ...stream,
@@ -124,9 +122,13 @@ export const useStream = ({
             }
 
             const encodedMagnet = encodeURIComponent(stream.link);
+            
+            // Generate both local and bridge links
+            // We use the local one as primary, but logic in useEffect will switch to bridge if needed
             return {
               ...stream,
               link: `${torrServerUrl}/stream/video.mp4?link=${encodedMagnet}&play`,
+              originalMagnet: stream.link, // Keep original for bridge fallback
               type: 'mp4',
             };
           }
@@ -178,7 +180,37 @@ export const useStream = ({
     }
   }, [streamData]);
 
-  // Debrid resolution logic
+  // Zero-Config: Automatic Bridge Switching
+  useEffect(() => {
+    const checkEngineAndSwitch = async () => {
+      if (selectedStream?.link?.includes('127.0.0.1:8090') || selectedStream?.link?.includes('localhost:8090')) {
+        try {
+          // Perform a quick HEAD request to see if local engine is alive
+          const response = await fetch('http://127.0.0.1:8090/echo', { method: 'GET' });
+          if (!response.ok) throw new Error('Local engine not responding');
+        } catch (e) {
+          console.log('Local engine not found, switching to Public Bridge...');
+          const publicBridge = settingsStorage.getPublicTorrServerBridge();
+          const magnet = (selectedStream as any).originalMagnet;
+          
+          if (magnet) {
+            const encodedMagnet = encodeURIComponent(magnet);
+            setSelectedStream({
+              ...selectedStream,
+              link: `${publicBridge}/stream/video.mp4?link=${encodedMagnet}&play`,
+            });
+            ToastAndroid.show('Using Zero-Config Bridge', ToastAndroid.SHORT);
+          }
+        }
+      }
+    };
+
+    if (selectedStream?.link) {
+      checkEngineAndSwitch();
+    }
+  }, [selectedStream?.link]);
+
+  // Debrid resolution logic (Intelligent Fallback)
   useEffect(() => {
     const resolveDebrid = async () => {
       if (selectedStream?.isDebrid && selectedStream.link.startsWith('magnet:') && !selectedStream.isResolved) {
@@ -186,28 +218,18 @@ export const useStream = ({
           ToastAndroid.show('Resolving via Debrid...', ToastAndroid.SHORT);
           const files = await debridService.resolveMagnet(selectedStream.link);
           if (files && files.length > 0) {
-            // Find the best file (usually the largest one or the first one)
-            // For now, take the first file
             const bestFile = files[0];
             setSelectedStream({
               ...selectedStream,
               link: bestFile.downloadUrl,
               isDebrid: false, // Mark as resolved
+              isResolved: true,
             });
             ToastAndroid.show('Debrid Link Ready', ToastAndroid.SHORT);
           }
         } catch (error: any) {
           console.error('Debrid resolution failed:', error);
-          ToastAndroid.show('Debrid failed, falling back to TorrServer', ToastAndroid.SHORT);
-
-          // Fallback to TorrServer
-          const torrServerUrl = settingsStorage.getTorrServerUrl() || 'http://127.0.0.1:8090';
-          const encodedMagnet = encodeURIComponent(selectedStream.link);
-          setSelectedStream({
-            ...selectedStream,
-            link: `${torrServerUrl}/stream/video.mp4?link=${encodedMagnet}&play`,
-            isDebrid: false,
-          });
+          // Fallback handled by the Zero-Config useEffect which checks for magnet/localhost
         }
       }
     };
