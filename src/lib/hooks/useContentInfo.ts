@@ -47,6 +47,9 @@ export const useContentInfo = (link: string, providerValue: string) => {
   });
 };
 
+const TMDB_API_KEY = '9d2bff12ed955c7f1f74b83187f188ae';
+const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+
 // Hook for fetching enhanced metadata from Stremio
 export const useEnhancedMetadata = (imdbId: string, type: string) => {
   return useQuery({
@@ -96,6 +99,46 @@ export const useEnhancedMetadata = (imdbId: string, type: string) => {
   });
 };
 
+// Hook for fetching cast from TMDB (Universal Cast Fix)
+export const useTmdbCredits = (imdbId: string, type: string) => {
+  return useQuery({
+    queryKey: ['tmdbCredits', imdbId, type],
+    queryFn: async () => {
+      if (!imdbId) return null;
+      console.log('Fetching TMDB credits for:', imdbId);
+      try {
+        const searchType = type === 'series' || type === 'tv' ? 'tv' : 'movie';
+        
+        // 1. Find TMDB ID by IMDB ID
+        const findUrl = `${TMDB_BASE_URL}/find/${imdbId}?api_key=${TMDB_API_KEY}&external_source=imdb_id`;
+        const findRes = await axios.get(findUrl);
+        const findData = findRes.data;
+        const results = searchType === 'movie' ? findData.movie_results : findData.tv_results;
+        
+        if (!results || results.length === 0) return null;
+        const tmdbId = results[0].id;
+
+        // 2. Fetch credits
+        const creditsUrl = `${TMDB_BASE_URL}/${searchType}/${tmdbId}/credits?api_key=${TMDB_API_KEY}`;
+        const creditsRes = await axios.get(creditsUrl);
+        const cast = creditsRes.data?.cast?.slice(0, 40).map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          character: c.character,
+          image: c.profile_path ? `https://image.tmdb.org/t/p/w185${c.profile_path}` : undefined,
+        }));
+
+        return cast || [];
+      } catch (error) {
+        console.error('Error fetching TMDB credits:', error);
+        return null;
+      }
+    },
+    enabled: !!imdbId && (type === 'movie' || type === 'series' || type === 'tv'),
+    staleTime: 60 * 60 * 1000, // 1 hour
+  });
+};
+
 // Combined hook for both info and metadata
 export const useContentDetails = (link: string, providerValue: string) => {
   // First, get the basic content info
@@ -114,13 +157,20 @@ export const useContentDetails = (link: string, providerValue: string) => {
     refetch: refetchMeta,
   } = useEnhancedMetadata(info?.imdbId || '', info?.type || '');
 
+  // Finally, get high-quality cast if imdbId is available
+  const {
+    data: tmdbCast,
+    isLoading: tmdbLoading,
+    refetch: refetchTmdb,
+  } = useTmdbCredits(info?.imdbId || '', info?.type || '');
+
   return {
     info,
-    meta,
-    isLoading: infoLoading || metaLoading,
+    meta: meta ? { ...meta, tmdbCast } : (tmdbCast ? { tmdbCast } : null),
+    isLoading: infoLoading || metaLoading || tmdbLoading,
     error: infoError || metaError,
     refetch: async () => {
-      await Promise.all([refetchInfo(), refetchMeta()]);
+      await Promise.all([refetchInfo(), refetchMeta(), refetchTmdb()]);
     },
   };
 };

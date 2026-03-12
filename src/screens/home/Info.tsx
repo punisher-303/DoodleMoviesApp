@@ -628,8 +628,12 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                         data={(() => {
                           const providerCast = info?.cast && Array.isArray(info.cast) && info.cast.length > 0 ? info.cast : [];
                           const cinemetaCast = meta?.cast && Array.isArray(meta.cast) ? meta.cast : [];
+                          const tmdbCast = meta?.tmdbCast && Array.isArray(meta.tmdbCast) ? meta.tmdbCast : [];
                           
-                          // If provider cast has detailed objects (images), prioritize it
+                          // Prioritize TMDB cast as it's most likely to have high-quality images
+                          if (tmdbCast.length > 0) return tmdbCast;
+
+                          // If provider cast has detailed objects (images), prioritize it next
                           const hasDetailedProviderCast = providerCast.some((c: any) => typeof c === 'object' && c.image);
                           return hasDetailedProviderCast ? providerCast : (cinemetaCast.length > 0 ? cinemetaCast : providerCast);
                         })() as any[]}

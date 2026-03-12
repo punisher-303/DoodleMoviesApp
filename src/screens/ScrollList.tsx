@@ -187,26 +187,43 @@ const ScrollList = ({ route }: Props): ReactElement => {
                 margin: 12,
                 alignItems: viewType === 1 ? 'stretch' : 'center',
               }}
-              onPress={() =>
+              onPress={() => {
+                if (item.type === 'person') {
+                  navigation.navigate('SearchStack', {
+                    screen: 'ScrollList',
+                    params: {
+                      filter: item.link,
+                      title: item.title,
+                      isSearch: true,
+                      providerValue: route.params?.providerValue || provider.value,
+                    },
+                  });
+                  return;
+                }
                 navigation.navigate('Info', {
                   link: item.link,
                   provider: route.params?.providerValue || provider.value,
                   poster: item?.image,
-                })
-              }>
+                });
+              }}>
               <Image
-                className="rounded-md"
+                className={item.type === 'person' ? "rounded-full" : "rounded-md"}
                 source={{
                   uri:
                     item.image ||
-                    'https://placehold.jp/24/363636/ffffff/100x150.png?text=Doodle',
+                    (item.type === 'person'
+                      ? 'https://placehold.jp/24/363636/ffffff/150x150.png?text=Actor'
+                      : 'https://placehold.jp/24/363636/ffffff/100x150.png?text=Doodle'),
                 }}
                 style={
-                  viewType === 1
-                    ? { width: 100, height: 150 }
-                    : { width: 70, height: 100 }
+                  item.type === 'person'
+                    ? { width: 80, height: 80, marginLeft: viewType === 1 ? 10 : 0 }
+                    : (viewType === 1
+                      ? { width: 100, height: 150 }
+                      : { width: 70, height: 100 })
                 }
                 cachePolicy="memory-disk"
+                contentFit="cover"
               />
               <Text
                 className={

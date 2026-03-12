@@ -6,6 +6,7 @@ import { settingsStorage } from '../storage';
 import { ifExists } from '../file/ifExists';
 import { Stream } from '../providers/types';
 import { debridService } from '../services/DebridService';
+import TorrEngineService from '../services/TorrEngineService';
 
 interface UseStreamOptions {
   activeEpisode: any;
@@ -180,16 +181,16 @@ export const useStream = ({
     }
   }, [streamData]);
 
-  // Zero-Config: Automatic Bridge Switching
+  // Zero-Config: Automatic Engine Scaling & Bridge Fallback
   useEffect(() => {
     const checkEngineAndSwitch = async () => {
+      // If we have a localhost link, we need to make sure the engine is running
       if (selectedStream?.link?.includes('127.0.0.1:8090') || selectedStream?.link?.includes('localhost:8090')) {
         try {
-          // Perform a quick HEAD request to see if local engine is alive
-          const response = await fetch('http://127.0.0.1:8090/echo', { method: 'GET' });
-          if (!response.ok) throw new Error('Local engine not responding');
+          const success = await TorrEngineService.ensureEngine();
+          if (!success) throw new Error('Failed to start local engine');
         } catch (e) {
-          console.log('Local engine not found, switching to Public Bridge...');
+          console.log('Local engine failed to start, switching to Public Bridge...');
           const publicBridge = settingsStorage.getPublicTorrServerBridge();
           const magnet = (selectedStream as any).originalMagnet;
           
@@ -199,7 +200,7 @@ export const useStream = ({
               ...selectedStream,
               link: `${publicBridge}/stream/video.mp4?link=${encodedMagnet}&play`,
             });
-            ToastAndroid.show('Using Zero-Config Bridge', ToastAndroid.SHORT);
+            ToastAndroid.show('Using Zero-Config Bridge (Fallback)', ToastAndroid.SHORT);
           }
         }
       }

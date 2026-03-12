@@ -115,21 +115,26 @@ const SliderItem = React.memo(({
   providerValue?: string;
   provider: any;
 }) => {
+  const isPerson = item.type === 'person';
+
   return (
-    <View className="flex flex-col mx-2">
+    <View className="flex flex-col mx-2 items-center">
       <TouchableOpacity
         onPress={e => {
           if (e && e.stopPropagation) {
             e.stopPropagation();
           }
-          if (item.type === 'person') {
+          if (isPerson) {
             const name = item.title;
             //@ts-ignore
-            navigation.navigate('ScrollList', {
-              filter: item.link, // For people, link is already the person_id string
-              title: name,
-              isSearch: true,
-              providerValue: item.provider || providerValue || provider?.value,
+            navigation.navigate('SearchStack', {
+              screen: 'ScrollList',
+              params: {
+                filter: item.link,
+                title: name,
+                isSearch: true,
+                providerValue: item.provider || providerValue || provider?.value,
+              },
             });
             return;
           }
@@ -141,20 +146,24 @@ const SliderItem = React.memo(({
           });
         }}>
         <Image
-          className="rounded-md"
+          className={isPerson ? "rounded-full" : "rounded-md"}
           source={{
             uri:
               item?.image ||
-              'https://placehold.jp/24/363636/ffffff/100x150.png?text=doodle',
+              (isPerson 
+                ? 'https://placehold.jp/24/363636/ffffff/150x150.png?text=Actor'
+                : 'https://placehold.jp/24/363636/ffffff/100x150.png?text=doodle'),
           }}
-          style={{ width: 100, height: 150 }}
+          style={isPerson ? { width: 80, height: 80 } : { width: 100, height: 150 }}
           cachePolicy="memory-disk"
+          contentFit="cover"
         />
       </TouchableOpacity>
-      <Text className="text-white text-center truncate w-24 text-xs">
-        {item.title.length > 24
-          ? `${item.title.slice(0, 24)}...`
-          : item.title}
+      <Text 
+        className="text-white text-center truncate w-24 text-[10px] mt-1" 
+        numberOfLines={1}
+      >
+        {item.title}
       </Text>
     </View>
   );
