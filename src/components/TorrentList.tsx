@@ -218,10 +218,12 @@ const TorrentList: React.FC<TorrentListProps> = ({
       className="bg-zinc-900/50 border border-white/10 rounded-xl p-3 mb-2 flex-row items-center"
     >
       <View className="flex-1 mr-2">
-        <MarqueeText 
-            text={item.name} 
-            style={{ color: 'white', fontWeight: '500', fontSize: 13 }} 
-        />
+        <Text 
+            style={{ color: 'white', fontWeight: '500', fontSize: 13 }}
+            numberOfLines={2}
+        >
+            {item.name}
+        </Text>
         
         <View className="flex-row flex-wrap mt-1">
           {renderBadge(item.qualityTag, getQualityColor(item.qualityTag))}

@@ -380,7 +380,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
           return;
         }
 
-        if (onSelectTorrent && providerValue === 'Torrent') {
+        if (onSelectTorrent && providerValue.toLowerCase() === 'torrent') {
           onSelectTorrent(link, secondaryTitle || primaryTitle);
           return;
         }
@@ -389,7 +389,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
         return;
       }
 
-      if (onSelectTorrent && providerValue === 'Torrent') {
+      if (onSelectTorrent && providerValue.toLowerCase() === 'torrent') {
         onSelectTorrent(link, secondaryTitle || primaryTitle);
         return;
       }

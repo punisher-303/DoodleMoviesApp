@@ -638,9 +638,12 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                               onPress={() => {
                                 //@ts-ignore
                                 searchNavigation.navigate('SearchStack', {
-                                  screen: 'SearchResults',
+                                  screen: 'ScrollList',
                                   params: {
                                     filter: isDetailed ? `person_id:${actor.id}:${name}` : name,
+                                    title: name,
+                                    isSearch: true,
+                                    providerValue: route.params.provider || provider.value,
                                   },
                                 });
                               }}
@@ -837,7 +840,7 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                 </View>
 
                 {/* Main container */}
-                <View className="p-4 bg-black">
+                <View className="px-4 pb-1 bg-black">
 
                   {infoLoading ? (
                     <View className="gap-y-3 items-start mb-4 p-3">
