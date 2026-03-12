@@ -507,12 +507,6 @@ const SeasonList: React.FC<SeasonListProps> = ({
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              onPress={() => handleExternalPlayer(item.link, 'series')}
-              className="bg-zinc-900 h-12 w-11 rounded-xl border border-white/40 items-center justify-center"
-            >
-              <MaterialCommunityIcons name="rocket-launch-outline" size={20} color="#A1A1AA" />
-            </TouchableOpacity>
 
             <Downloader
               providerValue={providerValue}
@@ -591,12 +585,6 @@ const SeasonList: React.FC<SeasonListProps> = ({
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              onPress={() => handleExternalPlayer(item.link, item?.type || type)}
-              className="bg-zinc-900 h-12 w-11 rounded-xl border border-white/40 items-center justify-center"
-            >
-              <MaterialCommunityIcons name="rocket-launch-outline" size={20} color="#A1A1AA" />
-            </TouchableOpacity>
 
             <Downloader
               providerValue={providerValue}
@@ -846,10 +834,12 @@ const SeasonList: React.FC<SeasonListProps> = ({
                         justifyContent: 'center'
                     }}
                   >
-                    <MarqueeText 
-                        text={item.title.match(/Episode (\d+)/i) ? `E${item.title.match(/Episode (\d+)/i)![1]}` : item.title}
-                        style={{ color: isSelected ? 'black' : 'white', fontWeight: 'bold', fontSize: 12 }}
-                    />
+                    <Text 
+                        style={{ color: isSelected ? 'black' : 'white', fontWeight: 'bold', fontSize: 13 }}
+                        numberOfLines={1}
+                    >
+                        {item.title.match(/Episode (\d+)/i) ? `E${item.title.match(/Episode (\d+)/i)![1]}` : item.title}
+                    </Text>
                   </TouchableOpacity>
                 );
               }}

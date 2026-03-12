@@ -622,8 +622,11 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                       <FlatList
                         horizontal
                         showsHorizontalScrollIndicator={false}
+                        initialNumToRender={10}
+                        maxToRenderPerBatch={20}
+                        windowSize={5}
                         data={(meta?.cast || info?.cast) as any[]}
-                        keyExtractor={(actor, index) => (typeof actor === 'object' ? String(actor.id) : String(index))}
+                        keyExtractor={(actor, index) => (typeof actor === 'object' ? String(actor.id || index) : String(index))}
                         renderItem={({ item: actor }) => {
                           const isDetailed = typeof actor === 'object';
                           const name = isDetailed ? actor.name : actor;
@@ -677,46 +680,30 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                         <Text className="text-white text-lg font-semibold">
                           Synopsis
                         </Text>
-                        <Text className="text-white text-xs bg-tertiary p-1 px-2 rounded-md">
+                        <Text className="text-white text-[10px] bg-tertiary p-1 px-2 rounded-md font-bold uppercase tracking-wider">
                           {route.params.provider || provider.value}
                         </Text>
                       </View>
                     </Skeleton>
                     <View className="flex-row items-center gap-4 mb-1">
                       {/* Kept existing button, but now you also have the Flip Header */}
-                      {meta?.trailers && meta?.trailers.length > 0 && (
-                        <TouchableOpacity
-                          className="p-1 rounded-full"
-                          onPress={() =>
-                            Linking.openURL(
-                              'https://www.youtube.com/watch?v=' +
-                              meta?.trailers?.[0]?.source,
-                            )
-                          }>
-                          <MaterialCommunityIcons
-                            name="movie-open"
-                            size={25}
-                            color="rgb(156 163 175)"
-                          />
-                        </TouchableOpacity>
-                      )}
                       {inLibrary ? (
                         <TouchableOpacity
-                          className="p-1 rounded-full"
+                          className="p-1 rounded-sm"
                           onPress={() => removeLibrary()}>
                           <Ionicons
                             name="bookmark"
-                            size={30}
+                            size={24}
                             color={primary}
                           />
                         </TouchableOpacity>
                       ) : (
                         <TouchableOpacity
-                          className="p-1 rounded-full"
+                          className="p-1 rounded-sm"
                           onPress={() => addLibrary()}>
                           <Ionicons
                             name="bookmark-outline"
-                            size={30}
+                            size={24}
                             color={primary}
                           />
                         </TouchableOpacity>
@@ -730,8 +717,8 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                           setOpenExternalPlayer(newVal);
                         }}>
                         <MaterialCommunityIcons
-                          name="rocket-launch"
-                          size={25}
+                          name="vlc"
+                          size={26}
                           color={OpenExternalPlayer ? primary : 'rgb(156 163 175)'}
                         />
                       </TouchableOpacity>

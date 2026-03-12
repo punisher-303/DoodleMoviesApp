@@ -228,20 +228,19 @@ const TorrentList: React.FC<TorrentListProps> = ({
           {item.audioTags.map((tag: string) => renderBadge(tag, getAudioColor(tag)))}
         </View>
 
-        <View className="flex-row items-center mt-1 space-x-3 gap-2">
-            <View className="flex-row items-center">
-                <MaterialCommunityIcons name="database" size={12} color="#A1A1AA" />
-                <Text className="text-zinc-400 text-[11px] ml-1">{item.size}</Text>
+        <View className="flex-row items-center mt-2 space-x-4">
+            <View className="flex-row items-center bg-white/5 px-2 py-0.5 rounded-md">
+                <MaterialCommunityIcons name="database-outline" size={13} color="#A1A1AA" />
+                <Text className="text-zinc-400 text-[11px] ml-1.5 font-medium">{item.size}</Text>
             </View>
-            <View className="flex-row items-center">
-                <MaterialCommunityIcons name="arrow-up" size={12} color="#22C55E" />
-                <Text className="text-green-500 text-[11px] ml-0.5">{item.seeders}</Text>
+            <View className="flex-row items-center bg-green-500/10 px-2 py-0.5 rounded-md">
+                <MaterialCommunityIcons name="arrow-up-bold" size={13} color="#22C55E" />
+                <Text className="text-green-500 text-[11px] ml-1 font-bold">{item.seeders}</Text>
             </View>
-            <View className="flex-1">
-                <MarqueeText 
-                    text={`Source: ${item.source}`}
-                    style={{ color: '#71717A', fontSize: 10, fontWeight: 'bold' }}
-                />
+            <View className="flex-1 ml-1">
+                <Text className="text-zinc-500 text-[10px] font-bold uppercase tracking-tighter" numberOfLines={1}>
+                    {item.source}
+                </Text>
             </View>
         </View>
       </View>
@@ -257,16 +256,6 @@ const TorrentList: React.FC<TorrentListProps> = ({
             <Ionicons name="copy-outline" size={16} color="#A1A1AA" />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-            onPress={() => {
-                Linking.openURL(item.link).catch(() => {
-                    ToastAndroid.show('No app found to handle this link', ToastAndroid.SHORT);
-                });
-            }}
-            className="bg-white/5 p-2 rounded-full"
-        >
-            <MaterialCommunityIcons name="rocket-launch-outline" size={16} color="#A1A1AA" />
-        </TouchableOpacity>
 
         <TouchableOpacity 
             onPress={() => {
