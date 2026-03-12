@@ -259,11 +259,41 @@ export const useStream = ({
     }
   }, [error]);
 
+  // Bridge Selection State (for rotating through public bridges if one fails)
+  const [bridgeIndex, setBridgeIndex] = useState(0);
+
   // Helper function to switch to the next stream
   const switchToNextStream = (showToast = true): boolean => {
+    // 1. Multi-Bridge Logic: If the current stream is using a bridge, try the NEXT bridge first
+    // before abandoning this torrent source entirely.
+    const publicBridges = settingsStorage.getPublicTorrServerBridges();
+    const isUsingBridge = publicBridges.some(b => selectedStream?.link?.startsWith(b));
+    
+    if (isUsingBridge && bridgeIndex < publicBridges.length - 1) {
+      const nextBridgeIdx = bridgeIndex + 1;
+      setBridgeIndex(nextBridgeIdx);
+      
+      const magnet = (selectedStream as any).originalMagnet;
+      if (magnet) {
+        const nextBridge = settingsStorage.getPublicTorrServerBridge(nextBridgeIdx);
+        const encodedMagnet = encodeURIComponent(magnet);
+        
+        setSelectedStream({
+          ...selectedStream,
+          link: `${nextBridge}/stream/video.mp4?link=${encodedMagnet}&play`,
+        });
+        
+        if (showToast) {
+          ToastAndroid.show(`Trying Bridge ${nextBridgeIdx + 1}...`, ToastAndroid.SHORT);
+        }
+        return true;
+      }
+    }
+
+    // 2. Standard Stream Skipping (If all bridges failed or not a bridge stream)
     if (streamData && streamData.length > 0) {
       const currentIndex = streamData.findIndex(
-        (s) => s.link === selectedStream.link && s.server === selectedStream.server,
+        (s) => s.link === selectedStream.link || s.originalMagnet === (selectedStream as any).originalMagnet,
       );
 
       // We need to handle the hubcloud skip here too, just in case the streamData list has 
@@ -283,12 +313,13 @@ export const useStream = ({
       }
 
       if (nextStream) {
+        setBridgeIndex(0); // Reset bridge index for new torrent
         setSelectedStream(nextStream);
         setSkipAttemptCount(0); // Reset attempt count for the new stream
 
         if (showToast) {
           ToastAndroid.show(
-            'Video could not be played, Trying next server',
+            'Trying next server...',
             ToastAndroid.SHORT,
           );
         }
@@ -319,14 +350,9 @@ export const useStream = ({
    * @returns true if there was a next stream to switch to, false otherwise.
    */
   const handleStreamLoadFailure = () => {
-    // Only attempt to skip once per selected stream link/server
-    if (skipAttemptCount === 0) {
-      setSkipAttemptCount(1); // Mark as attempted
-      console.log('Stream load failure detected, attempting to switch stream.');
-      return switchToNextStream();
-    }
-    console.log('Already attempted to skip this stream, or no more streams.');
-    return false;
+    // We increase skipAttemptCount but allow multiple attempts if multi-bridge is working
+    console.log('Stream load failure detected, attempting bridge rotation or stream switch.');
+    return switchToNextStream();
   };
 
 

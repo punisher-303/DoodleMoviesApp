@@ -67,7 +67,8 @@ export class ExtensionManager {
         type: item.type || 'global',
         category: item.category || 'movie/tvshow',
         installed: false,
-        sourceUrl: item.sourceUrl || undefined
+        sourceUrl: item.sourceUrl || undefined,
+        bridges: item.bridges || undefined,
       }));
 
       // Cache the manifest

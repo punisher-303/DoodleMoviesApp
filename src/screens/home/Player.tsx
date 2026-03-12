@@ -1312,30 +1312,30 @@ const Player = ({ route }: Props): React.JSX.Element => {
 
   const handleVideoError = useCallback(
     (e: any) => {
-      console.log('PlayerError', e);
-      if (!switchToNextStream()) {
+      console.log('[Player] Video Error:', e);
+      
+      const switched = switchToNextStream();
+      
+      if (!switched) {
+        // We are out of streams or bridge rotations
         ToastAndroid.show(
-          'Video could not be played, trying next stream...',
-          ToastAndroid.SHORT,
+          'No working streams found for this media.',
+          ToastAndroid.LONG,
         );
         setTimeout(() => {
-          if (!streamLoading && !selectedStream?.link) {
-            ToastAndroid.show(
-              'No working streams found. Returning.',
-              ToastAndroid.LONG,
-            );
+          if (navigation.canGoBack()) {
             navigation.goBack();
           }
         }, 3000);
+      } else {
+        // switchToNextStream already shows its own "Trying next..." toast
+        setShowControls(true);
       }
-      setShowControls(true);
     },
     [
       switchToNextStream,
       navigation,
       setShowControls,
-      streamLoading,
-      selectedStream,
     ],
   );
 

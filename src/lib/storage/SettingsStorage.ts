@@ -1,4 +1,5 @@
 import { mainStorage } from './StorageService';
+import { extensionStorage } from './extensionStorage';
 
 /**
  * Storage keys for settings
@@ -282,12 +283,31 @@ export class SettingsStorage {
       return savedUrl;
     }
     // Zero-Config Fallback: If local is default or empty, return localhost but hint at bridge
-    return savedUrl || 'http://127.0.0.1:8090';
+    return 'http://127.0.0.1:8090';
   }
 
-  getPublicTorrServerBridge(): string {
-    // Return a reliable public bridge as a fallback
-    return 'https://torr.pw'; // Example public bridge
+  getPublicTorrServerBridges(): string[] {
+    // Try to get dynamic bridges from the installed Torrent provider manifest
+    const installed = extensionStorage.getInstalledProviders();
+    const torrentProvider = installed.find(p => p.value === 'torrent');
+    
+    if (torrentProvider && torrentProvider.bridges && torrentProvider.bridges.length > 0) {
+      console.log('[SettingsStorage] Using dynamic bridges from manifest:', torrentProvider.bridges);
+      return torrentProvider.bridges;
+    }
+
+    // Fallback verified bridges
+    return [
+      'http://torr.unknot.ru:8090',
+      'http://ts.shv.su',
+      'http://torrserver.nnoffkj.ru',
+      'http://vavilon.online:8090',
+    ];
+  }
+
+  getPublicTorrServerBridge(index: number = 0): string {
+    const bridges = this.getPublicTorrServerBridges();
+    return bridges[index % bridges.length];
   }
 
   setTorrServerUrl(url: string): void {

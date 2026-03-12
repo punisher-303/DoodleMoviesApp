@@ -199,17 +199,11 @@ const TorrentList: React.FC<TorrentListProps> = ({
                     onPlay(item); // Fallback
                 }
             }
-        } catch (error) {
-            console.error("Resolution failed:", error);
-            const externalPlayer = settingsStorage.getBool('useExternalPlayer');
-            
-            if (externalPlayer && item.link.startsWith('magnet:')) {
-                ToastAndroid.show('Engine failed, trying external player...', ToastAndroid.SHORT);
-                handleExternalPlayer(item.link, type);
-            } else {
-                ToastAndroid.show('Engine resolution failed, check settings', ToastAndroid.SHORT);
-                onPlay(item); 
-            }
+        } catch (error: any) {
+            console.log("[TorrentList] Local engine check skipped or failed:", error.message);
+            // In Zero-Config mode, we don't treat local engine failure as a hard error
+            // We just let onPlay handle it via the Public Bridge fallback in useStream
+            onPlay(item); 
         } finally {
             setIsResolving(false);
         }

@@ -15,6 +15,7 @@ export interface ProviderExtension {
   installedAt?: number;
   lastUpdated?: number;
   sourceUrl?: string;
+  bridges?: string[];
 }
 
 /**
