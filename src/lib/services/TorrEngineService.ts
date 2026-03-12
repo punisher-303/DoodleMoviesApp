@@ -22,6 +22,11 @@ class TorrEngineService {
   async ensureEngine(): Promise<boolean> {
     if (Platform.OS !== 'android') return false;
 
+    if (!TorrServerModule) {
+      console.warn('[TorrEngineService] Native TorrServerModule not found. A fresh build is required for local engine.');
+      return false;
+    }
+
     try {
       // 1. Check if already running
       const alive = await this.isAlive();
@@ -31,6 +36,7 @@ class TorrEngineService {
       }
 
       // 2. Start via native module
+      console.log('[TorrEngineService] Starting local engine...');
       await TorrServerModule.startServer(PORT);
 
       // 3. Wait for echo

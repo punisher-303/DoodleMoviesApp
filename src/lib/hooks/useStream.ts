@@ -187,20 +187,18 @@ export const useStream = ({
       // If we have a localhost link, we need to make sure the engine is running
       if (selectedStream?.link?.includes('127.0.0.1:8090') || selectedStream?.link?.includes('localhost:8090')) {
         try {
+          console.log('[useStream] Ensuring local engine...');
           const success = await TorrEngineService.ensureEngine();
-          if (!success) throw new Error('Failed to start local engine');
-        } catch (e) {
-          console.log('Local engine failed to start, switching to Public Bridge...');
-          const publicBridge = settingsStorage.getPublicTorrServerBridge();
-          const magnet = (selectedStream as any).originalMagnet;
+          if (success) return; // Engine is ready, we are good
           
-          if (magnet) {
-            const encodedMagnet = encodeURIComponent(magnet);
-            setSelectedStream({
-              ...selectedStream,
-              link: `${publicBridge}/stream/video.mp4?link=${encodedMagnet}&play`,
-            });
-            ToastAndroid.show('Using Zero-Config Bridge (Fallback)', ToastAndroid.SHORT);
+          throw new Error('Local engine failed to start');
+        } catch (e) {
+          console.log('[useStream] Local engine fallback triggered:', e);
+          // Instead of manual link swap, we use our robust switchToNextStream
+          // which knows how to handle bridges and rotation.
+          const switched = switchToNextStream(false); // don't show toast for the auto-initial skip
+          if (!switched) {
+             console.warn('[useStream] Failed to fallback to any bridge');
           }
         }
       }

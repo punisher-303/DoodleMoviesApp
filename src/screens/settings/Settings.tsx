@@ -160,6 +160,14 @@ const Settings = ({ navigation }: Props) => {
     if (!url) return;
     setEngineStatus('checking');
     try {
+      // If it's the local address, we can try to start it ourselves
+      if (url.includes('127.0.0.1') || url.includes('localhost')) {
+        const TorrEngineService = require('../../lib/services/TorrEngineService').default;
+        const success = await TorrEngineService.ensureEngine();
+        setEngineStatus(success ? 'active' : 'offline');
+        return;
+      }
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000);
       const res = await fetch(`${url}/echo`, { signal: controller.signal });

@@ -1504,6 +1504,8 @@ const Player = ({ route }: Props): React.JSX.Element => {
   ]);
 
   useEffect(() => {
+    let stuckTimeout: NodeJS.Timeout;
+    
     if (streamLoading) {
       loadingOpacity.value = withTiming(1, { duration: 800 });
       loadingScale.value = withTiming(1, { duration: 800 });
@@ -1516,8 +1518,22 @@ const Player = ({ route }: Props): React.JSX.Element => {
         ),
         -1,
       );
+
+      // Stuck Loading Protection: Auto-skip if source is stuck for 20s
+      stuckTimeout = setTimeout(() => {
+        if (streamLoading && !isPlaying && !isPlayerLocked) {
+           console.log('[Player] Detected stuck loading, triggering auto-skip...');
+           handleVideoError({ error: 'STUCK_LOADING' });
+        }
+      }, 20000); // 20 seconds
+    } else {
+      loadingOpacity.value = withTiming(0, { duration: 400 });
     }
-  }, [streamLoading]);
+
+    return () => {
+      if (stuckTimeout) clearTimeout(stuckTimeout);
+    };
+  }, [streamLoading, isPlaying, isPlayerLocked, handleVideoError]);
 
   useEffect(() => {
     const shouldShow =
