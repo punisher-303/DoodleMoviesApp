@@ -58,40 +58,46 @@ export const useHomePageData = ({
 // Memoized hero selection with stable reference
 export const getRandomHeroPost = (
   homeData: HomePageData[],
-  providerValue?: string, // Added providerValue for caching
+  providerValue?: string,
 ) => {
   if (!homeData || homeData.length === 0) {
     return null;
   }
 
-  // If providerValue is present, try to get cached hero
+  // 1. Try to get cached hero for stability
   if (providerValue) {
     const cachedHero = cacheStorage.getString(`hero_selection_${providerValue}`);
     if (cachedHero) {
       try {
-        const parsed = JSON.parse(cachedHero);
-        // Verify the cached hero still exists in the fresh data (optional but good practice)
-        // For now, just return it to be fast
-        return parsed;
+        return JSON.parse(cachedHero);
       } catch (e) {
-        // failed to parse, continue to pick new
+        // failed to parse
       }
     }
   }
 
-  const lastCategory = homeData[homeData.length - 1]; // or random category? Original used lastCategory? 
-  // Original code: const lastCategory = homeData[homeData.length - 1];
-  // Wait, is "lastCategory" really the hero category? Usually first or random?
-  // The original code used homeData[homeData.length - 1]. I'll stick to that.
+  // 2. Selection Logic: Filter out people-only categories
+  // We prefer the first category (usually "Trending" or "Featured")
+  // because the hero should be impactful.
+  const validCategories = homeData.filter(cat => 
+    cat.Posts && 
+    cat.Posts.length > 0 && 
+    cat.Posts.some(post => post.type !== 'person')
+  );
 
-  if (!lastCategory.Posts || lastCategory.Posts.length === 0) {
-    return null;
-  }
+  if (validCategories.length === 0) return null;
 
-  const randomIndex = Math.floor(Math.random() * lastCategory.Posts.length);
-  const selectedHero = lastCategory.Posts[randomIndex];
+  // Pick the first valid category (usually the most important one)
+  const heroCategory = validCategories[0];
+  
+  // Filter out any people in that category just in case
+  const moviePosts = heroCategory.Posts.filter(post => post.type !== 'person');
+  
+  if (moviePosts.length === 0) return null;
 
-  // Cache the selection if providerValue is available
+  const randomIndex = Math.floor(Math.random() * Math.min(moviePosts.length, 5)); // Pick from top 5 for better quality
+  const selectedHero = moviePosts[randomIndex];
+
   if (providerValue && selectedHero) {
     cacheStorage.setString(
       `hero_selection_${providerValue}`,
