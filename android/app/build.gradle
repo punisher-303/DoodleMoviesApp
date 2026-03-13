@@ -180,7 +180,7 @@ if (keystorePropertiesFile.exists()) {
         jniLibs {
             // ENABLE MODERN PACKAGING FOR 16KB SUPPORT
             // This enables 16KB alignment while maintaining compatibility
-            useLegacyPackaging false
+            useLegacyPackaging true
         }
         // Handle potential library conflicts
         pickFirsts += ['**/libreactnative.so']

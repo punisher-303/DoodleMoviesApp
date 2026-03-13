@@ -23,7 +23,7 @@ class TorrEngineService {
     if (Platform.OS !== 'android') return false;
 
     if (!TorrServerModule) {
-      console.warn('[TorrEngineService] Native TorrServerModule not found. A fresh build is required for local engine.');
+      console.warn('[TorrEngineService] Native TorrServerModule not found.');
       return false;
     }
 
@@ -36,16 +36,21 @@ class TorrEngineService {
       }
 
       // 2. Start via native module
-      console.log('[TorrEngineService] Starting local engine...');
-      await TorrServerModule.startServer(PORT);
-
-      // 3. Wait for echo
-      const ready = await this.waitForEcho();
+      ToastAndroid.show('Starting Torrent Engine...', ToastAndroid.SHORT);
+      console.log('[TorrEngineService] Starting local engine via NativeModule...');
+      const started = await TorrServerModule.startServer(PORT);
+      
+      // 3. Wait for echo with progression logging
+      const ready = await this.waitForEcho(25000); // Increased to 25s
       if (ready) {
+        console.log('[TorrEngineService] Engine is UP and responding.');
         await this.configureSettings();
+        ToastAndroid.show('Torrent Engine Ready', ToastAndroid.SHORT);
         return true;
       }
 
+      console.error('[TorrEngineService] Engine failed to respond within timeout.');
+      ToastAndroid.show('Engine Failed to Start', ToastAndroid.SHORT);
       return false;
     } catch (error) {
       console.error('[TorrEngineService] Failed to ensure engine:', error);
@@ -55,18 +60,24 @@ class TorrEngineService {
 
   private async isAlive(): Promise<boolean> {
     try {
-      const resp = await axios.get(`${BASE_URL}/echo`, { timeout: 1000 });
+      // Use 127.0.0.1 strictly
+      const resp = await axios.get(`http://127.0.0.1:${PORT}/echo`, { timeout: 2000 });
       return resp.status === 200;
-    } catch {
+    } catch (e: any) {
       return false;
     }
   }
 
   private async waitForEcho(timeoutMs = 15000): Promise<boolean> {
     const start = Date.now();
+    let attempts = 0;
     while (Date.now() - start < timeoutMs) {
+      attempts++;
       if (await this.isAlive()) return true;
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (attempts % 4 === 0) {
+        console.log(`[TorrEngineService] Still waiting... (${Math.round((Date.now() - start)/1000)}s)`);
+      }
+      await new Promise(resolve => setTimeout(resolve, 800));
     }
     return false;
   }
@@ -80,15 +91,21 @@ class TorrEngineService {
 
       const optimized = {
         ...current,
-        CacheSize: 256 * 1024 * 1024, // 256MB RAM Cache (Safer for mobile)
-        PreloadCache: 5,               // 5% Preload (Smoother start)
-        ReaderReadAHead: 70,          // 70% Read ahead (Avoid choking swarms)
-        ResponsiveMode: true,         // Priority for reader pieces
-        Strategy: 2,                  // Balanced/Fast strategy
-        ConnectionsLimit: 150,        // Slightly lower to avoid network congestion
-        DisableUpload: true,          // Leech mode for max speed
-        RetrackersMode: 1,            // Add retrackers
-        TorrentDisconnectTimeout: 86400, // Stay alive
+        CacheSize: 200 * 1024 * 1024, // 200MB RAM Cache
+        PreloadCache: 3,               // 3% Preload
+        ReaderReadAHead: 80,          // 80% Read ahead
+        ResponsiveMode: true,         
+        Strategy: 0,                  // 0 = Fast Strategy
+        ConnectionsLimit: 200,        // Bumping to 200 for faster swarming
+        DisableUpload: true,          
+        RetrackersMode: 1,            
+        TorrentDisconnectTimeout: 86400,
+        DhtEndpoints: [
+          "router.bittorrent.com:6881",
+          "router.utorrent.com:6881",
+          "dht.transmissionbt.com:6881",
+          "dht.libtorrent.org:25401"
+        ],
       };
 
       await axios.post(`${BASE_URL}/settings`, {

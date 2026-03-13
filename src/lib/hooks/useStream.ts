@@ -130,7 +130,7 @@ export const useStream = ({
               ...stream,
               link: `${torrServerUrl}/stream?link=${encodedMagnet}&play`,
               originalMagnet: stream.link, // Keep original for bridge fallback
-              type: 'mkv', // Use mkv as a safer default for torrents
+              // type: removed to allow player auto-detection
             };
           }
           return stream;
@@ -266,27 +266,30 @@ export const useStream = ({
     // 1. Multi-Bridge Logic: If the current stream is using a bridge, try the NEXT bridge first
     // before abandoning this torrent source entirely.
     const publicBridges = settingsStorage.getPublicTorrServerBridges();
+    const isUsingLocal = selectedStream?.link?.includes('127.0.0.1:8090') || selectedStream?.link?.includes('localhost:8090');
     const isUsingBridge = publicBridges.some(b => selectedStream?.link?.startsWith(b));
-    
-    if (isUsingBridge && bridgeIndex < publicBridges.length - 1) {
-      const nextBridgeIdx = bridgeIndex + 1;
+    const magnet = (selectedStream as any).originalMagnet;
+
+    // 1. Initial Local -> Bridge Fallback OR Bridge -> Next Bridge Rotation
+    if (magnet && (isUsingLocal || (isUsingBridge && bridgeIndex < publicBridges.length - 1))) {
+      let nextBridgeIdx = isUsingLocal ? 0 : bridgeIndex + 1;
       setBridgeIndex(nextBridgeIdx);
       
-      const magnet = (selectedStream as any).originalMagnet;
-      if (magnet) {
-        const nextBridge = settingsStorage.getPublicTorrServerBridge(nextBridgeIdx);
-        const encodedMagnet = encodeURIComponent(magnet);
-        
-        setSelectedStream({
-          ...selectedStream,
-          link: `${nextBridge}/stream?link=${encodedMagnet}&play`,
-        });
-        
-        if (showToast) {
-          ToastAndroid.show(`Trying Bridge ${nextBridgeIdx + 1}...`, ToastAndroid.SHORT);
-        }
-        return true;
+      const nextBridge = settingsStorage.getPublicTorrServerBridge(nextBridgeIdx);
+      const encodedMagnet = encodeURIComponent(magnet);
+      
+      setSelectedStream({
+        ...selectedStream,
+        link: `${nextBridge}/stream?link=${encodedMagnet}&play`,
+      });
+      
+      if (showToast) {
+        ToastAndroid.show(
+          isUsingLocal ? 'Local engine issue, trying bridge...' : `Trying Bridge ${nextBridgeIdx + 1}...`,
+          ToastAndroid.SHORT
+        );
       }
+      return true;
     }
 
     // 2. Standard Stream Skipping (If all bridges failed or not a bridge stream)
