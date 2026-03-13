@@ -55,6 +55,7 @@ import { checkNotifications, openSettings, RESULTS, check, request, PERMISSIONS 
 import { MaterialIcons } from '@expo/vector-icons';
 import useAppModeStore from './lib/zustand/appModeStore';
 import DoodleTVStack from './navigation/DoodleTVStack';
+import TorrEngineService from './lib/services/TorrEngineService';
 
 // import useSettingsStore from './lib/zustand/settingsStore';
 
@@ -383,6 +384,15 @@ const App = () => {
     return () => {
       updateProvidersService.stopAutomaticUpdateCheck();
     };
+  }, []);
+  // Initialize torrent engine at startup
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      console.log('[App] Proactively ensuring torrent engine...');
+      TorrEngineService.ensureEngine().catch(e => 
+        console.log('[App] Initial engine start ignored (will retry on playback)', e.message)
+      );
+    }
   }, []);
 
 

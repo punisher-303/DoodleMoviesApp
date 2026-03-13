@@ -80,12 +80,12 @@ class TorrEngineService {
 
       const optimized = {
         ...current,
-        CacheSize: 512 * 1024 * 1024, // 512MB RAM Cache
-        PreloadCache: 2,               // 2% Preload (Fast start)
-        ReaderReadAHead: 95,          // 95% Read ahead
+        CacheSize: 256 * 1024 * 1024, // 256MB RAM Cache (Safer for mobile)
+        PreloadCache: 5,               // 5% Preload (Smoother start)
+        ReaderReadAHead: 70,          // 70% Read ahead (Avoid choking swarms)
         ResponsiveMode: true,         // Priority for reader pieces
-        Strategy: 2,                  // Fastest strategy
-        ConnectionsLimit: 200,
+        Strategy: 2,                  // Balanced/Fast strategy
+        ConnectionsLimit: 150,        // Slightly lower to avoid network congestion
         DisableUpload: true,          // Leech mode for max speed
         RetrackersMode: 1,            // Add retrackers
         TorrentDisconnectTimeout: 86400, // Stay alive

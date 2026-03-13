@@ -168,15 +168,17 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
 
             if (isDummy) return false;
 
-            if (isDummy) return false;
-
             // 2. Strict Title Match: Only keep posters that actually contain the searched keyword
             // (Many providers return loosely related garbage that bloats the UI)
             
             // SKIP strict filtering if this is a person search (we want the whole filmography)
             if (route.params.filter.startsWith('person_id:')) return true;
 
-            const searchWords = searchKeywordLower.split(' ').filter(w => w.length > 2);
+            const searchWords = searchKeywordLower.split(' ').filter(w => w.length >= 2);
+            if (searchWords.length === 0) return true; // Fallback for very short queries
+            
+            // Check if title contains the search keyword or its significant words
+            return titleLower.includes(searchKeywordLower) || searchWords.every(word => titleLower.includes(word));
           });
 
           // Initialize empty provider block so it shows up in UI as tracking

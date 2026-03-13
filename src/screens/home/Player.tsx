@@ -1519,13 +1519,18 @@ const Player = ({ route }: Props): React.JSX.Element => {
         -1,
       );
 
-      // Stuck Loading Protection: Auto-skip if source is stuck for 20s
+      // Stuck Loading Protection: Auto-skip if source is stuck
+      // Torrents (local or bridge) get more time (45s) to find peers than direct links (20s)
+      const isTorrent = selectedStream?.link?.includes('127.0.0.1:8090') || 
+                        settingsStorage.getPublicTorrServerBridges().some(b => selectedStream?.link?.startsWith(b));
+      const timeoutMs = isTorrent ? 45000 : 20000;
+
       stuckTimeout = setTimeout(() => {
         if (streamLoading && !isPlaying && !isPlayerLocked) {
-           console.log('[Player] Detected stuck loading, triggering auto-skip...');
+           console.log(`[Player] Detected stuck loading after ${timeoutMs/1000}s, triggering auto-skip...`);
            handleVideoError({ error: 'STUCK_LOADING' });
         }
-      }, 20000); // 20 seconds
+      }, timeoutMs); 
     } else {
       loadingOpacity.value = withTiming(0, { duration: 400 });
     }

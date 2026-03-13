@@ -128,9 +128,9 @@ export const useStream = ({
             // We use the local one as primary, but logic in useEffect will switch to bridge if needed
             return {
               ...stream,
-              link: `${torrServerUrl}/stream/video.mp4?link=${encodedMagnet}&play`,
+              link: `${torrServerUrl}/stream?link=${encodedMagnet}&play`,
               originalMagnet: stream.link, // Keep original for bridge fallback
-              type: 'mp4',
+              type: 'mkv', // Use mkv as a safer default for torrents
             };
           }
           return stream;
@@ -279,7 +279,7 @@ export const useStream = ({
         
         setSelectedStream({
           ...selectedStream,
-          link: `${nextBridge}/stream/video.mp4?link=${encodedMagnet}&play`,
+          link: `${nextBridge}/stream?link=${encodedMagnet}&play`,
         });
         
         if (showToast) {
