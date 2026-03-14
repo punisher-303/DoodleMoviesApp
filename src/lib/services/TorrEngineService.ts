@@ -132,16 +132,19 @@ class TorrEngineService {
         PreloadCache: 3,               // 3% Preload
         ReaderReadAHead: 80,          // 80% Read ahead
         ResponsiveMode: true,         
-        Strategy: 0,                  // 0 = Fast Strategy
-        ConnectionsLimit: 200,        // Bumping to 200 for faster swarming
+        Strategy: 2,                  // 2 = RequestStrategyFastest (Picks fastest peers immediately)
+        ConnectionsLimit: 250,        // Balanced for modern mobile devices (prevents overhead)
         DisableUpload: true,          
         RetrackersMode: 1,            
+        DhtConnectionLimit: 0,        // 0 = Unlimited (Faster peer discovery)
+        PeersListenPort: 0,           // 0 = Random (Avoids firewall blocks)
         TorrentDisconnectTimeout: 86400,
         DhtEndpoints: [
           "router.bittorrent.com:6881",
           "router.utorrent.com:6881",
           "dht.transmissionbt.com:6881",
-          "dht.libtorrent.org:25401"
+          "dht.libtorrent.org:25401",
+          "dht.aelitis.com:6881"
         ],
       };
 

@@ -8,6 +8,39 @@ import { Stream } from '../providers/types';
 import { debridService } from '../services/DebridService';
 import TorrEngineService from '../services/TorrEngineService';
 
+// Ultra-Stable Tracker List (Feb 2026) - Appended to magnets for faster peer discovery
+const TOP_TRACKERS = [
+  'udp://tracker.opentrackr.org:1337/announce',
+  'udp://open.tracker.cl:1337/announce',
+  'udp://open.stealth.si:80/announce',
+  'udp://tracker.torrent.eu.org:451/announce',
+  'udp://tracker.moeking.me:6969/announce',
+  'udp://exodus.desync.com:6969/announce',
+  'udp://tracker.tiny-vps.com:6969/announce',
+  'udp://tracker.openbittorrent.com:6969/announce',
+  'udp://p4p.arenabg.com:1337/announce',
+  'udp://tracker.cyberia.is:6969/announce',
+  'udp://explodie.org:6969/announce',
+  'udp://tracker.dler.org:6969/announce',
+  'udp://opentracker.i2p.rocks:6969/announce',
+  'udp://bt.oiia.moe:6969/announce',
+  'udp://tracker1.bt.moack.co.kr:80/announce',
+  'udp://tracker.bitsearch.to:1337/announce',
+  'http://tracker.openbittorrent.com:80/announce',
+  'http://tracker.opentrackr.org:1337/announce',
+];
+
+const boostMagnet = (magnet: string): string => {
+  if (!magnet || !magnet.startsWith('magnet:?')) return magnet;
+  let boosted = magnet;
+  TOP_TRACKERS.forEach(tr => {
+    if (!magnet.includes(encodeURIComponent(tr))) {
+      boosted += `&tr=${encodeURIComponent(tr)}`;
+    }
+  });
+  return boosted;
+};
+
 interface UseStreamOptions {
   activeEpisode: any;
   routeParams: any;
@@ -276,12 +309,13 @@ export const useStream = ({
       setBridgeIndex(nextBridgeIdx);
       
       const nextBridge = settingsStorage.getPublicTorrServerBridge(nextBridgeIdx);
-      const encodedMagnet = encodeURIComponent(magnet);
+      const boostedMagnet = boostMagnet(magnet);
+      const encodedMagnet = encodeURIComponent(boostedMagnet);
       
       setSelectedStream({
         ...selectedStream,
         link: `${nextBridge}/stream?link=${encodedMagnet}&play`,
-        originalMagnet: magnet, // Explicitly preserve magnet
+        originalMagnet: magnet, 
       });
       
       console.log(`[useStream] Rotating to bridge[${nextBridgeIdx}]: ${nextBridge}`);
