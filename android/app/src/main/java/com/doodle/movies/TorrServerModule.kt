@@ -20,7 +20,8 @@ class TorrServerModule(reactContext: ReactApplicationContext) : ReactContextBase
 
     @ReactMethod
     fun startServer(port: Int, promise: Promise) {
-        if (process != null) {
+        if (process != null && isAlive(process!!)) {
+            android.util.Log.d("TorrServerModule", "Engine already active")
             promise.resolve(true)
             return
         }
@@ -30,20 +31,19 @@ class TorrServerModule(reactContext: ReactApplicationContext) : ReactContextBase
             val binaryPath = "$nativeLibDir/libtorrserver.so"
             val binaryFile = File(binaryPath)
 
-            android.util.Log.d("TorrServerModule", "Checking binary at: $binaryPath")
-            android.util.Log.d("TorrServerModule", "Binary exists: ${binaryFile.exists()}")
-            android.util.Log.d("TorrServerModule", "Binary can execute: ${binaryFile.canExecute()}")
-
             if (!binaryFile.exists()) {
-                // Defensive: check if it's named without lib prefix or something else
                 android.util.Log.e("TorrServerModule", "CRITICAL: Binary not found at $binaryPath")
-                promise.reject("BINARY_NOT_FOUND", "TorrServer binary not found at $binaryPath")
+                promise.reject("BINARY_NOT_FOUND", "Engine binary missing from deployment.")
                 return
             }
 
-            // Ensure binary is executable
-            binaryFile.setExecutable(true)
-            android.util.Log.d("TorrServerModule", "SetExecutable true called")
+            // Restore executable permission for safety on physical devices
+            try {
+                binaryFile.setExecutable(true)
+                android.util.Log.d("TorrServerModule", "Executable permission set")
+            } catch (e: Exception) {
+                android.util.Log.w("TorrServerModule", "Failed to set executable (expected on some OS versions)")
+            }
 
             // Ensure directory for data exists
             val dataDir = File(reactApplicationContext.filesDir, "torr_data")
@@ -51,30 +51,76 @@ class TorrServerModule(reactContext: ReactApplicationContext) : ReactContextBase
                 dataDir.mkdirs()
             }
 
-            android.util.Log.d("TorrServerModule", "Data directory: ${dataDir.absolutePath}")
+            // --- DEEP CLEANING: Remove stale lock files ---
+            val lockFiles = dataDir.listFiles { _, name -> name.endsWith(".lock") || name.contains("lock") }
+            lockFiles?.forEach { 
+                android.util.Log.d("TorrServerModule", "Removing stale lock: ${it.name}")
+                it.delete() 
+            }
 
             val command = mutableListOf(
                 binaryPath,
                 "-p", port.toString(),
                 "-d", dataDir.absolutePath,
-                "-k" // --dontkill: don't kill existing instance
+                "-l", "0.0.0.0" // Explicitly bind to all interfaces for loopback accessibility
             )
 
-            android.util.Log.d("TorrServerModule", "Starting process with command: $command")
-            val processBuilder = ProcessBuilder(command)
-            processBuilder.directory(dataDir)
+            android.util.Log.d("TorrServerModule", "Launching engine: $command")
+            val pb = ProcessBuilder(command)
+            pb.directory(dataDir)
+            pb.redirectErrorStream(true)
             
-            // Set environment variables if needed
-            val env = processBuilder.environment()
+            val env = pb.environment()
             env["GODEBUG"] = "madvdontneed=1"
-
-            process = processBuilder.start()
-            android.util.Log.d("TorrServerModule", "Process started successfully")
+            env["HOME"] = dataDir.absolutePath
             
+            val p = pb.start()
+            process = p
+
+            // Monitor output for first 800ms
+            val startTime = System.currentTimeMillis()
+            val reader = p.inputStream.bufferedReader()
+            val sb = StringBuilder()
+            
+            // Background thread to log process output
+            Thread {
+                try {
+                    var line: String? = reader.readLine()
+                    while (line != null) {
+                        android.util.Log.d("TorrServer_Output", line)
+                        line = reader.readLine()
+                    }
+                } catch (e: Exception) {}
+            }.start()
+
+            Thread.sleep(800)
+            if (!isAlive(p)) {
+                 val exitVal = p.exitValue()
+                 android.util.Log.e("TorrServerModule", "Process died immediately with code: $exitVal")
+                 promise.reject("CRASH", "Engine died immediately (Code $exitVal)")
+                 return
+            }
+
+            android.util.Log.d("TorrServerModule", "Engine started successfully")
             promise.resolve(true)
         } catch (e: Exception) {
-            android.util.Log.e("TorrServerModule", "Start error: ${e.message}", e)
-            promise.reject("START_ERROR", e.message)
+            android.util.Log.e("TorrServerModule", "Uncaught Start Error: ${e.message}", e)
+            promise.reject("EXCEPTION", e.message)
+        }
+    }
+
+    @ReactMethod
+    fun clearData(promise: Promise) {
+        try {
+            val dataDir = File(reactApplicationContext.filesDir, "torr_data")
+            if (dataDir.exists()) {
+                dataDir.deleteRecursively()
+                dataDir.mkdirs()
+                android.util.Log.d("TorrServerModule", "Engine data cleared")
+            }
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("CLEAR_ERROR", e.message)
         }
     }
 

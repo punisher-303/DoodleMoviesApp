@@ -299,9 +299,9 @@ export class SettingsStorage {
     // Fallback verified bridges
     return [
       'http://torr.unknot.ru:8090',
-      'http://ts.shv.su',
-      'http://torrserver.nnoffkj.ru',
-      'http://vavilon.online:8090',
+      'http://88.87.92.183:8090',
+      'http://ts.maxvol.pro',
+      'http://188.235.146.53:8090',
     ];
   }
 

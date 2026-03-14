@@ -281,12 +281,16 @@ export const useStream = ({
       setSelectedStream({
         ...selectedStream,
         link: `${nextBridge}/stream?link=${encodedMagnet}&play`,
+        originalMagnet: magnet, // Explicitly preserve magnet
       });
+      
+      console.log(`[useStream] Rotating to bridge[${nextBridgeIdx}]: ${nextBridge}`);
       
       if (showToast) {
         ToastAndroid.show(
-          isUsingLocal ? 'Local engine issue, trying bridge...' : `Trying Bridge ${nextBridgeIdx + 1}...`,
-          ToastAndroid.SHORT
+          isUsingLocal ? `Local engine issue, trying bridge: ${nextBridge.split('://')[1].substring(0, 15)}...` 
+                       : `Bridge failed, trying fallback (${nextBridgeIdx + 1}): ${nextBridge.split('://')[1].substring(0, 15)}...`,
+          ToastAndroid.LONG
         );
       }
       return true;
@@ -298,15 +302,14 @@ export const useStream = ({
         (s) => s.link === selectedStream.link || s.originalMagnet === (selectedStream as any).originalMagnet,
       );
 
-      // We need to handle the hubcloud skip here too, just in case the streamData list has 
-      // other 'hubcloud' entries further down.
       let nextIndex = currentIndex + 1;
       let nextStream = streamData[nextIndex];
       let skippedHubcloud = false;
 
+      // Skip dead servers like hubcloud
       while (
         nextStream &&
-        nextStream.server?.toLowerCase() === 'hubcloud' &&
+        (nextStream.server?.toLowerCase() === 'hubcloud' || nextStream.server?.toLowerCase() === 'null') &&
         nextIndex < streamData.length - 1
       ) {
         nextIndex++;
@@ -315,20 +318,14 @@ export const useStream = ({
       }
 
       if (nextStream) {
-        setBridgeIndex(0); // Reset bridge index for new torrent
+        setBridgeIndex(0); // Reset bridge index for new torrent source
         setSelectedStream(nextStream);
-        setSkipAttemptCount(0); // Reset attempt count for the new stream
+        setSkipAttemptCount(0); 
 
         if (showToast) {
-          ToastAndroid.show(
-            'Trying next server...',
-            ToastAndroid.SHORT,
-          );
+          ToastAndroid.show('Trying next available server...', ToastAndroid.SHORT);
+          if (skippedHubcloud) ToastAndroid.show('Skipped offline server', ToastAndroid.SHORT);
         }
-        if (skippedHubcloud) {
-          ToastAndroid.show('Skipped hubcloud server', ToastAndroid.SHORT);
-        }
-
         return true;
       }
     }

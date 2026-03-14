@@ -156,29 +156,41 @@ const Settings = ({ navigation }: Props) => {
     settingsStorage.setTorrServerUrl(url);
   }, []);
 
+  const [engineError, setEngineError] = useState<string | null>(null);
+
   const checkEngine = useCallback(async (url: string) => {
     if (!url) return;
     setEngineStatus('checking');
+    setEngineError(null);
     try {
       // If it's the local address, we can try to start it ourselves
       if (url.includes('127.0.0.1') || url.includes('localhost')) {
         const TorrEngineService = require('../../lib/services/TorrEngineService').default;
-        const success = await TorrEngineService.ensureEngine();
-        setEngineStatus(success ? 'active' : 'offline');
+        try {
+          const success = await TorrEngineService.ensureEngine();
+          setEngineStatus(success ? 'active' : 'offline');
+          if (!success) setEngineError('Engine started but not responding (Timeout)');
+        } catch (err: any) {
+          setEngineStatus('offline');
+          setEngineError(err.message || 'Start Exception');
+        }
         return;
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
       const res = await fetch(`${url}/echo`, { signal: controller.signal });
       clearTimeout(timeoutId);
       if (res.ok) {
         setEngineStatus('active');
+        setEngineError(null);
       } else {
         setEngineStatus('offline');
+        setEngineError(`HTTP Error: ${res.status}`);
       }
-    } catch (e) {
+    } catch (e: any) {
       setEngineStatus('offline');
+      setEngineError(e.message || 'Connection Refused');
     }
   }, []);
 
@@ -762,7 +774,7 @@ const Settings = ({ navigation }: Props) => {
               <Text className="text-gray-400 text-xs mb-2">
                 Base URL (Auto-detected if local)
               </Text>
-              <View className="flex-row items-center bg-white/5 rounded-lg border border-white/10 px-3">
+              <View className="flex-row items-center bg-white/5 rounded-lg border border-white/10 px-3 mb-3">
                 <MaterialCommunityIcons name="server" size={20} color={primary} />
                 <TextInput
                   className="flex-1 text-white p-2 h-11"
@@ -774,10 +786,27 @@ const Settings = ({ navigation }: Props) => {
                   autoCorrect={false}
                 />
               </View>
-              <Text className="text-gray-500 text-[10px] mt-2 italic">
-                {engineStatus === 'active' 
-                   ? 'Successfully connected to the torrent engine.' 
-                   : 'Ensure TorrServer (Matrix) is running for local streaming.'}
+
+              <TouchableOpacity 
+                disabled={engineStatus === 'checking'}
+                onPress={async () => {
+                    const TorrEngineService = require('../../lib/services/TorrEngineService').default;
+                    await TorrEngineService.clearEngineData();
+                    checkEngine(torrServerUrl);
+                }}
+                className="flex-row items-center justify-center p-3 rounded-lg border border-[#333] bg-[#222]">
+                <MaterialCommunityIcons name="refresh" size={18} color="white" />
+                <Text className="text-white ml-2 text-xs font-medium">Reset & Restart Engine</Text>
+              </TouchableOpacity>
+
+              <Text className="text-gray-500 text-[10px] mt-3 italic text-center">
+                {engineError ? (
+                  <Text className="text-red-400 font-bold">{engineError}</Text>
+                ) : (
+                  engineStatus === 'active' 
+                    ? 'Successfully connected to the torrent engine.' 
+                    : 'Engine offline? Try "Reset & Restart" to clear corrupt data.'
+                )}
               </Text>
             </View>
           </View>

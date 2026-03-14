@@ -38,7 +38,20 @@ class TorrEngineService {
       // 2. Start via native module
       ToastAndroid.show('Starting Torrent Engine...', ToastAndroid.SHORT);
       console.log('[TorrEngineService] Starting local engine via NativeModule...');
-      const started = await TorrServerModule.startServer(PORT);
+      
+      try {
+        await TorrServerModule.startServer(PORT);
+      } catch (e: any) {
+        const errorMsg = e.message || 'Unknown Error';
+        console.error('[TorrEngineService] Native start failed:', errorMsg);
+        
+        if (errorMsg.includes('code 127')) {
+            ToastAndroid.show('Engine Error: Incompatible Device ABI', ToastAndroid.LONG);
+        } else {
+            ToastAndroid.show(`Engine Start Error: ${errorMsg}`, ToastAndroid.LONG);
+        }
+        return false;
+      }
       
       // 3. Wait for echo with progression logging
       const ready = await this.waitForEcho(25000); // Increased to 25s
@@ -50,7 +63,7 @@ class TorrEngineService {
       }
 
       console.error('[TorrEngineService] Engine failed to respond within timeout.');
-      ToastAndroid.show('Engine Failed to Start', ToastAndroid.SHORT);
+      ToastAndroid.show('Engine Timeout: Try Clearing Data', ToastAndroid.LONG);
       return false;
     } catch (error) {
       console.error('[TorrEngineService] Failed to ensure engine:', error);
@@ -58,14 +71,38 @@ class TorrEngineService {
     }
   }
 
-  private async isAlive(): Promise<boolean> {
+  async clearEngineData(): Promise<boolean> {
+    if (Platform.OS !== 'android' || !TorrServerModule) return false;
     try {
-      // Use 127.0.0.1 strictly
-      const resp = await axios.get(`http://127.0.0.1:${PORT}/echo`, { timeout: 2000 });
-      return resp.status === 200;
-    } catch (e: any) {
+      await this.stopEngine();
+      await TorrServerModule.clearData();
+      ToastAndroid.show('Engine Data Cleared', ToastAndroid.SHORT);
+      return true;
+    } catch (e) {
+      console.error('[TorrEngineService] Failed to clear data:', e);
       return false;
     }
+  }
+
+  private async isAlive(): Promise<boolean> {
+    const urls = [
+      `http://127.0.0.1:${PORT}/echo`,
+      `http://localhost:${PORT}/echo`,
+      `http://[::1]:${PORT}/echo` // Add IPv6 loopback
+    ];
+
+    for (const url of urls) {
+      try {
+        const resp = await axios.get(url, { 
+          timeout: 2500, // Increased timeout for slower physical devices
+          headers: { 'Cache-Control': 'no-cache' }
+        });
+        if (resp.status === 200) return true;
+      } catch (e) {
+        // Continue to next URL
+      }
+    }
+    return false;
   }
 
   private async waitForEcho(timeoutMs = 15000): Promise<boolean> {
