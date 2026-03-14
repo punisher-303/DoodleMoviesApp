@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <!-- Allow cleartext for local engine and verified bridges -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">127.0.0.1</domain>
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">torr.unknot.ru</domain>
-        <domain includeSubdomains="true">ts.shv.su</domain>
-        <domain includeSubdomains="true">vavilon.online</domain>
+        <domain includeSubdomains="true">ts.maxvol.pro</domain>
+        <domain includeSubdomains="true">88.87.92.183</domain>
+        <domain includeSubdomains="true">188.235.146.53</domain>
     </domain-config>
+    
+    <!-- General config for other scrapers -->
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
