@@ -62,6 +62,7 @@ export const useStream = ({
     link: '',
     type: '',
   });
+  const [isResolving, setIsResolving] = useState(false);
   const [externalSubs, setExternalSubs] = useState<any[]>([]);
 
   // State to manage automatic skipping attempts for the current selected stream
@@ -214,33 +215,52 @@ export const useStream = ({
     }
   }, [streamData]);
 
-  // Zero-Config: Automatic Engine Scaling & Bridge Fallback
+  // Stremio-Grade: Automatic Torrent Pre-Resolution
   useEffect(() => {
-    const checkEngineAndSwitch = async () => {
-      // If we have a localhost link, we need to make sure the engine is running
-      if (selectedStream?.link?.includes('127.0.0.1:8090') || selectedStream?.link?.includes('localhost:8090')) {
+    const resolveTorrent = async () => {
+      // Only trigger for local TorrServer links that haven't been resolved yet
+      const isLocalRawMagnet = selectedStream?.link?.includes('8090/stream?link=') && selectedStream?.originalMagnet;
+      
+      if (isLocalRawMagnet && !selectedStream.isResolved) {
         try {
-          console.log('[useStream] Ensuring local engine...');
-          const success = await TorrEngineService.ensureEngine();
-          if (success) return; // Engine is ready, we are good
-          
-          throw new Error('Local engine failed to start');
-        } catch (e) {
-          console.log('[useStream] Local engine fallback triggered:', e);
-          // Instead of manual link swap, we use our robust switchToNextStream
-          // which knows how to handle bridges and rotation.
-          const switched = switchToNextStream(false); // don't show toast for the auto-initial skip
-          if (!switched) {
-             console.warn('[useStream] Failed to fallback to any bridge');
+          console.log('[useStream] Starting Stremio-grade resolution for:', selectedStream.originalMagnet);
+          setIsResolving(true);
+          ToastAndroid.show('Resolving Torrent Metadata...', ToastAndroid.SHORT);
+
+          const finalUrl = await TorrEngineService.prepareTorrentStream(
+            selectedStream.originalMagnet!,
+            activeEpisode?.season,
+            activeEpisode?.number || activeEpisode?.episode
+          );
+
+          if (finalUrl) {
+            console.log('[useStream] Resolution successful:', finalUrl);
+            setSelectedStream({
+              ...selectedStream,
+              link: finalUrl,
+              isResolved: true,
+              server: selectedStream.server + ' (Resolved)'
+            });
           }
+        } catch (e: any) {
+          console.error('[useStream] Torrent resolution failed:', e.message);
+          ToastAndroid.show(`Resolution Error: ${e.message}`, ToastAndroid.LONG);
+          
+          // Fallback to bridge rotation if local resolution fails
+          switchToNextStream(true);
+        } finally {
+          setIsResolving(false);
         }
+      } else if (selectedStream?.link?.includes('8090') && !selectedStream.originalMagnet) {
+          // Fallback health check for non-magnet torrent links
+          TorrEngineService.ensureEngine();
       }
     };
 
     if (selectedStream?.link) {
-      checkEngineAndSwitch();
+      resolveTorrent();
     }
-  }, [selectedStream?.link]);
+  }, [selectedStream?.link, selectedStream?.originalMagnet]);
 
   // Debrid resolution logic (Intelligent Fallback)
   useEffect(() => {
@@ -395,7 +415,8 @@ export const useStream = ({
     setSelectedStream,
     externalSubs,
     setExternalSubs,
-    isLoading,
+    isLoading: isLoading || isResolving,
+    isResolving,
     error,
     refetch,
     switchToNextStream: handleStreamLoadFailure, // Renamed to reflect its new use for external call

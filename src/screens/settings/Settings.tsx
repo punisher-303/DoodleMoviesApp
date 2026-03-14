@@ -262,6 +262,8 @@ const Settings = ({ navigation }: Props) => {
   const [rdUserCode, setRdUserCode] = useState<string | null>(null);
   const [isRDLoggedIn, setIsRDLoggedIn] = useState(!!settingsStorage.getRealDebridToken());
   const [isPollingRD, setIsPollingRD] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
+  const [logs, setLogs] = useState('');
   // ---------------------------------
 
   // --- PROVIDER LATENCY Check ---
@@ -794,10 +796,28 @@ const Settings = ({ navigation }: Props) => {
                     await TorrEngineService.clearEngineData();
                     checkEngine(torrServerUrl);
                 }}
-                className="flex-row items-center justify-center p-3 rounded-lg border border-[#333] bg-[#222]">
+                className="flex-row items-center justify-center p-3 rounded-lg border border-[#333] bg-[#222] mb-2">
                 <MaterialCommunityIcons name="refresh" size={18} color="white" />
                 <Text className="text-white ml-2 text-xs font-medium">Reset & Restart Engine</Text>
               </TouchableOpacity>
+
+              <TouchableOpacity 
+                onPress={async () => {
+                   const TorrEngineService = require('../../lib/services/TorrEngineService').default;
+                   const engineLogs = await TorrEngineService.getEngineLogs();
+                   setLogs(engineLogs);
+                   setShowLogs(true);
+                }}
+                className="flex-row items-center justify-center p-3 rounded-lg border border-[#333] bg-[#222]">
+                <MaterialCommunityIcons name="text-box-search-outline" size={18} color={primary} />
+                <Text className="text-white ml-2 text-xs font-medium">View Engine Logs</Text>
+              </TouchableOpacity>
+
+              {engineError && (
+                <Text className="text-[#EF4444] text-[10px] mt-2 text-center italic">
+                    {engineError}
+                </Text>
+              )}
 
               <Text className="text-gray-500 text-[10px] mt-3 italic text-center">
                 {engineError ? (
@@ -1021,6 +1041,30 @@ const Settings = ({ navigation }: Props) => {
           </View>
         </AnimatedSection>
       </View>
+      {/* Engine Logs Modal */}
+      {showLogs && (
+        <View className="absolute top-0 left-0 right-0 bottom-0 z-[999] bg-black/90 p-5 pt-12">
+            <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-white text-lg font-bold">Engine Diagnostics</Text>
+                <TouchableOpacity onPress={() => setShowLogs(false)}>
+                    <AntDesign name="close" size={24} color="white" />
+                </TouchableOpacity>
+            </View>
+            <ScrollView className="flex-1 bg-[#111] rounded-lg p-3 border border-[#333]">
+                <Text className="text-[#00FF00] font-mono text-[10px]">
+                    {logs || "No logs available"}
+                </Text>
+            </ScrollView>
+            <TouchableOpacity 
+               onPress={() => {
+                  Clipboard.setString(logs);
+                  ToastAndroid.show('Logs copied to clipboard', ToastAndroid.SHORT);
+               }}
+               className="bg-blue-600 p-4 rounded-xl mt-4 items-center">
+                <Text className="text-white font-bold">Copy Logs to Clipboard</Text>
+            </TouchableOpacity>
+        </View>
+      )}
     </Animated.ScrollView>
   );
 };
