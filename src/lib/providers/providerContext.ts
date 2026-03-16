@@ -21,8 +21,11 @@ axios.interceptors.request.use((config) => {
      const isTrackers = blocked.some(domain => config.url?.includes(domain));
      
      if (isTrackers) {
+        const originalUrl = config.url;
         config.url = `https://api.allorigins.win/raw?url=${encodeURIComponent(config.url)}`;
-        console.log(`[Proxy] Rewriting to: ${config.url}`);
+        const msg = `[Proxy] Rewriting ${originalUrl} -> ${config.url}`;
+        console.log(msg);
+        TorrEngineService.logMessage(msg);
      }
   }
   return config;
