@@ -5,6 +5,7 @@ import {
   Text,
   Dimensions,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '../../components/Slider';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
@@ -145,7 +146,7 @@ const Home = ({ }: Props) => {
               backgroundColor={backgroundColor}
             />
 
-            <FlatList
+            <FlashList
               onScroll={handleScroll}
               scrollEventThrottle={16}
               showsVerticalScrollIndicator={false}
@@ -168,7 +169,17 @@ const Home = ({ }: Props) => {
                   <ContinueWatching />
                 </>
               }
-              data={isLoading && provider?.value ? providerManager.getCatalog({ providerValue: provider.value }) : homeData}
+              data={(() => {
+                if (isLoading && provider?.value) {
+                  try {
+                    return providerManager.getCatalog({ providerValue: provider.value });
+                  } catch (e) {
+                    console.error('Home Page Catalog Fetch Error:', e);
+                    return [];
+                  }
+                }
+                return homeData;
+              })()}
               keyExtractor={(item, index) => `${item.filter}-${index}`}
               renderItem={({ item, index }) => (
                 <View className={index === 0 ? '-mt-6 relative z-20' : 'relative z-20'}>
@@ -186,11 +197,8 @@ const Home = ({ }: Props) => {
                   <View className="h-16" />
                 </>
               }
-              windowSize={11}
-              initialNumToRender={5}
-              maxToRenderPerBatch={5}
-              updateCellsBatchingPeriod={50}
-              removeClippedSubviews={false}
+              estimatedItemSize={210}
+              removeClippedSubviews={true}
             />
           </Drawer>
         </View>

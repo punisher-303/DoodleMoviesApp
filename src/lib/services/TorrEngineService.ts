@@ -1,7 +1,13 @@
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules, Platform, ToastAndroid } from 'react-native';
 import axios from 'axios';
 
-const { TorrServerModule } = NativeModules;
+const TorrServerModuleStatic = NativeModules && NativeModules['TorrServerModule'];
+const getTorrModule = () => (NativeModules && NativeModules['TorrServerModule']) || TorrServerModuleStatic;
+
+console.log('[TorrEngineService] Available NativeModules:', Object.keys(NativeModules || {}));
+if (!TorrServerModuleStatic) {
+  console.error('[TorrEngineService] CRITICAL: TorrServerModule is UNDEFINED in NativeModules');
+}
 
 const PORT = 8090;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
@@ -22,8 +28,9 @@ class TorrEngineService {
   async ensureEngine(): Promise<boolean> {
     if (Platform.OS !== 'android') return false;
 
-    if (!TorrServerModule) {
-      console.warn('[TorrEngineService] Native TorrServerModule not found.');
+    const torrModule = getTorrModule();
+    if (!torrModule) {
+      console.warn('[TorrEngineService] Native TorrServerModule not found in NativeModules keys:', Object.keys(NativeModules));
       return false;
     }
 
@@ -40,7 +47,8 @@ class TorrEngineService {
       console.log('[TorrEngineService] Starting local engine via NativeModule...');
       
       try {
-        await TorrServerModule.startServer(PORT);
+        console.log('[TorrEngineService] Calling startServer...');
+        await torrModule.startServer(PORT);
       } catch (e: any) {
         const errorMsg = e.message || 'Unknown Error';
         console.error('[TorrEngineService] Native start failed:', errorMsg);
@@ -72,10 +80,11 @@ class TorrEngineService {
   }
 
   async clearEngineData(): Promise<boolean> {
-    if (Platform.OS !== 'android' || !TorrServerModule) return false;
+    const torrModule = getTorrModule();
+    if (Platform.OS !== 'android' || !torrModule) return false;
     try {
       await this.stopEngine();
-      await TorrServerModule.clearData();
+      await torrModule.clearData();
       ToastAndroid.show('Engine Data Cleared', ToastAndroid.SHORT);
       return true;
     } catch (e) {
@@ -284,16 +293,18 @@ class TorrEngineService {
   }
 
   async stopEngine() {
-    if (Platform.OS === 'android') {
-      await TorrServerModule.stopServer();
+    const torrModule = getTorrModule();
+    if (Platform.OS === 'android' && torrModule) {
+      await torrModule.stopServer();
       this.isConfigured = false;
     }
   }
 
   async getEngineLogs(): Promise<string> {
-    if (Platform.OS !== 'android' || !TorrServerModule) return 'Engine not available on this platform';
+    const torrModule = getTorrModule();
+    if (Platform.OS !== 'android' || !torrModule) return 'Engine not available on this platform';
     try {
-      return await TorrServerModule.getLogs();
+      return await torrModule.getLogs();
     } catch (e) {
       return `Failed to fetch logs: ${e}`;
     }

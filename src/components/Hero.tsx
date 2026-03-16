@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 
 import LinearGradient from 'react-native-linear-gradient';
-import FontAwesome6 from '@expo/vector-icons/FontAwesome';
+import { FontAwesome as FontAwesome6 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { HomeStackParamList, SearchStackParamList } from '../App';

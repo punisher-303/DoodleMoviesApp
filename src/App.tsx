@@ -6,6 +6,7 @@ import Settings from './screens/settings/Settings';
 import WatchList from './screens/WatchList';
 import Search from './screens/Search';
 import ScrollList from './screens/ScrollList';
+import CastDetail from './screens/CastDetail';
 import {
   NavigationContainer,
   createNavigationContainerRef,
@@ -57,12 +58,6 @@ import useAppModeStore from './lib/zustand/appModeStore';
 import DoodleTVStack from './navigation/DoodleTVStack';
 import TorrEngineService from './lib/services/TorrEngineService';
 
-// import useSettingsStore from './lib/zustand/settingsStore';
-
-// Lazy-load Firebase modules so app runs without google-services files
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-
-
 enableScreens(true);
 enableFreeze(true);
 
@@ -85,6 +80,7 @@ export type HomeStackParamList = {
     providerValue?: string;
     genre: string;
   };
+  CastDetail: { personId: string; name: string };
   Webview: { link: string };
 };
 
@@ -140,6 +136,7 @@ export type DoodleTVRootStackParamList = {
 
 export type SearchStackParamList = {
   Search: undefined;
+  CastDetail: { personId: string; name: string };
   ScrollList: {
     filter: string;
     title?: string;
@@ -154,6 +151,8 @@ export type SearchStackParamList = {
   };
   Info: { link: string; provider?: string; poster?: string };
   SearchResults: { filter: string; availableProviders?: string[] };
+  Suggestion: undefined;
+  Webview: { link: string };
 };
 
 export type WatchListStackParamList = {
@@ -335,6 +334,8 @@ const App = () => {
       S4() +
       '-' +
       S4() +
+      '-' +
+      S4() +
       S4() +
       S4()
     );
@@ -410,6 +411,7 @@ const App = () => {
         <HomeStack.Screen name="Info" component={Info} />
         <HomeStack.Screen name="ScrollList" component={ScrollList} />
         <HomeStack.Screen name="GenreList" component={ScrollList} />
+        <HomeStack.Screen name="CastDetail" component={CastDetail} />
         <HomeStack.Screen name="Webview" component={WebView} />
       </HomeStack.Navigator>
     );
@@ -425,12 +427,13 @@ const App = () => {
           freezeOnBlur: true,
         }}>
         <SearchStack.Screen name="Search" component={Search} />
+        <SearchStack.Screen name="CastDetail" component={CastDetail} />
         <SearchStack.Screen name="ScrollList" component={ScrollList} />
-        <HomeStack.Screen name="GenreList" component={ScrollList} />
+        <SearchStack.Screen name="GenreList" component={ScrollList} />
         <SearchStack.Screen name="Info" component={Info} />
-        <Stack.Screen name="Suggestion" component={Suggestion} />
+        <SearchStack.Screen name="Suggestion" component={Suggestion} />
         <SearchStack.Screen name="SearchResults" component={SearchResults} />
-        <HomeStack.Screen name="Webview" component={WebView} />
+        <SearchStack.Screen name="Webview" component={WebView} />
       </SearchStack.Navigator>
     );
   }

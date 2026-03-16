@@ -160,6 +160,7 @@ const Settings = ({ navigation }: Props) => {
 
   const checkEngine = useCallback(async (url: string) => {
     if (!url) return;
+    console.log('[Settings] Checking engine at:', url);
     setEngineStatus('checking');
     setEngineError(null);
     try {
@@ -167,10 +168,12 @@ const Settings = ({ navigation }: Props) => {
       if (url.includes('127.0.0.1') || url.includes('localhost')) {
         const TorrEngineService = require('../../lib/services/TorrEngineService').default;
         try {
+          console.log('[Settings] Triggering ensureEngine for local address');
           const success = await TorrEngineService.ensureEngine();
           setEngineStatus(success ? 'active' : 'offline');
           if (!success) setEngineError('Engine started but not responding (Timeout)');
         } catch (err: any) {
+          console.error('[Settings] engine start error:', err);
           setEngineStatus('offline');
           setEngineError(err.message || 'Start Exception');
         }
@@ -264,6 +267,12 @@ const Settings = ({ navigation }: Props) => {
   const [isPollingRD, setIsPollingRD] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
   const [logs, setLogs] = useState('');
+  const [isBridgeActive, setIsBridgeActive] = useState(false);
+
+  useEffect(() => {
+    const { NativeModules } = require('react-native');
+    setIsBridgeActive(!!(NativeModules && NativeModules['TorrServerModule']));
+  }, []);
   // ---------------------------------
 
   // --- PROVIDER LATENCY Check ---
@@ -757,8 +766,18 @@ const Settings = ({ navigation }: Props) => {
         <AnimatedSection delay={200}>
           <View className="mb-6 flex-col gap-3">
             <View className="flex-row items-center justify-between px-1">
-                <Text className="text-gray-400 text-sm">Torrent Engine (TorrServer)</Text>
-                <View className="flex-row items-center">
+                 <Text className="text-gray-400 text-sm">Torrent Engine (TorrServer)</Text>
+                 <View className="flex-row items-center">
+                    <View 
+                       style={{ 
+                         width: 6, 
+                         height: 6, 
+                         borderRadius: 3, 
+                         marginRight: 4,
+                         backgroundColor: isBridgeActive ? '#22C55E' : '#EF4444'
+                       }} 
+                    />
+                    <Text className="text-[8px] text-gray-500 mr-2">Bridge: {isBridgeActive ? 'OK' : 'FAIL'}</Text>
                     <View 
                        style={{ 
                          width: 8, 

@@ -1,45 +1,20 @@
-import { View, Text, Platform, Dimensions, FlatList } from 'react-native';
+import { View, Text, Platform, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import React from 'react';
+import React, { memo } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { WatchListStackParamList } from '../App';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
+import { FlashList } from '@shopify/flash-list';
 
 import useThemeStore from '../lib/zustand/themeStore';
 import useWatchListStore from '../lib/zustand/watchListStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { StatusBar } from 'expo-status-bar';
 
-const WatchList = () => {
-  const { primary } = useThemeStore(state => state);
-  const insets = useSafeAreaInsets();
-  const navigation =
-    useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
-  const { watchList } = useWatchListStore(state => state);
-
-  // Calculate how many items can fit per row
-  const screenWidth = Dimensions.get('window').width;
-  const containerPadding = 12; // from the px-3 class (3*4=12)
-  const itemSpacing = 10;
-
-  // Available width for the grid
-  const availableWidth = screenWidth - containerPadding * 2;
-
-  // Determine number of columns and adjusted item width
-  const numColumns = Math.floor(
-    (availableWidth + itemSpacing) / (100 + itemSpacing),
-  );
-
-  // Calculate the actual item width to fill the space exactly
-  const itemWidth =
-    (availableWidth - itemSpacing * (numColumns - 1)) / numColumns;
-
-  // Render each grid item
-  const renderItem = ({ item, index }: { item: any; index: number }) => (
+const WatchListItem = memo(({ item, itemWidth, navigation }: { item: any, itemWidth: number, navigation: any }) => (
     <TouchableOpacity
-      key={item.link + index}
       onPress={() =>
         navigation.navigate('Info', {
           link: item.link,
@@ -70,7 +45,24 @@ const WatchList = () => {
         </Text>
       </View>
     </TouchableOpacity>
+));
+
+const WatchList = () => {
+  const { primary } = useThemeStore(state => state);
+  const insets = useSafeAreaInsets();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
+  const { watchList } = useWatchListStore(state => state);
+
+  const screenWidth = Dimensions.get('window').width;
+  const containerPadding = 12;
+  const itemSpacing = 10;
+  const availableWidth = screenWidth - containerPadding * 2;
+  const numColumns = Math.floor(
+    (availableWidth + itemSpacing) / (100 + itemSpacing),
   );
+  const itemWidth =
+    (availableWidth - itemSpacing * (numColumns - 1)) / numColumns;
 
   return (
     <View className="flex-1 bg-black justify-center items-center">
@@ -79,7 +71,7 @@ const WatchList = () => {
       <View
         className="w-full bg-black"
         style={{
-          paddingTop: insets.top, // Dynamic safe area top padding
+          paddingTop: insets.top,
         }}
       />
 
@@ -91,15 +83,12 @@ const WatchList = () => {
         </Text>
 
         {watchList.length > 0 ? (
-          <FlatList
+          <FlashList
             data={watchList}
-            renderItem={renderItem}
+            renderItem={({ item }) => <WatchListItem item={item} itemWidth={itemWidth} navigation={navigation} />}
             keyExtractor={(item, index) => item.link + index}
             numColumns={numColumns}
-            columnWrapperStyle={{
-              gap: itemSpacing,
-              justifyContent: 'flex-start',
-            }}
+            estimatedItemSize={180}
             contentContainerStyle={{
               paddingBottom: 50,
             }}

@@ -10,10 +10,10 @@ import java.io.IOException
 class TorrServerModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
     private var process: Process? = null
     private val logBuffer = mutableListOf<String>()
-    private val MAX_LOG_LINES = 150
+    private val MAX_LOG_LINES = 200
 
     init {
-        android.util.Log.d("TorrServerModule", "Initialized on arch: ${System.getProperty("os.arch")}")
+        logToBuffer("Native Module Initialized on: ${System.getProperty("os.arch")}")
     }
 
     override fun getName(): String {
@@ -22,7 +22,7 @@ class TorrServerModule(reactContext: ReactApplicationContext) : ReactContextBase
 
     private fun logToBuffer(message: String) {
         val timestamped = "[${System.currentTimeMillis()}] $message"
-        android.util.Log.d("TorrServer_Log", timestamped)
+        android.util.Log.d("TorrServer_NativeLog", timestamped)
         synchronized(logBuffer) {
             if (logBuffer.size >= MAX_LOG_LINES) {
                 logBuffer.removeAt(0)
@@ -33,12 +33,8 @@ class TorrServerModule(reactContext: ReactApplicationContext) : ReactContextBase
 
     @ReactMethod
     fun startServer(port: Int, promise: Promise) {
-        synchronized(logBuffer) {
-            logBuffer.clear()
-        }
-        logToBuffer("Engine Startup Initiated. Port: $port")
-        logToBuffer("System Arch: ${System.getProperty("os.arch")}")
-
+        logToBuffer(">>> startServer() called with port: $port")
+        
         if (process != null && isAlive(process!!)) {
             logToBuffer("Engine already active. Reusing instance.")
             promise.resolve(true)
@@ -50,33 +46,27 @@ class TorrServerModule(reactContext: ReactApplicationContext) : ReactContextBase
             val binaryPath = "$nativeLibDir/libtorrserver.so"
             val binaryFile = File(binaryPath)
 
-            logToBuffer("Binary Path: $binaryPath")
+            logToBuffer("Binary check: $binaryPath")
             if (!binaryFile.exists()) {
-                logToBuffer("CRITICAL: Binary not found at $binaryPath")
-                promise.reject("BINARY_NOT_FOUND", "Engine binary missing from deployment.")
+                logToBuffer("CRITICAL ERROR: libtorrserver.so NOT FOUND at $binaryPath")
+                promise.reject("BINARY_NOT_FOUND", "Native binary missing.")
                 return
             }
 
-            // Restore executable permission for safety
+            logToBuffer("Binary size: ${binaryFile.length()} bytes")
+            
             try {
                 binaryFile.setExecutable(true)
-                logToBuffer("Executable permission set: success")
+                logToBuffer("setExecutable(true) called.")
             } catch (e: Exception) {
-                logToBuffer("Executable permission set: failed (${e.message})")
+                logToBuffer("setExecutable failed: ${e.message}")
             }
 
             val dataDir = File(reactApplicationContext.filesDir, "torr_data")
             if (!dataDir.exists()) {
                 dataDir.mkdirs()
             }
-            logToBuffer("Data Dir: ${dataDir.absolutePath}")
-
-            // Cleaning stale locks
-            val lockFiles = dataDir.listFiles { _, name -> name.endsWith(".lock") || name.contains("lock") }
-            lockFiles?.forEach { 
-                logToBuffer("Removing stale lock: ${it.name}")
-                it.delete() 
-            }
+            logToBuffer("Working Dir: ${dataDir.absolutePath}")
 
             val command = mutableListOf(
                 binaryPath,
@@ -85,7 +75,8 @@ class TorrServerModule(reactContext: ReactApplicationContext) : ReactContextBase
                 "-d", dataDir.absolutePath
             )
 
-            logToBuffer("Executing Command: $command")
+            logToBuffer("COMMAND: ${command.joinToString(" ")}")
+            
             val pb = ProcessBuilder(command)
             pb.directory(dataDir)
             pb.redirectErrorStream(true)
@@ -93,38 +84,39 @@ class TorrServerModule(reactContext: ReactApplicationContext) : ReactContextBase
             val env = pb.environment()
             env["GODEBUG"] = "madvdontneed=1"
             env["HOME"] = dataDir.absolutePath
-            env["TORR_LOG"] = "1"
             
+            logToBuffer("Starting process...")
             val p = pb.start()
             process = p
-            logToBuffer("Process started. PID check follows...")
 
-            // Background thread to log process output
+            // Output reader
             val reader = p.inputStream.bufferedReader()
             Thread {
                 try {
+                    logToBuffer("Reader thread started.")
                     var line: String? = reader.readLine()
                     while (line != null) {
-                        logToBuffer("BT: $line")
+                        logToBuffer("OUT: $line")
                         line = reader.readLine()
                     }
+                    logToBuffer("Process stream closed.")
                 } catch (e: Exception) {
-                    logToBuffer("Reader Thread Error: ${e.message}")
+                    logToBuffer("Reader error: ${e.message}")
                 }
             }.start()
 
-            Thread.sleep(1500)
+            Thread.sleep(2000)
             if (!isAlive(p)) {
                  val exitVal = p.exitValue()
-                 logToBuffer("CRASH: Process died with code: $exitVal")
-                 promise.reject("CRASH", "Engine died immediately (Code $exitVal)")
+                 logToBuffer("FATAL: Process died immediately. Exit Code: $exitVal")
+                 promise.reject("CRASH", "Process died ($exitVal)")
                  return
             }
 
-            logToBuffer("Engine Startup Verified. Alive = true.")
+            logToBuffer("<<< startServer() success. Process is alive.")
             promise.resolve(true)
         } catch (e: Exception) {
-            logToBuffer("START ERROR: ${e.message}")
+            logToBuffer("EXCEPTION in startServer: ${e.message}")
             promise.reject("EXCEPTION", e.message)
         }
     }
@@ -133,7 +125,7 @@ class TorrServerModule(reactContext: ReactApplicationContext) : ReactContextBase
     fun getLogs(promise: Promise) {
         synchronized(logBuffer) {
             if (logBuffer.isEmpty()) {
-                promise.resolve("Diagnostic Log: Buffer is empty. Engine hasn't been started since last clear.")
+                promise.resolve("Diagnostic Log Empty - Native Module exists but no events recorded.")
             } else {
                 promise.resolve(logBuffer.joinToString("\n"))
             }
@@ -142,35 +134,39 @@ class TorrServerModule(reactContext: ReactApplicationContext) : ReactContextBase
 
     @ReactMethod
     fun clearData(promise: Promise) {
+        logToBuffer(">>> clearData() called")
         try {
             val dataDir = File(reactApplicationContext.filesDir, "torr_data")
             if (dataDir.exists()) {
                 dataDir.deleteRecursively()
                 dataDir.mkdirs()
-                logToBuffer("Command: clearData successful")
+                logToBuffer("Data directory wiped.")
             }
             promise.resolve(true)
         } catch (e: Exception) {
+            logToBuffer("clearData EXCEPTION: ${e.message}")
             promise.reject("CLEAR_ERROR", e.message)
         }
     }
 
     @ReactMethod
     fun stopServer(promise: Promise) {
+        logToBuffer(">>> stopServer() called")
         try {
             process?.destroy()
             process = null
-            logToBuffer("Command: stopServer successful")
+            logToBuffer("Process destroyed.")
             promise.resolve(true)
         } catch (e: Exception) {
+            logToBuffer("stopServer EXCEPTION: ${e.message}")
             promise.reject("STOP_ERROR", e.message)
         }
     }
 
     @ReactMethod
     fun isServerRunning(promise: Promise) {
-        val isRunning = process != null && isAlive(process!!)
-        promise.resolve(isRunning)
+        val running = process != null && isAlive(process!!)
+        promise.resolve(running)
     }
 
     private fun isAlive(p: Process): Boolean {

@@ -3,7 +3,6 @@ import {
   View,
   StatusBar,
   RefreshControl,
-  FlatList,
   Linking,
   TouchableOpacity,
   Modal,
@@ -14,9 +13,11 @@ import {
   PanResponder,
   ActivityIndicator,
   StyleSheet,
+  Switch,
 } from 'react-native';
 import { Image } from 'expo-image';
-import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
+import React, { useCallback, useMemo, useRef, useState, useEffect, memo } from 'react';
+import { FlashList } from '@shopify/flash-list';
 import {
   NativeStackNavigationProp,
   NativeStackScreenProps,
@@ -30,14 +31,50 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { settingsStorage, watchListStorage } from '../../lib/storage';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import useThemeStore from '../../lib/zustand/themeStore';
 import { useNavigation } from '@react-navigation/native';
 import useWatchListStore from '../../lib/zustand/watchListStore';
 import { useContentDetails } from '../../lib/hooks/useContentInfo';
 import { QueryErrorBoundary } from '../../components/ErrorBoundary';
-import { Switch } from 'react-native';
 import YoutubePlayer from 'react-native-youtube-iframe';
+
+const CastItem = memo(({ actor, onPress }: { actor: any, onPress: (actor: any) => void }) => {
+  const isDetailed = typeof actor === 'object';
+  const name = isDetailed ? actor.name : actor;
+  const image = isDetailed ? actor.image : null;
+  const character = isDetailed ? actor.character : null;
+
+  return (
+    <TouchableOpacity
+      onPress={() => onPress(actor)}
+      className="mr-4 items-center w-20"
+    >
+      <View className="w-16 h-16 rounded-full overflow-hidden bg-zinc-800 border border-white/10 mb-1">
+        {image ? (
+          <Image
+            source={{ uri: image }}
+            className="w-full h-full"
+            contentFit="cover"
+            cachePolicy="memory-disk"
+          />
+        ) : (
+          <View className="flex-1 justify-center items-center">
+            <Ionicons name="person" size={24} color="gray" />
+          </View>
+        )}
+      </View>
+      <Text className="text-white text-[10px] text-center font-medium" numberOfLines={1}>
+        {name}
+      </Text>
+      {character && (
+        <Text className="text-gray-400 text-[8px] text-center" numberOfLines={1}>
+          {character}
+        </Text>
+      )}
+    </TouchableOpacity>
+  );
+});
 
 // --- CONFIGURATION ---
 const TMDB_API_KEY = '9d2bff12ed955c7f1f74b83187f188ae';
@@ -552,9 +589,10 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
           translucent={true}
           backgroundColor={backgroundColor}
         />
-        <View>
-          <FlatList
+        <View className="flex-1">
+          <FlashList
             data={[]}
+            estimatedItemSize={600}
             keyExtractor={(_, i) => i.toString()}
             renderItem={() => <View />}
             ListHeaderComponent={
@@ -619,71 +657,50 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                       <Text className="text-white text-lg font-semibold mb-2">
                         Cast
                       </Text>
-                      <FlatList
+                      <FlashList
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        initialNumToRender={10}
-                        maxToRenderPerBatch={20}
-                        windowSize={5}
+                        estimatedItemSize={80}
                         data={(() => {
                           const providerCast = info?.cast && Array.isArray(info.cast) && info.cast.length > 0 ? info.cast : [];
                           const cinemetaCast = meta?.cast && Array.isArray(meta.cast) ? meta.cast : [];
                           const tmdbCast = meta?.tmdbCast && Array.isArray(meta.tmdbCast) ? meta.tmdbCast : [];
                           
-                          // Prioritize TMDB cast as it's most likely to have high-quality images
                           if (tmdbCast.length > 0) return tmdbCast;
-
-                          // If provider cast has detailed objects (images), prioritize it next
                           const hasDetailedProviderCast = providerCast.some((c: any) => typeof c === 'object' && c.image);
                           return hasDetailedProviderCast ? providerCast : (cinemetaCast.length > 0 ? cinemetaCast : providerCast);
                         })() as any[]}
                         keyExtractor={(actor, index) => (typeof actor === 'object' ? String(actor.id || index) : String(index))}
-                        renderItem={({ item: actor }) => {
-                          const isDetailed = typeof actor === 'object';
-                          const name = isDetailed ? actor.name : actor;
-                          const image = isDetailed ? actor.image : null;
-                          const character = isDetailed ? actor.character : null;
-
-                          return (
-                            <TouchableOpacity
-                              onPress={() => {
-                                //@ts-ignore
-                                searchNavigation.navigate('SearchStack', {
-                                  screen: 'ScrollList',
-                                  params: {
-                                    filter: isDetailed ? `person_id:${actor.id}:${name}` : name,
-                                    title: name,
-                                    isSearch: true,
-                                    providerValue: route.params.provider || provider.value,
-                                  },
-                                });
-                              }}
-                              className="mr-4 items-center w-20"
-                            >
-                              <View className="w-16 h-16 rounded-full overflow-hidden bg-zinc-800 border border-white/10 mb-1">
-                                {image ? (
-                                  <Image
-                                    source={{ uri: image }}
-                                    className="w-full h-full"
-                                    contentFit="cover"
-                                  />
-                                ) : (
-                                  <View className="flex-1 justify-center items-center">
-                                    <Ionicons name="person" size={24} color="gray" />
-                                  </View>
-                                )}
-                              </View>
-                              <Text className="text-white text-[10px] text-center font-medium" numberOfLines={1}>
-                                {name}
-                              </Text>
-                              {character && (
-                                <Text className="text-gray-400 text-[8px] text-center" numberOfLines={1}>
-                                  {character}
-                                </Text>
-                              )}
-                            </TouchableOpacity>
-                          );
-                        }}
+                        renderItem={({ item: actor }) => (
+                          <CastItem 
+                            actor={actor} 
+                            onPress={(actor) => {
+                                const isDetailed = typeof actor === 'object';
+                                const name = isDetailed ? actor.name : actor;
+                                if (isDetailed && actor.id) {
+                                  //@ts-ignore
+                                  searchNavigation.navigate('SearchStack', {
+                                    screen: 'CastDetail',
+                                    params: {
+                                      personId: actor.id,
+                                      name: name,
+                                    },
+                                  });
+                                } else {
+                                  //@ts-ignore
+                                  searchNavigation.navigate('SearchStack', {
+                                    screen: 'ScrollList',
+                                    params: {
+                                      filter: isDetailed ? `person_id:${actor.id}:${name}` : name,
+                                      title: name,
+                                      isSearch: true,
+                                      providerValue: route.params.provider || provider.value,
+                                    },
+                                  });
+                                }
+                            }} 
+                          />
+                        )}
                       />
                     </View>
                   )}
@@ -847,7 +864,7 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                       )}
                     </Text>
                   </Skeleton>
-                  {/* cast */}
+
                 </View>
 
                 {/* Main container */}

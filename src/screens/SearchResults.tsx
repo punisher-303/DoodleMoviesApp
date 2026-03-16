@@ -2,10 +2,10 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Text,
-  FlatList,
   View,
   ListRenderItem,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '../components/Slider';
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
@@ -36,6 +36,7 @@ const SearchHeader = React.memo(
     topPadding,
     activeCategory,
     setActiveCategory,
+    loadingCount,
   }: {
     filter: string;
     isAllLoaded: boolean;
@@ -43,22 +44,28 @@ const SearchHeader = React.memo(
     topPadding: number;
     activeCategory: string;
     setActiveCategory: (category: string) => void;
+    loadingCount: number;
   }) => {
-    const categories = ['All', 'Movies', 'Series', 'Anime'];
+    const categories = ['All', 'Movies', 'Series', 'Anime', 'Cartoon', 'Cdrama', 'Donghua', 'Drama', 'Kdrama', 'Movie/tvshow', 'Tvshow'];
 
     return (
       <View className="mb-4" style={{ paddingTop: topPadding }}>
-        <View className="flex flex-row justify-between items-center gap-x-3 mb-4">
-          <Text className="text-white text-xl font-bold ">
-            {isAllLoaded ? 'Searched for' : 'Searching for'}{' '}
-            <Text style={{ color: primary }}>
-              "{filter.startsWith('person_id:') ? filter.split(':')[2] : filter}"
+        <View className="mb-4">
+          <View className="flex-row items-center">
+            <Text className="text-white text-xl font-bold">
+              {isAllLoaded ? 'Searched' : 'Searching'}{' '}
+              <Text style={{ color: primary }}>
+                "{filter.startsWith('person_id:') ? filter.split(':')[2] : filter}"
+              </Text>
             </Text>
-          </Text>
+            {!isAllLoaded && (
+              <ActivityIndicator size="small" color={primary} className="ml-3" />
+            )}
+          </View>
           {!isAllLoaded && (
-            <View className="flex justify-center items-center h-10">
-              <ActivityIndicator size="small" color={primary} animating={true} />
-            </View>
+            <Text className="text-gray-400 text-xs mt-0.5 font-medium">
+              Waiting for {loadingCount} sources...
+            </Text>
           )}
         </View>
 
@@ -66,9 +73,8 @@ const SearchHeader = React.memo(
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          className="flex-row"
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ gap: 8 }}
+          contentContainerStyle={{ gap: 10, paddingRight: 20 }}
         >
           {categories.map((category) => {
             const isActive = activeCategory === category;
@@ -76,19 +82,18 @@ const SearchHeader = React.memo(
               <TouchableOpacity
                 key={category}
                 onPress={() => setActiveCategory(category)}
-                style={{
-                  backgroundColor: isActive ? primary : '#2A2A2A',
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
-                  borderRadius: 20,
-                  borderWidth: 1,
-                  borderColor: isActive ? primary : '#3A3A3A',
-                }}
+                className={`rounded-full px-5 py-2 border ${
+                  isActive ? '' : 'bg-[#131722] border-[#282d3a]'
+                }`}
+                style={isActive ? { backgroundColor: primary, borderColor: primary } : {}}
               >
-                <Text style={{
-                  color: isActive ? 'black' : 'white',
-                  fontWeight: isActive ? 'bold' : 'normal',
-                }}>
+                <Text
+                  className="text-sm"
+                  style={{
+                    color: isActive ? 'white' : '#94a3b8',
+                    fontWeight: isActive ? '700' : '500',
+                  }}
+                >
                   {category}
                 </Text>
               </TouchableOpacity>
@@ -124,21 +129,42 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
     };
   }, []);
 
+  const resultsQueue = useRef<SearchPageData[]>([]);
+  const updateInterval = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     const abortController = new AbortController();
     const signal = abortController.signal;
 
     // Reset State
     setSearchData([]);
+    resultsQueue.current = [];
 
     // Initialize loading state with all provider values
     const initialLoading = new Set(installedProviders.map(p => p.value));
     setLoadingProviders(initialLoading);
 
-    // Removed verifyStreamExistence function here to vastly accelerate search speeds.
-    // Making deep metadata/episode queries for every single search result caused massive
-    // UI latency and network throttling on the providers. We will assume search results
-    // are valid until the user clicks into them.
+    // Start batch update interval - pushes queued results to state every 400ms
+    // to prevent JS thread congestion and keep UI interactive (tapable).
+    updateInterval.current = setInterval(() => {
+        if (resultsQueue.current.length > 0 && isMounted.current) {
+            const batch = [...resultsQueue.current];
+            resultsQueue.current = [];
+            setSearchData(prev => {
+                // Merge batch results carefully
+                const next = [...prev];
+                batch.forEach(newBlock => {
+                    const idx = next.findIndex(p => p.value === newBlock.value);
+                    if (idx === -1) {
+                        next.push(newBlock);
+                    } else {
+                        next[idx] = newBlock;
+                    }
+                });
+                return next;
+            });
+        }
+    }, 400);
 
     const fetchProviderData = async (item: (typeof installedProviders)[0]) => {
       try {
@@ -152,69 +178,36 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
         if (signal.aborted || !isMounted.current) return;
 
         if (rawData && rawData.length > 0) {
-          // Filter out dummy error posts injected by providers,
-          // AND force strictly match the searched title keyword.
           const searchKeywordLower = route.params.filter.toLowerCase();
           const cleanRawData = rawData.filter((post) => {
             if (!post || !post.title) return false;
-
             const titleLower = post.title.toLowerCase();
-
-            // 1. Drop dummy provider placeholders
             const isDummy =
               titleLower.includes('no stream') ||
               titleLower.includes('no result') ||
               titleLower.includes('not found');
 
             if (isDummy) return false;
-
-            // 2. Strict Title Match: Only keep posters that actually contain the searched keyword
-            // (Many providers return loosely related garbage that bloats the UI)
-            
-            // SKIP strict filtering if this is a person search (we want the whole filmography)
             if (route.params.filter.startsWith('person_id:')) return true;
 
             const searchWords = searchKeywordLower.split(' ').filter(w => w.length >= 2);
-            if (searchWords.length === 0) return true; // Fallback for very short queries
-            
-            // Check if title contains the search keyword or its significant words
+            if (searchWords.length === 0) return true;
             return titleLower.includes(searchKeywordLower) || searchWords.every(word => titleLower.includes(word));
           });
 
-          // Initialize empty provider block so it shows up in UI as tracking
-          const newDataBlock: SearchPageData = {
+          // Queue the results instead of direct setState
+          resultsQueue.current.push({
             title: item.display_name,
-            Posts: [],
+            Posts: cleanRawData,
             filter: route.params.filter,
             providerValue: item.value,
             value: item.value,
             name: item.display_name,
-          };
-
-          // Add empty block to state so users see something is happening
-          setSearchData(prev => {
-            const exists = prev.find(p => p.value === item.value);
-            if (exists) return prev;
-            return [...prev, newDataBlock];
-          });
-
-          // Instead of batching and verifying streams which takes awful amounts of time,
-          // instantly push the cleaned raw search results to the screen.
-          setSearchData(prev => {
-            return prev.map(providerBlock => {
-              if (providerBlock.value === item.value) {
-                return {
-                  ...providerBlock,
-                  Posts: cleanRawData, // Instantly inject the cleaned payload
-                };
-              }
-              return providerBlock;
-            });
           });
         }
       } catch (error) {
         if (!signal.aborted && isMounted.current) {
-          console.error(`Error fetching ${item.display_name}:`, error);
+          // Silent error for better UX
         }
       } finally {
         if (!signal.aborted && isMounted.current) {
@@ -227,22 +220,20 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
       }
     };
 
-    // Trigger all fetches with a slight microscopic stagger instead of a pure forEach.
-    // Firing 15+ parallel provider scrapers on the exact same millisecond completely 
-    // chokes the Javascript UI thread, causing React Native to drop touch/pointer events
-    // until the queue clears out. Staggering them by 50ms gives the UI thread room to breathe.
     installedProviders.forEach((item, index) => {
       setTimeout(() => {
         if (!signal.aborted && isMounted.current) {
           fetchProviderData(item);
         }
-      }, index * 100); // 100ms stagger between each provider
+      }, index * 80); // Staggered delay to keep UI interactive
     });
 
     return () => {
       abortController.abort();
+      if (updateInterval.current) clearInterval(updateInterval.current);
     };
-  }, [route.params.filter, installedProviders]); // Note: DO NOT add activeCategory here, it will trigger an accidental re-fetch
+  }, [route.params.filter, installedProviders]);
+ // Note: DO NOT add activeCategory here, it will trigger an accidental re-fetch
 
   // Memoize and sort the data so loaded providers appear first, 
   // currently loading providers are in the middle, and empty providers are hidden/discarded.
@@ -259,37 +250,35 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
         const providerNameLower = providerBlock.name.toLowerCase();
 
         // 1. ANIME: Strict collection of Anime and Cartoons
-        const isAnimeProvider = providerNameLower.includes('anime') || providerNameLower.includes('gogo') || providerNameLower.includes('zoro');
+        const isAnimeProvider = providerNameLower.includes('anime') || providerNameLower.includes('gogo') || providerNameLower.includes('zoro') || providerNameLower.includes('ani');
         const isAnimeContent = postTypeLower.includes('anime') || postTypeLower.includes('cartoon') || postTypeLower.includes('animation') || titleLower.includes('dub') || titleLower.includes('sub');
         const isActuallyAnime = isAnimeProvider || isAnimeContent;
 
         // 2. SERIES: Strict collection of episodic content
-        // We use title strings as fallbacks because providers often leave postType empty
         const isSeriesContent = postTypeLower.includes('tv') || postTypeLower.includes('series') || postTypeLower.includes('season') || postTypeLower.includes('episode') || postTypeLower.includes('show') || titleLower.includes('season') || titleLower.includes('episode');
 
         // 3. MOVIES: Single films
-        const isMovieContent = postTypeLower.includes('movie') || postTypeLower.includes('film') || postTypeLower === '';
+        const isMovieContent = postTypeLower.includes('movie') || postTypeLower.includes('film') || (postTypeLower === '' && !isSeriesContent);
 
-        if (activeCategory === 'Anime') {
-          return isActuallyAnime;
-        }
+        // 4. DRAMA / KDRAMA
+        const isKdrama = titleLower.includes('kdrama') || providerNameLower.includes('asian') || titleLower.includes('korean');
+        const isDrama = postTypeLower.includes('drama') || titleLower.includes('drama') || isKdrama;
+
+        if (activeCategory === 'Anime') return isActuallyAnime;
+        if (activeCategory === 'Cartoon') return postTypeLower.includes('cartoon') || titleLower.includes('cartoon');
+        if (activeCategory === 'Cdrama') return titleLower.includes('cdrama') || (isDrama && (titleLower.includes('chinese') || providerNameLower.includes('asian')));
+        if (activeCategory === 'Donghua') return titleLower.includes('donghua');
+        if (activeCategory === 'Drama') return isDrama;
+        if (activeCategory === 'Kdrama') return isKdrama;
+        if (activeCategory === 'Movie/tvshow') return isMovieContent || isSeriesContent;
+        if (activeCategory === 'Tvshow') return isSeriesContent;
 
         // CRITICAL STRICT GATES: If we are sorting for Western Movies or Series, 
         // completely block ANY content that was flagged as Anime or Cartoon.
-        if (isActuallyAnime) return false;
+        if (isActuallyAnime && (activeCategory === 'Movies' || activeCategory === 'Series')) return false;
 
-        if (activeCategory === 'Series') {
-          // Series MUST strictly contain series/episodic tags.
-          return isSeriesContent;
-        }
-
-        if (activeCategory === 'Movies') {
-          // Movies MUST strictly NOT contain series/episodic tags.
-          if (isSeriesContent) return false;
-
-          // Return explicit movies or untagged western content (fallback)
-          return isMovieContent;
-        }
+        if (activeCategory === 'Series') return isSeriesContent;
+        if (activeCategory === 'Movies') return isMovieContent && !isSeriesContent;
 
         return false;
       });
@@ -352,7 +341,7 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
 
   return (
     <View className="bg-black flex-1 w-full relative">
-      <FlatList
+      <FlashList
         data={sortedSearchData}
         keyExtractor={(item, index) =>
           `${item.providerValue}-${index}`
@@ -368,15 +357,13 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
             topPadding={insets.top + 16}
             activeCategory={activeCategory}
             setActiveCategory={setActiveCategory}
+            loadingCount={loadingProviders.size}
           />
         }
         ListFooterComponent={<View className="h-16" />}
         contentContainerStyle={{ paddingHorizontal: 16 }}
-        initialNumToRender={5}
-        maxToRenderPerBatch={5}
-        windowSize={11}
-        updateCellsBatchingPeriod={50}
-        removeClippedSubviews={false}
+        estimatedItemSize={220}
+        removeClippedSubviews={true}
       />
     </View>
   );

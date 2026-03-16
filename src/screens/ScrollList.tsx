@@ -1,7 +1,8 @@
-import { View, Text, TouchableOpacity, GestureResponderEvent, FlatList } from 'react-native';
-
+import { View, Text, TouchableOpacity, GestureResponderEvent } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import React, { useEffect, useState, useRef, ReactElement } from 'react';
+import React, { useEffect, useState, useRef, ReactElement, memo } from 'react';
+// ... existing imports ...
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeStackParamList, SearchStackParamList } from '../App';
 import { Post } from '../lib/providers/types';
@@ -15,9 +16,93 @@ import SkeletonLoader from '../components/Skeleton';
 import useThemeStore from '../lib/zustand/themeStore';
 import { providerManager } from '../lib/services/ProviderManager';
 
-type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
+const ScrollListItem = memo(({ 
+  item, 
+  viewType, 
+  navigation, 
+  providerValue, 
+  currentProviderValue 
+}: { 
+  item: Post, 
+  viewType: number, 
+  navigation: any, 
+  providerValue?: string, 
+  currentProviderValue: string 
+}) => {
+  return (
+    <TouchableOpacity
+      style={{
+        flexDirection: viewType === 1 ? 'column' : 'row',
+        margin: 12,
+        alignItems: viewType === 1 ? 'stretch' : 'center',
+      }}
+      onPress={() => {
+        if (item.type === 'person') {
+          const linkParts = item.link.split(':');
+          if (linkParts[0] === 'person_id' && linkParts[1]) {
+            //@ts-ignore
+            navigation.navigate('SearchStack', {
+              screen: 'CastDetail',
+              params: {
+                personId: linkParts[1],
+                name: item.title,
+              },
+            });
+            return;
+          }
+          navigation.navigate('SearchStack', {
+            screen: 'ScrollList',
+            params: {
+              filter: item.link,
+              title: item.title,
+              isSearch: true,
+              providerValue: providerValue || currentProviderValue,
+            },
+          });
+          return;
+        }
+        navigation.navigate('Info', {
+          link: item.link,
+          provider: providerValue || currentProviderValue,
+          poster: item?.image,
+        });
+      }}>
+      <Image
+        className={item.type === 'person' ? "rounded-full" : "rounded-md"}
+        source={{
+          uri:
+            item.image ||
+            (item.type === 'person'
+              ? 'https://placehold.jp/24/363636/ffffff/150x150.png?text=Actor'
+              : 'https://placehold.jp/24/363636/ffffff/100x150.png?text=Doodle'),
+        }}
+        style={
+          item.type === 'person'
+            ? { width: 80, height: 80, marginLeft: viewType === 1 ? 10 : 0 }
+            : (viewType === 1
+              ? { width: 100, height: 150 }
+              : { width: 70, height: 100 })
+        }
+        cachePolicy="memory-disk"
+        contentFit="cover"
+      />
+      <View style={viewType === 1 ? { width: 100 } : { flex: 1, marginLeft: 12 }}>
+        <Text
+          numberOfLines={2}
+          className={
+            viewType === 1
+              ? 'text-white text-center text-[10px] mt-1'
+              : 'text-white font-semibold text-base'
+          }>
+          {item.title}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+});
 
 const ScrollList = ({ route }: Props): ReactElement => {
+// ...
   const insets = useSafeAreaInsets();
   const { primary } = useThemeStore(state => state);
   const navigation =
@@ -161,7 +246,7 @@ const ScrollList = ({ route }: Props): ReactElement => {
         </TouchableOpacity>
       </View>
       <View className="justify-center flex-row w-full flex-1">
-        <FlatList
+        <FlashList
           ListFooterComponent={
             <>
               {isLoading && (
@@ -176,69 +261,22 @@ const ScrollList = ({ route }: Props): ReactElement => {
           }
           data={posts}
           numColumns={viewType === 1 ? 3 : 1}
-          removeClippedSubviews={false}
+          removeClippedSubviews={true}
           key={`view-type-${viewType}`}
           contentContainerStyle={{ paddingBottom: 80 }}
-          keyExtractor={(item, i) => `${item.title}-${i}`}
+          keyExtractor={(item, i) => `${item.link}-${i}`}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              style={{
-                flexDirection: viewType === 1 ? 'column' : 'row',
-                margin: 12,
-                alignItems: viewType === 1 ? 'stretch' : 'center',
-              }}
-              onPress={() => {
-                if (item.type === 'person') {
-                  navigation.navigate('SearchStack', {
-                    screen: 'ScrollList',
-                    params: {
-                      filter: item.link,
-                      title: item.title,
-                      isSearch: true,
-                      providerValue: route.params?.providerValue || provider.value,
-                    },
-                  });
-                  return;
-                }
-                navigation.navigate('Info', {
-                  link: item.link,
-                  provider: route.params?.providerValue || provider.value,
-                  poster: item?.image,
-                });
-              }}>
-              <Image
-                className={item.type === 'person' ? "rounded-full" : "rounded-md"}
-                source={{
-                  uri:
-                    item.image ||
-                    (item.type === 'person'
-                      ? 'https://placehold.jp/24/363636/ffffff/150x150.png?text=Actor'
-                      : 'https://placehold.jp/24/363636/ffffff/100x150.png?text=Doodle'),
-                }}
-                style={
-                  item.type === 'person'
-                    ? { width: 80, height: 80, marginLeft: viewType === 1 ? 10 : 0 }
-                    : (viewType === 1
-                      ? { width: 100, height: 150 }
-                      : { width: 70, height: 100 })
-                }
-                cachePolicy="memory-disk"
-                contentFit="cover"
-              />
-              <Text
-                className={
-                  viewType === 1
-                    ? 'text-white text-center truncate w-24 text-xs'
-                    : 'text-white ml-3 truncate w-72 font-semibold text-base'
-                }>
-                {item?.title?.length > 24 && viewType === 1
-                  ? item.title.slice(0, 24) + '...'
-                  : item.title}
-              </Text>
-            </TouchableOpacity>
+            <ScrollListItem 
+              item={item} 
+              viewType={viewType} 
+              navigation={navigation} 
+              providerValue={providerValue} 
+              currentProviderValue={provider.value} 
+            />
           )}
           onEndReached={onEndReached}
-          onEndReachedThreshold={0.5}
+          onEndReachedThreshold={0.4}
+          estimatedItemSize={viewType === 1 ? 200 : 120}
         />
         {!isLoading && posts.length === 0 ? (
           <View className="w-full h-full flex items-center justify-center">
