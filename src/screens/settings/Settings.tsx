@@ -63,17 +63,6 @@ const setWatchTogetherModeStorage = (mode: boolean) => {
 };
 // -----------------------------------------------------------
 
-// --- NETWORK PROXY PERSISTENCE ---
-const KEY_NETWORK_PROXY = 'networkProxyMode';
-
-const getNetworkProxyMode = () => {
-  const modeStr = cacheStorageService.getString(KEY_NETWORK_PROXY);
-  return modeStr === 'true' ? true : false;
-};
-
-const setNetworkProxyModeStorage = (mode: boolean) => {
-  cacheStorageService.setString(KEY_NETWORK_PROXY, String(mode));
-};
 // -----------------------------------------------------------
 
 
@@ -250,7 +239,7 @@ const Settings = ({ navigation }: Props) => {
     getWatchTogetherMode(),
   );
   const [networkProxyMode, setNetworkProxyMode] = useState(
-    getNetworkProxyMode(),
+    settingsStorage.isNetworkProxyEnabled(),
   );
   const [syncLink, setSyncLink] = useState('');
   const [torrServerUrl, setTorrServerUrl] = useState(
@@ -442,11 +431,10 @@ const Settings = ({ navigation }: Props) => {
     }
   }, [appMode, setAppMode]);
 
-  // --- PROXY TOGGLE ---
   const toggleNetworkProxy = useCallback(() => {
     const newState = !networkProxyMode;
     setNetworkProxyMode(newState);
-    setNetworkProxyModeStorage(newState);
+    settingsStorage.setNetworkProxyEnabled(newState);
 
     if (settingsStorage.isHapticFeedbackEnabled()) {
       ReactNativeHapticFeedback.trigger('impactMedium', {

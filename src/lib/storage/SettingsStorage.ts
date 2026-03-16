@@ -51,6 +51,7 @@ export enum SettingsKeys {
   RD_REFRESH_TOKEN = 'rdRefreshToken',
   RD_TOKEN_EXPIRY = 'rdTokenExpiry',
   TORBOX_KEY = 'torboxKey',
+  NETWORK_PROXY = 'networkProxyMode',
 }
 
 /**
@@ -360,6 +361,14 @@ export class SettingsStorage {
 
   setTorBoxKey(key: string): void {
     mainStorage.setString(SettingsKeys.TORBOX_KEY, key);
+  }
+
+  isNetworkProxyEnabled(): boolean {
+    return mainStorage.getBool(SettingsKeys.NETWORK_PROXY) === true;
+  }
+
+  setNetworkProxyEnabled(enabled: boolean): void {
+    mainStorage.setBool(SettingsKeys.NETWORK_PROXY, enabled);
   }
 }
 

@@ -133,6 +133,11 @@ class TorrServerModule(reactContext: ReactApplicationContext) : ReactContextBase
     }
 
     @ReactMethod
+    fun logMessage(message: String) {
+        logToBuffer("[BRIDGE] $message")
+    }
+
+    @ReactMethod
     fun clearData(promise: Promise) {
         logToBuffer(">>> clearData() called")
         try {

@@ -309,6 +309,17 @@ class TorrEngineService {
       return `Failed to fetch logs: ${e}`;
     }
   }
+
+  async logMessage(message: string): Promise<void> {
+    const torrModule = getTorrModule();
+    if (Platform.OS === 'android' && torrModule && torrModule.logMessage) {
+      try {
+        await torrModule.logMessage(message);
+      } catch (e) {
+        // Method might not be available yet if build is pending
+      }
+    }
+  }
 }
 
 export default TorrEngineService.getInstance();

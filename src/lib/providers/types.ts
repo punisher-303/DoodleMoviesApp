@@ -151,6 +151,7 @@ export type ProviderContext = {
   getBaseUrl: (providerValue: string) => Promise<string>;
   commonHeaders: Record<string, string>;
   cheerio: typeof cheerio;
+  nativeLog?: (message: string) => void;
   extractors: {
     hubcloudExtracter: (link: string, signal: AbortSignal) => Promise<Stream[]>;
     gofileExtracter: (id: string) => Promise<{
