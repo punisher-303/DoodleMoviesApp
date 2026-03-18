@@ -298,10 +298,9 @@ const TorrentList: React.FC<TorrentListProps> = ({
             </View>
         </View>
 
-        {/* Row 2: File Name (Wrapping) */}
+        {/* Row 2: File Name (Modern Standard Font) */}
         <Text 
-            style={{ color: 'white', fontWeight: '600', fontSize: 13, lineHeight: 18 }}
-            className="mb-2"
+            className="text-white font-semibold text-base mb-2"
             numberOfLines={3}
         >
             {item.name}
