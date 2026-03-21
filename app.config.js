@@ -25,19 +25,6 @@ module.exports = () => {
       },
     ],
     [
-      'react-native-video',
-      {
-        enableNotificationControls: true,
-        enableAndroidPictureInPicture: true,
-        androidExtensions: {
-          useExoplayerRtsp: false,
-          useExoplayerSmoothStreaming: true,
-          useExoplayerHls: true,
-          useExoplayerDash: true,
-        },
-      },
-    ],
-    [
       'react-native-edge-to-edge',
       {
         android: {

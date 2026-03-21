@@ -28,18 +28,31 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../App';
 import { cacheStorage, settingsStorage } from '../../lib/storage';
 import { OrientationLocker, LANDSCAPE } from 'react-native-orientation-locker';
-import VideoPlayer from '@8man/react-native-media-console';
+import { VLCPlayer } from 'react-native-vlc-media-player';
+import Slider from '@react-native-community/slider';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Dimensions } from 'react-native'; // ADDED DIMENSIONS IMPORT
+
 import {
-  VideoRef,
-  SelectedVideoTrack,
-  SelectedVideoTrackType,
   ResizeMode,
-  SelectedTrack,
   SelectedTrackType,
-} from 'react-native-video';
+  TextTracks,
+  TextTrackType,
+  OnLoadData,
+  OnProgressData,
+  OnVideoErrorData,
+} from '../../types/video';
+
+enum SelectedVideoTrackType {
+  AUTO = 'auto',
+  DISABLED = 'disabled',
+  RESOLUTION = 'resolution',
+  INDEX = 'index'
+}
+type VideoRef = any;
+type SelectedTrack = { type: SelectedTrackType; value?: number | string };
+type SelectedVideoTrack = { type: SelectedVideoTrackType; value?: number | string };
 import useContentStore from '../../lib/zustand/contentStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
@@ -685,25 +698,25 @@ const Player = ({ route }: Props): React.JSX.Element => {
   const initialActiveEpisode = useMemo(() => {
     const fromList = route.params?.episodeList?.[route.params.linkIndex];
     if (fromList) return fromList;
-    const link = route.params?.link || route.params?.video_id;
+    const link = (route.params as any)?.link || (route.params as any)?.video_id;
     if (link) {
-      const titleFromLink = route.params?.primaryTitle
-        ? decodeURIComponent(route.params.primaryTitle)
-        : route.params?.title || 'Shared Video';
+      const titleFromLink = (route.params as any)?.primaryTitle
+        ? decodeURIComponent((route.params as any).primaryTitle)
+        : (route.params as any)?.title || 'Shared Video';
       return {
         title: titleFromLink,
         link: link,
-        poster: route.params?.poster?.poster || null,
+        poster: (route.params as any)?.poster?.poster || null,
       };
     }
     return null;
   }, [
     route.params?.episodeList,
     route.params?.linkIndex,
-    route.params?.link,
-    route.params?.video_id,
-    route.params?.primaryTitle,
-    route.params?.title,
+    (route.params as any)?.link,
+    (route.params as any)?.video_id,
+    (route.params as any)?.primaryTitle,
+    (route.params as any)?.title,
   ]);
 
   const [activeEpisode, setActiveEpisode] = useState(initialActiveEpisode);
@@ -781,7 +794,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
 
   // --- DEFINED VIDEO ID UPFRONT FOR STORAGE KEYS ---
   const videoId =
-    route.params?.link || route.params?.video_id || activeEpisode?.link || '';
+    (route.params as any)?.link || (route.params as any)?.video_id || activeEpisode?.link || '';
 
   // --- WATCH TOGETHER STATE ---
   const [agoraUid] = useState(Math.floor(Math.random() * 100000));
@@ -832,8 +845,8 @@ const Player = ({ route }: Props): React.JSX.Element => {
   }, [watchTogetherMode, roomId, videoId, roomStorageKey]);
 
   const otherUserNicknameFromLink = useMemo(() => {
-    const leaderNickname = route.params?.leader;
-    if (route.params?.syncLink && leaderNickname) {
+    const leaderNickname = (route.params as any)?.leader;
+    if ((route.params as any)?.syncLink && leaderNickname) {
       return decodeURIComponent(leaderNickname);
     }
     return '';
@@ -1859,16 +1872,72 @@ const Player = ({ route }: Props): React.JSX.Element => {
           className="flex-1"
           onTouchStart={e => e.stopPropagation()}
           onTouchMove={e => e.stopPropagation()}
-          onTouchEnd={e => e.stopPropagation()}>
+          onTouchEnd={e => { e.stopPropagation(); setShowControls(!showControls); }}>
           {showPlayer && (
-            <VideoPlayer
-              key={
-                activeEpisode?.link
-                  ? activeEpisode.link + keyForPlayer
-                  : keyForPlayer
-              }
-              {...videoPlayerProps}
-            />
+            <View className="flex-1 bg-black">
+              {/* @ts-ignore */}
+              <VLCPlayer
+                ref={playerRef as any}
+                style={{ flex: 1, backgroundColor: 'black' }}
+                source={{ uri: selectedStream?.link || '', initOptions: ['--network-caching=5000', '--sout-mux-caching=5000', '--drop-late-frames', '--skip-frames'] }}
+                paused={!isPlaying}
+                rate={finalPlaybackRate}
+                onProgress={(e: any) => {
+                   if (e.duration) {
+                     handleProgress({ currentTime: e.currentTime / 1000, seekableDuration: e.duration / 1000 });
+                   }
+                }}
+                onEnd={handleNextEpisode}
+                onError={handleVideoError}
+                onPlaying={() => setIsPlaying(true)}
+                onPaused={() => setIsPlaying(false)}
+                videoAspectRatio={resizeMode === ResizeMode.STRETCH ? '16:9' : resizeMode === ResizeMode.COVER ? '4:3' : undefined}
+                autoAspectRatio={resizeMode === ResizeMode.CONTAIN || resizeMode === ResizeMode.NONE}
+              />
+              
+              {showControls && !isPlayerLocked && (
+                // @ts-ignore
+                <Animated.View style={[controlsStyle]} className="absolute top-0 left-0 w-full h-full justify-center items-center bg-black/40" onTouchStart={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()} onTouchEnd={(e) => { e.stopPropagation(); setShowControls(false); }}>
+                  {/* @ts-ignore */}
+                  <View className="flex-row items-center gap-12" onTouchEnd={(e: any) => e.stopPropagation()}>
+                     {/* @ts-ignore */}
+                     <TouchableOpacity onPress={() => playerRef.current?.seek((videoPositionRef.current.position - 10) * 1000)} className="p-4 bg-black/50 rounded-full">
+                       <MaterialIcons name="replay-10" size={40} color="white" />
+                     </TouchableOpacity>
+
+                     <TouchableOpacity onPress={() => setIsPlaying(!isPlaying)} className="p-6 bg-black/70 rounded-full border border-white/20">
+                       <MaterialIcons name={isPlaying ? "pause" : "play-arrow"} size={60} color="white" />
+                     </TouchableOpacity>
+
+                     <TouchableOpacity onPress={() => playerRef.current?.seek((videoPositionRef.current.position + 10) * 1000)} className="p-4 bg-black/50 rounded-full">
+                       <MaterialIcons name="forward-10" size={40} color="white" />
+                     </TouchableOpacity>
+                  </View>
+
+                  <View className="absolute bottom-20 w-full px-8 flex-row items-center bg-black/50 py-3 rounded-lg self-center max-w-[90%]" onTouchEnd={(e) => e.stopPropagation()}>
+                    <Text className="text-white text-xs font-semibold mr-3 w-12 text-center">
+                      {Math.floor(videoPositionRef.current.position / 60)}:{Math.floor(videoPositionRef.current.position % 60).toString().padStart(2, '0')}
+                    </Text>
+                    <Slider
+                      style={{ flex: 1, height: 40 }}
+                      minimumValue={0}
+                      maximumValue={videoPositionRef.current.duration || 100}
+                      value={videoPositionRef.current.position}
+                      minimumTrackTintColor={primary}
+                      maximumTrackTintColor="#FFFFFF50"
+                      thumbTintColor={primary}
+                      onSlidingComplete={(val) => {
+                         playerRef.current?.seek(val * 1000);
+                         if (watchTogetherMode && isSessionLeader) sendTimeUpdate(val, isPlaying);
+                      }}
+                    />
+                    <Text className="text-white text-xs font-semibold ml-3 w-12 text-center">
+                      {Math.floor(videoPositionRef.current.duration / 60)}:{Math.floor(videoPositionRef.current.duration % 60).toString().padStart(2, '0')}
+                    </Text>
+                  </View>
+                </Animated.View>
+              )}
+            </View>
           )}
         </TouchableOpacity>
 
@@ -2112,7 +2181,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
             <TouchableOpacity
               className="flex-row gap-1 items-center opacity-60"
               onPress={() => {
-                playerRef?.current?.enterPictureInPicture();
+                if (playerRef?.current?.enterPictureInPicture) { playerRef?.current?.enterPictureInPicture(); } else { ToastAndroid.show('PIP disabled on VLC player', ToastAndroid.SHORT); }
               }}>
               <MaterialIcons
                 name="picture-in-picture"

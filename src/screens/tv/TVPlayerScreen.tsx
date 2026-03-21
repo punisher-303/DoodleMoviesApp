@@ -23,14 +23,15 @@ import Animated, {
 } from 'react-native-reanimated';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { DoodleTVStackParamList } from '../../App';
-import Video, {
-  VideoRef,
-  SelectedTrackType,
+import { VLCPlayer } from 'react-native-vlc-media-player';
+import {
   ResizeMode,
+  SelectedTrackType,
   OnLoadData,
   OnProgressData,
   OnVideoErrorData,
-} from 'react-native-video';
+} from '../../types/video';
+type VideoRef = any;
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -681,20 +682,28 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
       <StatusBar hidden />
 
       <View style={styles.videoWrapper}>
-        <Video
-          ref={playerRef}
-          source={{ uri: selectedStream?.link }}
+        <VLCPlayer
+          ref={playerRef as any}
+          source={{ uri: selectedStream?.link, initOptions: ['--network-caching=5000', '--sout-mux-caching=5000', '--drop-late-frames', '--skip-frames'] }}
           style={styles.backgroundVideo}
-          controls={false}
           paused={isPaused}
-          onLoad={handleVideoLoad}
-          onProgress={handleProgress}
-          onError={handleVideoError}
-          resizeMode={resizeMode}
+          onProgress={(e: any) => {
+            if (e.duration) {
+              handleProgress({ 
+                currentTime: e.currentTime / 1000, 
+                playableDuration: e.duration / 1000,
+                seekableDuration: e.duration / 1000 
+              });
+              if (duration === 0) {
+                handleLoad({ duration: e.duration / 1000 } as any);
+              }
+            }
+          }}
+          onEnd={switchToNextStream}
+          onError={(e: any) => handleVideoError({ error: { errorString: 'VLC Error', errorCode: '0' } })}
+          videoAspectRatio={resizeMode === ResizeMode.STRETCH ? '16:9' : resizeMode === ResizeMode.COVER ? '4:3' : undefined}
+          autoAspectRatio={resizeMode === ResizeMode.CONTAIN || resizeMode === ResizeMode.NONE}
           rate={playbackRate}
-          selectedTextTrack={selectedTextTrack}
-          selectedAudioTrack={selectedAudioTrack}
-          selectedVideoTrack={selectedVideoTrack}
         />
         {/* New Gesture Overlay to capture all touches */}
         <TouchableNativeFeedback

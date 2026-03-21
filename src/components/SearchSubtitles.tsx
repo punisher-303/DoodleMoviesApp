@@ -13,7 +13,7 @@ import React, {useState} from 'react';
 import useThemeStore from '../lib/zustand/themeStore';
 import {ScrollView} from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
-import {TextTracks, TextTrackType} from 'react-native-video';
+import {TextTracks, TextTrackType} from '../types/video';
 
 const SearchSubtitles = ({
   searchQuery,

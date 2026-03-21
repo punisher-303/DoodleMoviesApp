@@ -15,7 +15,7 @@ import SkeletonLoader from './Skeleton';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {Clipboard} from 'react-native';
 import useThemeStore from '../lib/zustand/themeStore';
-import {TextTrackType} from 'react-native-video';
+import {TextTrackType} from '../types/video';
 import {settingsStorage} from '../lib/storage';
 
 type Props = {
