@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, Pressable, Linking, ToastAndroid } from 'react-native';
 
 import { ifExists } from '../lib/file/ifExists';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -113,14 +113,12 @@ const DownloadComponent = ({
   }, [downloadModal, longPressModal]);
 
   // on holdPress external downloader
-  const longPressDownload = async (link: string, type?: string) => {
+  const longPressDownload = async (link: string) => {
     try {
-      await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
-        data: link,
-        //type: type || 'video/*',
-      });
+      await Linking.openURL(link);
     } catch (error) {
       console.log(error);
+      ToastAndroid.show('Could not open link', ToastAndroid.SHORT);
     }
   };
 
@@ -134,7 +132,8 @@ const DownloadComponent = ({
           } else if (downloadActive) {
             setCancelModal(prev => !prev);
           } else {
-            if (settingsStorage.getBool('alwaysExternalDownloader') === true) {
+            const isTorrent = (providerValue || '').toLowerCase() === 'torrent' || (provider.value || '').toLowerCase() === 'torrent';
+            if (isTorrent || settingsStorage.isExternalDownloaderEnabled()) {
               setLongPressModal(true);
             } else {
               setDownloadModal(true);

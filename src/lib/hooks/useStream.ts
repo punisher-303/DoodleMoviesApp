@@ -5,8 +5,7 @@ import { providerManager } from '../services/ProviderManager';
 import { settingsStorage } from '../storage';
 import { ifExists } from '../file/ifExists';
 import { Stream } from '../providers/types';
-import { debridService } from '../services/DebridService';
-import TorrEngineService from '../services/TorrEngineService';
+import { TextTracks, TextTrackType } from '../../types/video';
 
 // Ultra-Stable Tracker List (Feb 2026) - Appended to magnets for faster peer discovery
 const TOP_TRACKERS = [
@@ -63,7 +62,7 @@ export const useStream = ({
     type: '',
   });
   const [isResolving, setIsResolving] = useState(false);
-  const [externalSubs, setExternalSubs] = useState<any[]>([]);
+  const [externalSubs, setExternalSubs] = useState<TextTracks>([]);
 
   // State to manage automatic skipping attempts for the current selected stream
   const [skipAttemptCount, setSkipAttemptCount] = useState(0);
@@ -135,42 +134,16 @@ export const useStream = ({
           throw new Error('No streams available');
         }
 
-        // Zero-Config: Intelligent Torrent Resolution
-        let torrServerUrl = settingsStorage.getTorrServerUrl();
-        const publicBridge = settingsStorage.getPublicTorrServerBridge();
-
-        // We will perform a quick check for local engine later, 
-        // but for now, we map the streams and mark them if they need resolution
-        const resolvedData = filteredData.map(stream => {
-          // If stream is already resolved
-          if (stream.isResolved) {
-             return stream;
-          }
-
+        // Return streams directly (Magnets will be handled by Downloader)
+        return filteredData.map(stream => {
           if (stream.link.startsWith('magnet:')) {
-            // Debrid-First: If debrid is enabled, prioritize it
-            if (settingsStorage.isDebridEnabled() && settingsStorage.getDebridService() !== 'None') {
-              return {
-                ...stream,
-                isDebrid: true,
-              };
-            }
-
-            const encodedMagnet = encodeURIComponent(stream.link);
-            
-            // Generate both local and bridge links
-            // We use the local one as primary, but logic in useEffect will switch to bridge if needed
             return {
               ...stream,
-              link: `${torrServerUrl}/stream?link=${encodedMagnet}&play`,
-              originalMagnet: stream.link, // Keep original for bridge fallback
-              // type: removed to allow player auto-detection
+              link: boostMagnet(stream.link),
             };
           }
           return stream;
         });
-
-        return resolvedData;
       } catch (err: any) {
         clearTimeout(timeoutId);
         throw err;
@@ -215,86 +188,19 @@ export const useStream = ({
     }
   }, [streamData]);
 
-  // Stremio-Grade: Automatic Torrent Pre-Resolution
-  useEffect(() => {
-    const resolveTorrent = async () => {
-      // Only trigger for local TorrServer links that haven't been resolved yet
-      const isLocalRawMagnet = selectedStream?.link?.includes('8090/stream?link=') && selectedStream?.originalMagnet;
-      
-      if (isLocalRawMagnet && !selectedStream.isResolved) {
-        try {
-          console.log('[useStream] Starting Stremio-grade resolution for:', selectedStream.originalMagnet);
-          setIsResolving(true);
-          ToastAndroid.show('Resolving Torrent Metadata...', ToastAndroid.SHORT);
 
-          const finalUrl = await TorrEngineService.prepareTorrentStream(
-            selectedStream.originalMagnet!,
-            activeEpisode?.season,
-            activeEpisode?.number || activeEpisode?.episode
-          );
+  // Pre-resolution logic REMOVED (using magnets directly for external download)
 
-          if (finalUrl) {
-            console.log('[useStream] Resolution successful:', finalUrl);
-            setSelectedStream({
-              ...selectedStream,
-              link: finalUrl,
-              isResolved: true,
-              server: selectedStream.server + ' (Resolved)'
-            });
-          }
-        } catch (e: any) {
-          console.error('[useStream] Torrent resolution failed:', e.message);
-          ToastAndroid.show(`Resolution Error: ${e.message}`, ToastAndroid.LONG);
-          
-          // Fallback to bridge rotation if local resolution fails
-          switchToNextStream(true);
-        } finally {
-          setIsResolving(false);
-        }
-      } else if (selectedStream?.link?.includes('8090') && !selectedStream.originalMagnet) {
-          // Fallback health check for non-magnet torrent links
-          TorrEngineService.ensureEngine();
-      }
-    };
 
-    if (selectedStream?.link) {
-      resolveTorrent();
-    }
-  }, [selectedStream?.link, selectedStream?.originalMagnet]);
-
-  // Debrid resolution logic (Intelligent Fallback)
-  useEffect(() => {
-    const resolveDebrid = async () => {
-      if (selectedStream?.isDebrid && selectedStream.link.startsWith('magnet:') && !selectedStream.isResolved) {
-        try {
-          ToastAndroid.show('Resolving via Debrid...', ToastAndroid.SHORT);
-          const files = await debridService.resolveMagnet(selectedStream.link);
-          if (files && files.length > 0) {
-            const bestFile = files[0];
-            setSelectedStream({
-              ...selectedStream,
-              link: bestFile.downloadUrl,
-              isDebrid: false, // Mark as resolved
-              isResolved: true,
-            });
-            ToastAndroid.show('Debrid Link Ready', ToastAndroid.SHORT);
-          }
-        } catch (error: any) {
-          console.error('Debrid resolution failed:', error);
-          // Fallback handled by the Zero-Config useEffect which checks for magnet/localhost
-        }
-      }
-    };
-
-    resolveDebrid();
-  }, [selectedStream]);
+  // Debrid resolution logic REMOVED
 
   // Extract external subtitles (existing logic)
   useEffect(() => {
     if (streamData && streamData.length > 0) {
-      const subs: any[] = [];
+      const subs: TextTracks = [];
       streamData.forEach(track => {
         if (track?.subtitles?.length && track.subtitles.length > 0) {
+          // Map to internal TextTrack format if needed, but for now assuming compatible
           subs.push(...track.subtitles);
         }
       });
@@ -316,39 +222,6 @@ export const useStream = ({
 
   // Helper function to switch to the next stream
   const switchToNextStream = (showToast = true): boolean => {
-    // 1. Multi-Bridge Logic: If the current stream is using a bridge, try the NEXT bridge first
-    // before abandoning this torrent source entirely.
-    const publicBridges = settingsStorage.getPublicTorrServerBridges();
-    const isUsingLocal = selectedStream?.link?.includes('127.0.0.1:8090') || selectedStream?.link?.includes('localhost:8090');
-    const isUsingBridge = publicBridges.some(b => selectedStream?.link?.startsWith(b));
-    const magnet = (selectedStream as any).originalMagnet;
-
-    // 1. Initial Local -> Bridge Fallback OR Bridge -> Next Bridge Rotation
-    if (magnet && (isUsingLocal || (isUsingBridge && bridgeIndex < publicBridges.length - 1))) {
-      let nextBridgeIdx = isUsingLocal ? 0 : bridgeIndex + 1;
-      setBridgeIndex(nextBridgeIdx);
-      
-      const nextBridge = settingsStorage.getPublicTorrServerBridge(nextBridgeIdx);
-      const boostedMagnet = boostMagnet(magnet);
-      const encodedMagnet = encodeURIComponent(boostedMagnet);
-      
-      setSelectedStream({
-        ...selectedStream,
-        link: `${nextBridge}/stream?link=${encodedMagnet}&play`,
-        originalMagnet: magnet, 
-      });
-      
-      console.log(`[useStream] Rotating to bridge[${nextBridgeIdx}]: ${nextBridge}`);
-      
-      if (showToast) {
-        ToastAndroid.show(
-          isUsingLocal ? `Local engine issue, trying bridge: ${nextBridge.split('://')[1].substring(0, 15)}...` 
-                       : `Bridge failed, trying fallback (${nextBridgeIdx + 1}): ${nextBridge.split('://')[1].substring(0, 15)}...`,
-          ToastAndroid.LONG
-        );
-      }
-      return true;
-    }
 
     // 2. Standard Stream Skipping (If all bridges failed or not a bridge stream)
     if (streamData && streamData.length > 0) {

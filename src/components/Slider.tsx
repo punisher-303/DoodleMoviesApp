@@ -104,6 +104,8 @@ export default function Slider({
   );
 }
 
+export default React.memo(Slider);
+
 const SliderItem = React.memo(({
   item,
   navigation,

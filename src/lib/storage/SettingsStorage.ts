@@ -43,15 +43,8 @@ export enum SettingsKeys {
   CUSTOM_PROVIDER_BASE_URL = 'customProviderBaseUrl',
   USE_CUSTOM_PROVIDER_BASE_URL = 'useCustomProviderBaseUrl',
 
-  // TorrServer / Debrid
-  TORR_SERVER_URL = 'torrServerUrl',
-  USE_DEBRID = 'useDebrid',
-  DEBRID_SERVICE = 'debridService',
-  RD_ACCESS_TOKEN = 'rdAccessToken',
-  RD_REFRESH_TOKEN = 'rdRefreshToken',
-  RD_TOKEN_EXPIRY = 'rdTokenExpiry',
-  TORBOX_KEY = 'torboxKey',
   NETWORK_PROXY = 'networkProxyMode',
+  ALWAYS_EXTERNAL_DOWNLOADER = 'alwaysExternalDownloader',
 }
 
 /**
@@ -278,90 +271,6 @@ export class SettingsStorage {
     mainStorage.setBool(key, value);
   }
 
-  getTorrServerUrl(): string {
-    const savedUrl = mainStorage.getString(SettingsKeys.TORR_SERVER_URL);
-    if (savedUrl && savedUrl !== 'http://localhost:8090') {
-      return savedUrl;
-    }
-    // Zero-Config Fallback: If local is default or empty, return localhost but hint at bridge
-    return 'http://127.0.0.1:8090';
-  }
-
-  getPublicTorrServerBridges(): string[] {
-    // Try to get dynamic bridges from the installed Torrent provider manifest
-    const installed = extensionStorage.getInstalledProviders();
-    const torrentProvider = installed.find(p => p.value === 'torrent');
-    
-    if (torrentProvider && torrentProvider.bridges && torrentProvider.bridges.length > 0) {
-      console.log('[SettingsStorage] Using dynamic bridges from manifest:', torrentProvider.bridges);
-      return torrentProvider.bridges;
-    }
-
-    // Fallback verified bridges
-    return [
-      'http://torr.unknot.ru:8090',
-      'http://88.87.92.183:8090',
-      'http://ts.maxvol.pro',
-      'http://188.235.146.53:8090',
-    ];
-  }
-
-  getPublicTorrServerBridge(index: number = 0): string {
-    const bridges = this.getPublicTorrServerBridges();
-    return bridges[index % bridges.length];
-  }
-
-  setTorrServerUrl(url: string): void {
-    mainStorage.setString(SettingsKeys.TORR_SERVER_URL, url);
-  }
-
-  isDebridEnabled(): boolean {
-    return mainStorage.getBool(SettingsKeys.USE_DEBRID) === true;
-  }
-
-  setDebridEnabled(enabled: boolean): void {
-    mainStorage.setBool(SettingsKeys.USE_DEBRID, enabled);
-  }
-
-  getDebridService(): string {
-    return mainStorage.getString(SettingsKeys.DEBRID_SERVICE) || 'None';
-  }
-
-  setDebridService(service: string): void {
-    mainStorage.setString(SettingsKeys.DEBRID_SERVICE, service);
-  }
-
-  getRealDebridToken(): string | null {
-    return mainStorage.getString(SettingsKeys.RD_ACCESS_TOKEN);
-  }
-
-  setRealDebridToken(token: string): void {
-    mainStorage.setString(SettingsKeys.RD_ACCESS_TOKEN, token);
-  }
-
-  getRealDebridRefreshToken(): string | null {
-    return mainStorage.getString(SettingsKeys.RD_REFRESH_TOKEN);
-  }
-
-  setRealDebridRefreshToken(token: string): void {
-    mainStorage.setString(SettingsKeys.RD_REFRESH_TOKEN, token);
-  }
-
-  getRealDebridExpiry(): string | null {
-    return mainStorage.getString(SettingsKeys.RD_TOKEN_EXPIRY);
-  }
-
-  setRealDebridExpiry(expiry: string): void {
-    mainStorage.setString(SettingsKeys.RD_TOKEN_EXPIRY, expiry);
-  }
-
-  getTorBoxKey(): string | null {
-    return mainStorage.getString(SettingsKeys.TORBOX_KEY);
-  }
-
-  setTorBoxKey(key: string): void {
-    mainStorage.setString(SettingsKeys.TORBOX_KEY, key);
-  }
 
   isNetworkProxyEnabled(): boolean {
     return mainStorage.getBool(SettingsKeys.NETWORK_PROXY) === true;
@@ -369,6 +278,15 @@ export class SettingsStorage {
 
   setNetworkProxyEnabled(enabled: boolean): void {
     mainStorage.setBool(SettingsKeys.NETWORK_PROXY, enabled);
+  }
+
+  isExternalDownloaderEnabled(): boolean {
+    const val = mainStorage.getBool(SettingsKeys.ALWAYS_EXTERNAL_DOWNLOADER);
+    return val === null ? true : val;
+  }
+
+  setExternalDownloaderEnabled(enabled: boolean): void {
+    mainStorage.setBool(SettingsKeys.ALWAYS_EXTERNAL_DOWNLOADER, enabled);
   }
 }
 

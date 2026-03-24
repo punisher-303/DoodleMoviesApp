@@ -36,7 +36,7 @@ react {
 
     /* Bundling */
     //   A list containing the node command and its flags. Default is just 'node'.
-    // nodeExecutableAndArgs = ["node"]
+    nodeExecutableAndArgs = ["node", "--max-old-space-size=8192"]
     
     //
     //   The path to the CLI configuration file. Default is empty.
@@ -178,9 +178,9 @@ if (keystorePropertiesFile.exists()) {
     // }
      packagingOptions {
         jniLibs {
-            // ENABLE MODERN PACKAGING FOR 16KB SUPPORT
-            // This enables 16KB alignment while maintaining compatibility
-            useLegacyPackaging true
+            // 16KB alignment is best achieved with uncompressed packaging
+            // TorrServerModule.kt handles manual extraction if needed
+            useLegacyPackaging false
         }
         // Handle potential library conflicts
         pickFirsts += ['**/libreactnative.so']

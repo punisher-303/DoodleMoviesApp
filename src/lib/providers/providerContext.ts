@@ -8,7 +8,6 @@ import {superVideoExtractor} from './superVideoExtractor';
 import {gdFlixExtracter} from './gdflixExtractor';
 import {ProviderContext} from './types';
 import * as Crypto from 'expo-crypto';
-import TorrEngineService from '../services/TorrEngineService';
 import { settingsStorage } from '../storage';
 
 // --- SECURE PROXY INTERCEPTOR ---
@@ -17,7 +16,7 @@ axios.interceptors.request.use((config) => {
   const isProxyEnabled = settingsStorage.isNetworkProxyEnabled();
   
   if (isProxyEnabled && config.url && config.url.startsWith('http')) {
-     const blocked = ['torrentio.strem.fun', 'knaben.org', 'torrentgalaxy.to', 'bitsearch.to', '1337x.to', 'yts.mx'];
+     const blocked = ['torrentio.strem.fun', 'knaben.org', 'torrentgalaxy.to', 'bitsearch.to', '1337x.to', 'yts.mx', 'tgx.rs', 'vegamovies.vodka'];
      const isTrackers = blocked.some(domain => config.url?.includes(domain));
      
      if (isTrackers) {
@@ -25,7 +24,6 @@ axios.interceptors.request.use((config) => {
         config.url = `https://api.allorigins.win/raw?url=${encodeURIComponent(config.url)}`;
         const msg = `[Proxy] Rewriting ${originalUrl} -> ${config.url}`;
         console.log(msg);
-        TorrEngineService.logMessage(msg);
      }
   }
   return config;
@@ -51,5 +49,5 @@ export const providerContext: ProviderContext = {
   Crypto,
   cheerio,
   extractors,
-  nativeLog: (msg: string) => TorrEngineService.logMessage(msg),
+  nativeLog: (msg: string) => console.log(msg),
 };

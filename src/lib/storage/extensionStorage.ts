@@ -1,11 +1,21 @@
 import { mainStorage } from './StorageService';
 
 /**
+ * Provider Source
+ */
+export interface ProviderSource {
+  author: string;
+  url: string;
+  isDefault?: boolean;
+}
+
+/**
  * Provider extension metadata
  */
 export interface ProviderExtension {
   value: string;
   display_name: string;
+  source?: { author: string; url: string };
   version: string;
   icon: string;
   disabled: boolean;
@@ -23,6 +33,7 @@ export interface ProviderExtension {
  */
 export interface ProviderModule {
   value: string;
+  sourceAuthor?: string;
   version: string;
   modules: {
     posts?: string;
@@ -40,6 +51,7 @@ export interface ProviderModule {
 export enum ExtensionKeys {
   INSTALLED_PROVIDERS = 'installedProviders',
   AVAILABLE_PROVIDERS = 'availableProviders',
+  PROVIDER_SOURCES = 'providerSources',
   PROVIDER_MODULES = 'providerModules',
   MANIFEST_CACHE = 'manifestCache',
   LAST_MANIFEST_FETCH = 'lastManifestFetch',
@@ -49,6 +61,145 @@ export enum ExtensionKeys {
  * Extension storage manager
  */
 export class ExtensionStorage {
+  private normalizeUrl(url: string): string {
+    return url.trim().replace(/\/+$/, '');
+  }
+
+  private scopedKey(baseKey: string, author?: string): string {
+    if (!author) {
+      return baseKey;
+    }
+    return `${baseKey}_${author}`;
+  }
+
+  private isProviderMatch(
+    provider: ProviderExtension,
+    providerValue: string,
+    sourceAuthor?: string,
+  ): boolean {
+    if (provider.value !== providerValue) {
+      return false;
+    }
+    if (!sourceAuthor) {
+      return true;
+    }
+    return provider.source?.author === sourceAuthor;
+  }
+
+  private isModuleMatch(
+    module: ProviderModule,
+    providerValue: string,
+    sourceAuthor?: string,
+  ): boolean {
+    if (module.value !== providerValue) {
+      return false;
+    }
+    if (!sourceAuthor) {
+      return true;
+    }
+    return module.sourceAuthor === sourceAuthor;
+  }
+
+  /**
+   * Add provider sources
+   */
+  addProviderSources(author: string, url: string): void {
+    const normalizedAuthor = author.trim();
+    const normalizedUrl = this.normalizeUrl(url);
+    if (!normalizedAuthor || !normalizedUrl) {
+      return;
+    }
+
+    const sources =
+      mainStorage.getArray<ProviderSource>(ExtensionKeys.PROVIDER_SOURCES) ||
+      [];
+
+    const existingIndex = sources.findIndex(s => s.author === normalizedAuthor);
+    if (existingIndex >= 0) {
+      sources[existingIndex] = {
+        ...sources[existingIndex],
+        url: normalizedUrl,
+      };
+    } else {
+      sources.push({
+        author: normalizedAuthor,
+        url: normalizedUrl,
+        isDefault: sources.length === 0,
+      });
+    }
+
+    if (!sources.some(s => s.isDefault) && sources.length > 0) {
+      sources[0].isDefault = true;
+    }
+
+    mainStorage.setArray(ExtensionKeys.PROVIDER_SOURCES, sources);
+  }
+
+  /**
+   * Get provider sources
+   */
+  getProviderSource(getDefault = true): ProviderSource | undefined {
+    const sources =
+      mainStorage.getArray<ProviderSource>(ExtensionKeys.PROVIDER_SOURCES) ||
+      [];
+    if (sources.length === 0) {
+      return undefined;
+    }
+    return getDefault
+      ? sources.find(s => s.isDefault) || sources[0]
+      : sources[0];
+  }
+
+  /**
+   * Get all provider sources
+   */
+  getProviderSources(): ProviderSource[] {
+    return (
+      mainStorage.getArray<ProviderSource>(ExtensionKeys.PROVIDER_SOURCES) || []
+    );
+  }
+
+  /**
+   * Remove Provider source
+   */
+  removeProviderSource(author: string): void {
+    const sources =
+      mainStorage.getArray<ProviderSource>(ExtensionKeys.PROVIDER_SOURCES) ||
+      [];
+    const removedDefault = sources.find(s => s.author === author)?.isDefault;
+    const filtered = sources.filter(s => s.author !== author);
+
+    if (
+      filtered.length > 0 &&
+      (removedDefault || !filtered.some(s => s.isDefault))
+    ) {
+      filtered[0] = { ...filtered[0], isDefault: true };
+      for (let i = 1; i < filtered.length; i += 1) {
+        filtered[i] = { ...filtered[i], isDefault: false };
+      }
+    }
+
+    mainStorage.setArray(ExtensionKeys.PROVIDER_SOURCES, filtered);
+  }
+
+  /**
+   * Set default provider source
+   */
+  setDefaultProviderSource(author: string): void {
+    const sources =
+      mainStorage.getArray<ProviderSource>(ExtensionKeys.PROVIDER_SOURCES) ||
+      [];
+    if (!sources.some(s => s.author === author)) {
+      return;
+    }
+
+    const updated = sources.map(s => ({
+      ...s,
+      isDefault: s.author === author,
+    }));
+    mainStorage.setArray(ExtensionKeys.PROVIDER_SOURCES, updated);
+  }
+
   /**
    * Get installed providers
    */
@@ -70,10 +221,10 @@ export class ExtensionStorage {
   /**
    * Get available providers
    */
-  getAvailableProviders(): ProviderExtension[] {
+  getAvailableProviders(author?: string): ProviderExtension[] {
     return (
       mainStorage.getArray<ProviderExtension>(
-        ExtensionKeys.AVAILABLE_PROVIDERS,
+        this.scopedKey(ExtensionKeys.AVAILABLE_PROVIDERS, author),
       ) || []
     );
   }
@@ -81,8 +232,8 @@ export class ExtensionStorage {
   /**
    * Set available providers
    */
-  setAvailableProviders(providers: ProviderExtension[]): void {
-    mainStorage.setArray(ExtensionKeys.AVAILABLE_PROVIDERS, providers);
+  setAvailableProviders(providers: ProviderExtension[], author?: string): void {
+    mainStorage.setArray(this.scopedKey(ExtensionKeys.AVAILABLE_PROVIDERS, author), providers);
   }
 
   /**
@@ -131,11 +282,11 @@ export class ExtensionStorage {
   /**
    * Get provider modules cache
    */
-  getProviderModules(providerValue: string): ProviderModule | undefined {
+  getProviderModules(providerValue: string, sourceAuthor?: string): ProviderModule | undefined {
     const allModules =
       mainStorage.getArray<ProviderModule>(ExtensionKeys.PROVIDER_MODULES) ||
       [];
-    return allModules.find(m => m.value === providerValue);
+    return allModules.find(m => this.isModuleMatch(m, providerValue, sourceAuthor));
   }
 
   /**
@@ -172,9 +323,9 @@ export class ExtensionStorage {
   /**
    * Get manifest cache
    */
-  getManifestCache(): ProviderExtension[] {
+  getManifestCache(author?: string): ProviderExtension[] {
     return (
-      mainStorage.getArray<ProviderExtension>(ExtensionKeys.MANIFEST_CACHE) ||
+      mainStorage.getArray<ProviderExtension>(this.scopedKey(ExtensionKeys.MANIFEST_CACHE, author)) ||
       []
     );
   }
@@ -182,23 +333,23 @@ export class ExtensionStorage {
   /**
    * Set manifest cache
    */
-  setManifestCache(manifest: ProviderExtension[]): void {
-    mainStorage.setArray(ExtensionKeys.MANIFEST_CACHE, manifest);
-    mainStorage.setNumber(ExtensionKeys.LAST_MANIFEST_FETCH, Date.now());
+  setManifestCache(manifest: ProviderExtension[], author?: string): void {
+    mainStorage.setArray(this.scopedKey(ExtensionKeys.MANIFEST_CACHE, author), manifest);
+    mainStorage.setNumber(this.scopedKey(ExtensionKeys.LAST_MANIFEST_FETCH, author), Date.now());
   }
 
   /**
    * Get last manifest fetch time
    */
-  getLastManifestFetch(): number {
-    return mainStorage.getNumber(ExtensionKeys.LAST_MANIFEST_FETCH) || 0;
+  getLastManifestFetch(author?: string): number {
+    return mainStorage.getNumber(this.scopedKey(ExtensionKeys.LAST_MANIFEST_FETCH, author)) || 0;
   }
 
   /**
    * Check if manifest cache is expired (24 hours)
    */
-  isManifestCacheExpired(): boolean {
-    const lastFetch = this.getLastManifestFetch();
+  isManifestCacheExpired(author?: string): boolean {
+    const lastFetch = this.getLastManifestFetch(author);
     const now = Date.now();
     const twentyFourHours = 24 * 60 * 60 * 1000;
     return now - lastFetch > twentyFourHours;
@@ -207,9 +358,9 @@ export class ExtensionStorage {
   /**
    * Get providers that need updates
    */
-  getProvidersNeedingUpdate(): ProviderExtension[] {
-    const installed = this.getInstalledProviders();
-    const available = this.getAvailableProviders();
+  getProvidersNeedingUpdate(author?: string): ProviderExtension[] {
+    const installed = this.getInstalledProviders().filter(p => !author || p.source?.author === author);
+    const available = this.getAvailableProviders(author);
 
     return installed.filter(installedProvider => {
       const availableProvider = available.find(
@@ -226,11 +377,27 @@ export class ExtensionStorage {
    * Clear all extension data
    */
   clearAll(): void {
+    const sources = this.getProviderSources();
+
     mainStorage.delete(ExtensionKeys.INSTALLED_PROVIDERS);
     mainStorage.delete(ExtensionKeys.AVAILABLE_PROVIDERS);
     mainStorage.delete(ExtensionKeys.PROVIDER_MODULES);
     mainStorage.delete(ExtensionKeys.MANIFEST_CACHE);
     mainStorage.delete(ExtensionKeys.LAST_MANIFEST_FETCH);
+
+    sources.forEach(source => {
+      mainStorage.delete(
+        this.scopedKey(ExtensionKeys.AVAILABLE_PROVIDERS, source.author),
+      );
+      mainStorage.delete(
+        this.scopedKey(ExtensionKeys.MANIFEST_CACHE, source.author),
+      );
+      mainStorage.delete(
+        this.scopedKey(ExtensionKeys.LAST_MANIFEST_FETCH, source.author),
+      );
+    });
+
+    mainStorage.delete(ExtensionKeys.PROVIDER_SOURCES);
   }
 }
 

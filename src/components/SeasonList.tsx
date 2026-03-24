@@ -57,7 +57,7 @@ interface SeasonListProps {
     provider?: string;
     poster?: string;
   }>;
-  onSelectTorrent?: (link: string, title: string) => void;
+  onSelectTorrent?: (link: string, title: string, season?: number, episode?: number) => void;
 }
 
 interface PlayHandlerProps {
@@ -381,7 +381,12 @@ const SeasonList: React.FC<SeasonListProps> = ({
         }
 
         if (onSelectTorrent && providerValue.toLowerCase() === 'torrent') {
-          onSelectTorrent(link, secondaryTitle || primaryTitle);
+          onSelectTorrent(
+            link, 
+            secondaryTitle || primaryTitle, 
+            activeSeason?.seasonNumber || (activeSeason?.title?.match(/Season (\d+)/i)?.[1] ? parseInt(activeSeason.title.match(/Season (\d+)/i)![1]) : undefined), 
+            episodeData[linkIndex]?.episodeNumber || (episodeData[linkIndex]?.title?.match(/Episode (\d+)/i)?.[1] ? parseInt(episodeData[linkIndex].title.match(/Episode (\d+)/i)![1]) : undefined)
+          );
           return;
         }
 
@@ -390,7 +395,12 @@ const SeasonList: React.FC<SeasonListProps> = ({
       }
 
       if (onSelectTorrent && providerValue.toLowerCase() === 'torrent') {
-        onSelectTorrent(link, secondaryTitle || primaryTitle);
+        onSelectTorrent(
+            link, 
+            secondaryTitle || primaryTitle,
+            activeSeason?.seasonNumber || (activeSeason?.title?.match(/Season (\d+)/i)?.[1] ? parseInt(activeSeason.title.match(/Season (\d+)/i)![1]) : undefined), 
+            episodeData[linkIndex]?.episodeNumber || (episodeData[linkIndex]?.title?.match(/Episode (\d+)/i)?.[1] ? parseInt(episodeData[linkIndex].title.match(/Episode (\d+)/i)![1]) : undefined)
+        );
         return;
       }
 
@@ -484,46 +494,87 @@ const SeasonList: React.FC<SeasonListProps> = ({
             }
         `}>
           <View className="flex-row w-full justify-between gap-1 items-center">
-            <TouchableOpacity
-              className={`bg-zinc-900 rounded-xl h-12 px-4 flex-row items-center gap-x-2 border border-white/40 ${titleAlignment}`}
-              style={{ flex: 1 }}
-              onPress={() =>
-                playHandler({
-                  linkIndex: index,
-                  type: type,
-                  primaryTitle: metaTitle,
-                  secondaryTitle: item.title,
-                  seasonTitle: activeSeason?.title || '',
-                  episodeData: filteredAndSortedEpisodes,
-                })
-              }
-              onLongPress={() => onLongPressHandler(true, item.link, 'series')}>
-              <Ionicons name="play-circle" size={26} color={primary} />
-              <View className="flex-1 ml-1">
-                <MarqueeText 
-                    text={item.title} 
-                    style={{ color: 'white', fontWeight: '500', fontSize: 13 }} 
-                />
+            {providerValue.toLowerCase() === 'torrent' ? (
+              <View className="flex-row gap-2 h-12 flex-1">
+                <TouchableOpacity 
+                  className={`bg-zinc-900 rounded-xl h-12 px-4 flex-row items-center gap-x-2 border border-white/40 flex-1 ${titleAlignment}`}
+                  onPress={() => 
+                    playHandler({
+                      linkIndex: index,
+                      type: item.episodesLink ? 'series' : type,
+                      primaryTitle: metaTitle,
+                      secondaryTitle: item.title,
+                      seasonTitle: activeSeason?.title || '',
+                      episodeData: filteredAndSortedEpisodes,
+                    })
+                  }
+                >
+                  <Ionicons name="cloud-download" size={24} color={primary} />
+                  <View className="flex-1 ml-1">
+                    <MarqueeText 
+                        text={'Download - ' + item.title} 
+                        style={{ color: 'white', fontWeight: '500', fontSize: 13 }} 
+                    />
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  onPress={async () => {
+                    await Clipboard.setStringAsync(item.link);
+                    ToastAndroid.show('Link copied', ToastAndroid.SHORT);
+                  }}
+                  className="bg-white/5 w-12 rounded-xl items-center justify-center border border-white/10"
+                >
+                  <Ionicons name="copy-outline" size={20} color="#CBD5E1" />
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
+            ) : (
+              <>
+                <TouchableOpacity
+                  className={`bg-zinc-900 rounded-xl h-12 px-4 flex-row items-center gap-x-2 border border-white/40 ${titleAlignment}`}
+                  style={{ flex: 1 }}
+                  onPress={() =>
+                    playHandler({
+                      linkIndex: index,
+                      type: item.episodesLink ? 'series' : type,
+                      primaryTitle: metaTitle,
+                      secondaryTitle: item.title,
+                      seasonTitle: activeSeason?.title || '',
+                      episodeData: filteredAndSortedEpisodes,
+                    })
+                  }
+                  onLongPress={() => onLongPressHandler(true, item.link, 'series')}>
+                  <Ionicons 
+                    name="play-circle" 
+                    size={26} 
+                    color={primary} 
+                  />
+                  <View className="flex-1 ml-1">
+                    <MarqueeText 
+                        text={item.title} 
+                        style={{ color: 'white', fontWeight: '500', fontSize: 13 }} 
+                    />
+                  </View>
+                </TouchableOpacity>
 
-
-            <Downloader
-              providerValue={providerValue}
-              link={item.link}
-              type={type}
-              className="h-12 w-11"
-              title={
-                metaTitle.length > 30
-                  ? metaTitle.slice(0, 30) + '... ' + item.title
-                  : metaTitle + ' ' + item.title
-              }
-              fileName={(
-                metaTitle +
-                activeSeason.title +
-                item.title
-              ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
-            />
+                <Downloader
+                  providerValue={providerValue}
+                  link={item.link}
+                  type={type}
+                  className="h-12 w-11"
+                  title={
+                    metaTitle.length > 30
+                      ? metaTitle.slice(0, 30) + '... ' + item.title
+                      : metaTitle + ' ' + item.title
+                  }
+                  fileName={(
+                    metaTitle +
+                    activeSeason.title +
+                    item.title
+                  ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
+                />
+              </>
+            )}
           </View>
         </View>
       );
@@ -560,48 +611,89 @@ const SeasonList: React.FC<SeasonListProps> = ({
             }
         `}>
           <View className="flex-row w-full justify-between gap-1 items-center">
-            <TouchableOpacity
-              className={`bg-zinc-900 rounded-xl h-12 px-4 flex-row items-center gap-x-2 border border-white/40 ${titleAlignment}`}
-              style={{ flex: 1 }}
-              onPress={() =>
-                playHandler({
-                  linkIndex: index,
-                  type: type,
-                  primaryTitle: metaTitle,
-                  secondaryTitle: item.title,
-                  seasonTitle: activeSeason?.title || '',
-                  episodeData: filteredAndSortedDirectLinks,
-                })
-              }
-              onLongPress={() =>
-                onLongPressHandler(true, item.link, item?.type || 'series')
-              }>
-              <Ionicons name="play-circle" size={26} color={primary} />
-              <View className="flex-1 ml-1">
-                <MarqueeText
-                    text={activeSeason?.directLinks?.length && activeSeason?.directLinks?.length > 1 ? item.title : 'Play'}
-                    style={{ color: 'white', fontWeight: '500', fontSize: 13 }}
-                />
+            {providerValue.toLowerCase() === 'torrent' ? (
+              <View className="flex-row gap-2 h-12 flex-1">
+                <TouchableOpacity
+                  className={`bg-zinc-900 rounded-xl h-12 px-4 flex-row items-center gap-x-2 border border-white/40 flex-1 ${titleAlignment}`}
+                  onPress={() =>
+                    playHandler({
+                      linkIndex: index,
+                      type: type,
+                      primaryTitle: metaTitle,
+                      secondaryTitle: item.title,
+                      seasonTitle: activeSeason?.title || '',
+                      episodeData: filteredAndSortedDirectLinks,
+                    })
+                  }
+                >
+                  <Ionicons name="cloud-download" size={24} color={primary} />
+                  <View className="flex-1 ml-1">
+                    <MarqueeText
+                        text={'Download - ' + item.title}
+                        style={{ color: 'white', fontWeight: '500', fontSize: 13 }}
+                    />
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  onPress={async () => {
+                    await Clipboard.setStringAsync(item.link);
+                    ToastAndroid.show('Link copied', ToastAndroid.SHORT);
+                  }}
+                  className="bg-white/5 w-12 rounded-xl items-center justify-center border border-white/10"
+                >
+                  <Ionicons name="copy-outline" size={20} color="#CBD5E1" />
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
+            ) : (
+              <>
+                <TouchableOpacity
+                  className={`bg-zinc-900 rounded-xl h-12 px-4 flex-row items-center gap-x-2 border border-white/40 ${titleAlignment}`}
+                  style={{ flex: 1 }}
+                  onPress={() =>
+                    playHandler({
+                      linkIndex: index,
+                      type: type,
+                      primaryTitle: metaTitle,
+                      secondaryTitle: item.title,
+                      seasonTitle: activeSeason?.title || '',
+                      episodeData: filteredAndSortedDirectLinks,
+                    })
+                  }
+                  onLongPress={() =>
+                    onLongPressHandler(true, item.link, item?.type || 'series')
+                  }>
+                  <Ionicons 
+                    name="play-circle" 
+                    size={26} 
+                    color={primary} 
+                  />
+                  <View className="flex-1 ml-1">
+                    <MarqueeText
+                        text={activeSeason?.directLinks?.length && activeSeason?.directLinks?.length > 1 ? item.title : 'Play'}
+                        style={{ color: 'white', fontWeight: '500', fontSize: 13 }}
+                    />
+                  </View>
+                </TouchableOpacity>
 
-
-            <Downloader
-              providerValue={providerValue}
-              link={item.link}
-              type={item?.type || type}
-              className="h-12 w-11"
-              title={
-                metaTitle.length > 30
-                  ? metaTitle.slice(0, 30) + '... ' + item.title
-                  : metaTitle + ' ' + item.title
-              }
-              fileName={(
-                metaTitle +
-                activeSeason.title +
-                item.title
-              ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
-            />
+                <Downloader
+                  providerValue={providerValue}
+                  link={item.link}
+                  type={item?.type || type}
+                  className="h-12 w-11"
+                  title={
+                    metaTitle.length > 30
+                      ? metaTitle.slice(0, 30) + '... ' + item.title
+                      : metaTitle + ' ' + item.title
+                  }
+                  fileName={(
+                    metaTitle +
+                    activeSeason.title +
+                    item.title
+                  ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
+                />
+              </>
+            )}
           </View>
         </View>
       );
@@ -802,45 +894,56 @@ const SeasonList: React.FC<SeasonListProps> = ({
           <View>
             <FlatList
               ref={flatListRef}
-              horizontal
-              showsHorizontalScrollIndicator={false}
               data={filteredAndSortedEpisodes.length > 0 ? filteredAndSortedEpisodes : filteredAndSortedDirectLinks}
-              keyExtractor={(item, index) => `ep-chip-${item.link}-${index}`}
-              contentContainerStyle={{ paddingHorizontal: 4, gap: 10 }}
+              keyExtractor={(item, index) => `ep-box-${item.link}-${index}`}
+              contentContainerStyle={{ gap: 12 }}
               renderItem={({ item, index }) => {
                 const isSelected = selectedEpisodeIndex === index;
                 return (
-                  <TouchableOpacity
-                    onPress={() => {
-                        setSelectedEpisodeIndex(index);
-                        playHandler({
-                            linkIndex: index,
-                            type: item.episodesLink ? 'series' : type,
-                            primaryTitle: metaTitle,
-                            secondaryTitle: item.title,
-                            seasonTitle: activeSeason?.title || '',
-                            episodeData: filteredAndSortedEpisodes.length > 0 ? filteredAndSortedEpisodes : filteredAndSortedDirectLinks,
-                        });
-                    }}
-                    style={{ 
-                        backgroundColor: isSelected ? primary : '#18181b',
-                        borderColor: isSelected ? primary : '#27272a',
-                        borderWidth: 1,
-                        paddingHorizontal: 12,
-                        paddingVertical: 10,
-                        borderRadius: 12,
-                        width: 85,
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
+                  <View 
+                    style={{ backgroundColor: isSelected ? primary + '10' : '#121212' }}
+                    className="flex-row items-center gap-3 p-3 rounded-2xl border border-white/10"
                   >
-                    <Text 
-                        style={{ color: isSelected ? 'black' : 'white', fontWeight: 'bold', fontSize: 13 }}
+                    <View className="flex-1">
+                      <Text 
+                        className="text-white font-bold text-sm"
                         numberOfLines={1}
-                    >
-                        {item.title.match(/Episode (\d+)/i) ? `E${item.title.match(/Episode (\d+)/i)![1]}` : item.title}
-                    </Text>
-                  </TouchableOpacity>
+                      >
+                        {item.title}
+                      </Text>
+                    </View>
+
+                    <View className="flex-row gap-2">
+                      <TouchableOpacity 
+                        onPress={async () => {
+                          await Clipboard.setStringAsync(item.link);
+                          ToastAndroid.show('Link copied', ToastAndroid.SHORT);
+                        }}
+                        className="bg-white/5 h-10 w-10 rounded-xl items-center justify-center border border-white/10"
+                      >
+                        <Ionicons name="copy-outline" size={18} color="#CBD5E1" />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity 
+                        onPress={() => {
+                          setSelectedEpisodeIndex(index);
+                          playHandler({
+                              linkIndex: index,
+                              type: item.episodesLink ? 'series' : type,
+                              primaryTitle: metaTitle,
+                              secondaryTitle: item.title,
+                              seasonTitle: activeSeason?.title || '',
+                              episodeData: filteredAndSortedEpisodes.length > 0 ? filteredAndSortedEpisodes : filteredAndSortedDirectLinks,
+                          });
+                        }}
+                        style={{ backgroundColor: isSelected ? primary : '#262626' }}
+                        className="h-10 px-4 rounded-xl flex-row items-center justify-center"
+                      >
+                        <Ionicons name="download" size={18} color={isSelected ? "black" : "white"} />
+                        <Text style={{ color: isSelected ? "black" : "white" }} className="font-black ml-2 text-xs">Download</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 );
               }}
             />
@@ -988,4 +1091,4 @@ const SeasonList: React.FC<SeasonListProps> = ({
   );
 };
 
-export default SeasonList;
+export default React.memo(SeasonList);

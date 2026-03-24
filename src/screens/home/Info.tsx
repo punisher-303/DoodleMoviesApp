@@ -103,7 +103,7 @@ const getTmdbTrailer = async (
           searchType === 'movie' ? findData.movie_results : findData.tv_results;
         if (results && results.length > 0) tmdbId = results[0].id;
       } catch (e) {
-        console.warn('IMDB lookup failed');
+        // Silently fail IMDB lookup
       }
     }
 
@@ -175,6 +175,7 @@ const FlipHeader = ({
 
   const flipToVideo = useCallback(() => {
     setShowVideo(true);
+    hasAutoPlayed.current = true;
     Animated.timing(animatedValue, {
       toValue: 180,
       duration: 600,
@@ -195,6 +196,21 @@ const FlipHeader = ({
       useNativeDriver: true,
     }).start();
   }, [animatedValue]);
+
+  const hasAutoPlayed = useRef(false);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (trailerId && !showVideo && !hasAutoPlayed.current) {
+      timeout = setTimeout(() => {
+        flipToVideo();
+        hasAutoPlayed.current = true;
+      }, 4000);
+    }
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [trailerId, flipToVideo, showVideo]);
 
   const onStateChange = useCallback((state: string) => {
     if (state === 'ended') setIsPlaying(false);
@@ -257,7 +273,6 @@ const FlipHeader = ({
             contentFit="cover"
             transition={300}
             cachePolicy="memory-disk"
-            onError={e => console.warn('Background image failed:', e)}
           />
         </Skeleton>
         <LinearGradient
@@ -381,10 +396,12 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
     settingsStorage.getBool('useExternalPlayer', false),
   );
   const [alwaysUseExternalDownload, setAlwaysUseExternalDownload] = useState(
-    settingsStorage.getBool('alwaysExternalDownloader', false),
+    settingsStorage.isExternalDownloaderEnabled(),
   );
   const [selectedTorrentLink, setSelectedTorrentLink] = useState<string | null>(null);
   const [selectedTorrentTitle, setSelectedTorrentTitle] = useState<string>('');
+  const [selectedSeason, setSelectedSeason] = useState<number | undefined>();
+  const [selectedEpisode, setSelectedEpisode] = useState<number | undefined>();
 
   // Trailer State
   const [ytVideoId, setYtVideoId] = useState<string | null>(null);
@@ -497,6 +514,8 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
       if (movieItem && movieItem.directLinks && movieItem.directLinks[0]) {
         setSelectedTorrentLink(movieItem.directLinks[0].link);
         setSelectedTorrentTitle(displayTitle);
+        setSelectedSeason(undefined);
+        setSelectedEpisode(undefined);
       }
     }
   }, [info, filteredLinkList, selectedTorrentLink, route.params.provider, provider.value, displayTitle]);
@@ -758,10 +777,7 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                         className="p-1 rounded-full"
                         onPress={() => {
                           const newVal = !alwaysUseExternalDownload;
-                          settingsStorage.setBool(
-                            'alwaysExternalDownloader',
-                            newVal,
-                          );
+                          settingsStorage.setExternalDownloaderEnabled(newVal);
                           setAlwaysUseExternalDownload(newVal);
                         }}>
                         <MaterialCommunityIcons
@@ -908,9 +924,11 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                                     type={info?.type || 'series'}
                                     metaTitle={displayTitle}
                                     routeParams={route.params}
-                                    onSelectTorrent={(link, title) => {
+                                    onSelectTorrent={(link, title, season, episode) => {
                                         setSelectedTorrentLink(link);
                                         setSelectedTorrentTitle(title);
+                                        setSelectedSeason(season);
+                                        setSelectedEpisode(episode);
                                     }}
                                 />
                                 {selectedTorrentLink && (
@@ -922,18 +940,10 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                                             tmdbId={String(route.params.tmdbId || '')}
                                             imdbId={info?.imdbId || ''}
                                             title={selectedTorrentTitle}
-                                            onPlay={(stream) => {
-                                                navigation.navigate('Player', {
-                                                    linkIndex: 0,
-                                                    episodeList: [{ title: stream.name, link: stream.link }],
-                                                    type: info?.type || 'series',
-                                                    primaryTitle: displayTitle,
-                                                    secondaryTitle: selectedTorrentTitle,
-                                                    poster: posterImage,
-                                                    providerValue: route.params.provider || provider.value,
-                                                    infoUrl: route.params.link,
-                                                });
-                                            }}
+                                            mainTitle={displayTitle}
+                                            year={meta?.year}
+                                            season={selectedSeason}
+                                            episode={selectedEpisode}
                                         />
                                     </View>
                                 )}
@@ -956,18 +966,10 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                                             tmdbId={String(route.params.tmdbId || '')}
                                             imdbId={info?.imdbId || ''}
                                             title={selectedTorrentTitle}
-                                            onPlay={(stream) => {
-                                                navigation.navigate('Player', {
-                                                    linkIndex: 0,
-                                                    episodeList: [{ title: stream.name, link: stream.link }],
-                                                    type: info?.type || 'series',
-                                                    primaryTitle: displayTitle,
-                                                    secondaryTitle: selectedTorrentTitle,
-                                                    poster: posterImage,
-                                                    providerValue: route.params.provider || provider.value,
-                                                    infoUrl: route.params.link,
-                                                });
-                                            }}
+                                            mainTitle={displayTitle}
+                                            year={meta?.year}
+                                            season={selectedSeason}
+                                            episode={selectedEpisode}
                                         />
                                     </View>
                                 ) : (
@@ -983,9 +985,11 @@ export default function Info({ route, navigation }: Props): React.JSX.Element {
                                         type={info?.type || 'series'}
                                         metaTitle={displayTitle}
                                         routeParams={route.params}
-                                        onSelectTorrent={(link, title) => {
+                                        onSelectTorrent={(link, title, season, episode) => {
                                             setSelectedTorrentLink(link);
                                             setSelectedTorrentTitle(title);
+                                            setSelectedSeason(season);
+                                            setSelectedEpisode(episode);
                                         }}
                                     />
                                 )}

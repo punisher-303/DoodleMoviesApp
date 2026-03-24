@@ -34,4 +34,5 @@ export type {
   ExtensionKeys,
   ProviderExtension,
   ProviderModule,
+  ProviderSource,
 } from './extensionStorage';

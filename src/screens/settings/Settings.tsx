@@ -21,7 +21,6 @@ import {
   ProviderExtension,
   SettingsKeys,
 } from '../../lib/storage';
-import { debridService } from '../../lib/services/DebridService';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import { socialLinks } from '../../lib/constants';
@@ -140,101 +139,6 @@ const Settings = ({ navigation }: Props) => {
   const { clearHistory } = useWatchHistoryStore(state => state);
   const { appMode, setAppMode } = useAppModeStore(state => state);
 
-  const saveTorrServerUrl = useCallback((url: string) => {
-    setTorrServerUrl(url);
-    settingsStorage.setTorrServerUrl(url);
-  }, []);
-
-  const [engineError, setEngineError] = useState<string | null>(null);
-
-  const checkEngine = useCallback(async (url: string) => {
-    if (!url) return;
-    console.log('[Settings] Checking engine at:', url);
-    setEngineStatus('checking');
-    setEngineError(null);
-    try {
-      // If it's the local address, we can try to start it ourselves
-      if (url.includes('127.0.0.1') || url.includes('localhost')) {
-        const TorrEngineService = require('../../lib/services/TorrEngineService').default;
-        try {
-          console.log('[Settings] Triggering ensureEngine for local address');
-          const success = await TorrEngineService.ensureEngine();
-          setEngineStatus(success ? 'active' : 'offline');
-          if (!success) setEngineError('Engine started but not responding (Timeout)');
-        } catch (err: any) {
-          console.error('[Settings] engine start error:', err);
-          setEngineStatus('offline');
-          setEngineError(err.message || 'Start Exception');
-        }
-        return;
-      }
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
-      const res = await fetch(`${url}/echo`, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      if (res.ok) {
-        setEngineStatus('active');
-        setEngineError(null);
-      } else {
-        setEngineStatus('offline');
-        setEngineError(`HTTP Error: ${res.status}`);
-      }
-    } catch (e: any) {
-      setEngineStatus('offline');
-      setEngineError(e.message || 'Connection Refused');
-    }
-  }, []);
-
-  useEffect(() => {
-    checkEngine(torrServerUrl);
-  }, [torrServerUrl, checkEngine]);
-
-  // Real-Debrid Polling
-  useEffect(() => {
-    let interval: any;
-    if (isPollingRD && rdUserCode) {
-      interval = setInterval(async () => {
-        const success = await debridService.pollRDCredentials(rdUserCode);
-        if (success) {
-          setIsRDLoggedIn(true);
-          setRdUserCode(null);
-          setIsPollingRD(false);
-          ToastAndroid.show('Real-Debrid Login Successful!', ToastAndroid.SHORT);
-          clearInterval(interval);
-        }
-      }, 5000);
-    }
-    return () => clearInterval(interval);
-  }, [isPollingRD, rdUserCode]);
-
-  const handleRDLogin = async () => {
-    try {
-      const data = await debridService.startRDLogin();
-      if (data) {
-        setRdUserCode(data.user_code);
-        setIsPollingRD(true);
-        Clipboard.setString(data.user_code);
-        ToastAndroid.show(`Code ${data.user_code} copied to clipboard!`, ToastAndroid.SHORT);
-      }
-    } catch (error) {
-       ToastAndroid.show('Failed to start login', ToastAndroid.SHORT);
-    }
-  };
-
-  const logoutRD = () => {
-    settingsStorage.setRealDebridToken('');
-    settingsStorage.setRealDebridRefreshToken('');
-    settingsStorage.setRealDebridExpiry('');
-    setIsRDLoggedIn(false);
-    ToastAndroid.show('Logged out from Real-Debrid', ToastAndroid.SHORT);
-  };
-
-  const handleTorBoxSave = () => {
-    settingsStorage.setTorBoxKey(torboxKey);
-    ToastAndroid.show('TorBox Key Saved', ToastAndroid.SHORT);
-  };
-
   const [watchTogetherMode, setWatchTogetherMode] = useState(
     getWatchTogetherMode(),
   );
@@ -242,75 +146,8 @@ const Settings = ({ navigation }: Props) => {
     settingsStorage.isNetworkProxyEnabled(),
   );
   const [syncLink, setSyncLink] = useState('');
-  const [torrServerUrl, setTorrServerUrl] = useState(
-    settingsStorage.getTorrServerUrl(),
-  );
-  const [engineStatus, setEngineStatus] = useState<'checking' | 'active' | 'offline'>('checking');
-  
-  // Debrid State
-  const [useDebrid, setUseDebrid] = useState(settingsStorage.isDebridEnabled());
-  const [selectedDebrid, setSelectedDebrid] = useState(settingsStorage.getDebridService());
-  const [torboxKey, setTorboxKey] = useState(settingsStorage.getTorBoxKey() || '');
-  const [rdUserCode, setRdUserCode] = useState<string | null>(null);
-  const [isRDLoggedIn, setIsRDLoggedIn] = useState(!!settingsStorage.getRealDebridToken());
-  const [isPollingRD, setIsPollingRD] = useState(false);
-  const [showLogs, setShowLogs] = useState(false);
-  const [logs, setLogs] = useState('');
-  const [isBridgeActive, setIsBridgeActive] = useState(false);
-
-  useEffect(() => {
-    const { NativeModules } = require('react-native');
-    setIsBridgeActive(!!(NativeModules && NativeModules['TorrServerModule']));
-  }, []);
   // ---------------------------------
 
-  // --- PROVIDER LATENCY Check ---
-  const [pingStatus, setPingStatus] = useState<Record<string, number | null>>({});
-
-  useEffect(() => {
-    const checkAllProviders = async () => {
-      const results: Record<string, number | null> = {};
-
-      const checkProvider = async (p: ProviderExtension) => {
-        if (!p.sourceUrl) {
-          results[p.value] = null;
-          return;
-        }
-
-        const start = Date.now();
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
-
-          await fetch(p.sourceUrl, {
-            method: 'HEAD',
-            signal: controller.signal,
-            cache: 'no-cache'
-          });
-          clearTimeout(timeoutId);
-          const end = Date.now();
-          results[p.value] = end - start;
-        } catch (e) {
-          results[p.value] = -1; // Error/Timeout
-        }
-      };
-
-      await Promise.all(installedProviders.map(checkProvider));
-      setPingStatus(results);
-    };
-
-    if (installedProviders.length > 0) {
-      checkAllProviders();
-    }
-  }, [installedProviders]);
-
-  const getLatencyColor = (latency: number | null | undefined) => {
-    if (latency === undefined || latency === null) return 'gray';
-    if (latency === -1) return '#EF4444'; // Red (Error)
-    if (latency < 300) return '#22C55E'; // Green (Good)
-    if (latency < 800) return '#EAB308'; // Yellow (Okay)
-    return '#EF4444'; // Red (Slow)
-  };
 
   const handleProviderSelect = useCallback(
     (item: ProviderExtension) => {
@@ -342,18 +179,6 @@ const Settings = ({ navigation }: Props) => {
           borderColor: isSelected ? primary : '#333333',
         }}>
         <View className="flex-col items-center justify-center h-full p-2 relative">
-          {/* Latency Dot */}
-          <View
-            style={{
-              position: 'absolute',
-              top: 6,
-              left: 6,
-              width: 8,
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: getLatencyColor(pingStatus[item.value])
-            }}
-          />
 
           <RenderProviderFlagIcon type={item.type} />
           <Text
@@ -369,7 +194,7 @@ const Settings = ({ navigation }: Props) => {
         </View>
       </TouchableOpacity>
     ),
-    [handleProviderSelect, primary, pingStatus],
+    [handleProviderSelect, primary],
   );
 
   const providersList = useMemo(
@@ -623,6 +448,12 @@ const Settings = ({ navigation }: Props) => {
                 text="Provider Manager"
                 onPress={() => navigation.navigate('Extensions')}
                 primaryColor={primary}
+              />
+              <InternalOptionRow
+                icon={<MaterialCommunityIcons name="link-plus" />}
+                text="Provider Sources"
+                onPress={() => navigation.navigate('ProviderSourceManager')}
+                primaryColor={primary}
                 isLast={true}
               />
             </View>
@@ -751,183 +582,6 @@ const Settings = ({ navigation }: Props) => {
             </View>
           </View>
         </AnimatedSection>
-        <AnimatedSection delay={200}>
-          <View className="mb-6 flex-col gap-3">
-            <View className="flex-row items-center justify-between px-1">
-                 <Text className="text-gray-400 text-sm">Torrent Engine (TorrServer)</Text>
-                 <View className="flex-row items-center">
-                    <View 
-                       style={{ 
-                         width: 6, 
-                         height: 6, 
-                         borderRadius: 3, 
-                         marginRight: 4,
-                         backgroundColor: isBridgeActive ? '#22C55E' : '#EF4444'
-                       }} 
-                    />
-                    <Text className="text-[8px] text-gray-500 mr-2">Bridge: {isBridgeActive ? 'OK' : 'FAIL'}</Text>
-                    <View 
-                       style={{ 
-                         width: 8, 
-                         height: 8, 
-                         borderRadius: 4, 
-                         backgroundColor: engineStatus === 'active' ? '#22C55E' : (engineStatus === 'checking' ? '#EAB308' : '#EF4444')
-                       }} 
-                    />
-                    <Text className="text-[10px] ml-1.5" style={{ color: engineStatus === 'active' ? '#22C55E' : (engineStatus === 'checking' ? '#EAB308' : '#EF4444') }}>
-                        {engineStatus === 'active' ? 'Engine Active' : (engineStatus === 'checking' ? 'Checking...' : 'Engine Undetected')}
-                    </Text>
-                </View>
-            </View>
-            <View className="bg-[#1A1A1A] rounded-xl p-4">
-              <Text className="text-gray-400 text-xs mb-2">
-                Base URL (Auto-detected if local)
-              </Text>
-              <View className="flex-row items-center bg-white/5 rounded-lg border border-white/10 px-3 mb-3">
-                <MaterialCommunityIcons name="server" size={20} color={primary} />
-                <TextInput
-                  className="flex-1 text-white p-2 h-11"
-                  placeholder="http://127.0.0.1:8090"
-                  placeholderTextColor="#666"
-                  value={torrServerUrl}
-                  onChangeText={saveTorrServerUrl}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-              </View>
-
-              <TouchableOpacity 
-                disabled={engineStatus === 'checking'}
-                onPress={async () => {
-                    const TorrEngineService = require('../../lib/services/TorrEngineService').default;
-                    await TorrEngineService.clearEngineData();
-                    checkEngine(torrServerUrl);
-                }}
-                className="flex-row items-center justify-center p-3 rounded-lg border border-[#333] bg-[#222] mb-2">
-                <MaterialCommunityIcons name="refresh" size={18} color="white" />
-                <Text className="text-white ml-2 text-xs font-medium">Reset & Restart Engine</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                onPress={async () => {
-                   const TorrEngineService = require('../../lib/services/TorrEngineService').default;
-                   const engineLogs = await TorrEngineService.getEngineLogs();
-                   setLogs(engineLogs);
-                   setShowLogs(true);
-                }}
-                className="flex-row items-center justify-center p-3 rounded-lg border border-[#333] bg-[#222]">
-                <MaterialCommunityIcons name="text-box-search-outline" size={18} color={primary} />
-                <Text className="text-white ml-2 text-xs font-medium">View Engine Logs</Text>
-              </TouchableOpacity>
-
-              {engineError && (
-                <Text className="text-[#EF4444] text-[10px] mt-2 text-center italic">
-                    {engineError}
-                </Text>
-              )}
-
-              <Text className="text-gray-500 text-[10px] mt-3 italic text-center">
-                {engineError ? (
-                  <Text className="text-red-400 font-bold">{engineError}</Text>
-                ) : (
-                  engineStatus === 'active' 
-                    ? 'Successfully connected to the torrent engine.' 
-                    : 'Engine offline? Try "Reset & Restart" to clear corrupt data.'
-                )}
-              </Text>
-            </View>
-          </View>
-        </AnimatedSection>
-        <AnimatedSection delay={210}>
-          <View className="mb-6 flex-col gap-3">
-            <View className="flex-row items-center justify-between px-1">
-                <Text className="text-gray-400 text-sm">Debrid Support</Text>
-                <Switch
-                  trackColor={{ false: '#3f3f46', true: primary }}
-                  thumbColor={'white'}
-                  value={useDebrid}
-                  onValueChange={(val) => {
-                    setUseDebrid(val);
-                    settingsStorage.setDebridEnabled(val);
-                  }}
-                />
-            </View>
-            
-            {useDebrid && (
-              <View className="bg-[#1A1A1A] rounded-xl p-4 gap-y-4">
-                <View className="flex-row items-center justify-between bg-white/5 p-3 rounded-lg">
-                    <Text className="text-white">Service</Text>
-                    <View className="flex-row gap-2">
-                        {['None', 'Real-Debrid', 'TorBox'].map(s => (
-                            <TouchableOpacity 
-                                key={s}
-                                onPress={() => {
-                                    setSelectedDebrid(s);
-                                    settingsStorage.setDebridService(s);
-                                }}
-                                className={`px-3 py-1.5 rounded-md ${selectedDebrid === s ? 'bg-blue-600' : 'bg-zinc-800'}`}
-                            >
-                                <Text className="text-white text-xs font-bold">{s}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-
-                {selectedDebrid === 'Real-Debrid' && (
-                  <View className="gap-y-3">
-                    {isRDLoggedIn ? (
-                        <TouchableOpacity 
-                            onPress={logoutRD}
-                            className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg flex-row items-center justify-center"
-                        >
-                            <MaterialCommunityIcons name="logout" size={18} color="#EF4444" />
-                            <Text className="text-[#EF4444] ml-2 font-bold">Logout from Real-Debrid</Text>
-                        </TouchableOpacity>
-                    ) : (
-                        <View className="gap-y-3">
-                            {rdUserCode ? (
-                                <View className="bg-white/5 p-4 rounded-lg items-center">
-                                    <Text className="text-gray-400 text-xs mb-1">Enter this code at real-debrid.com/device:</Text>
-                                    <Text className="text-white text-3xl font-bold tracking-[8px] my-2">{rdUserCode}</Text>
-                                    <ActivityIndicator color={primary} size="small" className="mt-2" />
-                                    <Text className="text-gray-500 text-[10px] mt-2 italic">Waiting for approval...</Text>
-                                </View>
-                            ) : (
-                                <TouchableOpacity 
-                                    onPress={handleRDLogin}
-                                    className="bg-blue-600 p-3 rounded-lg flex-row items-center justify-center"
-                                >
-                                    <MaterialCommunityIcons name="login" size={18} color="white" />
-                                    <Text className="text-white ml-2 font-bold">Login with Real-Debrid</Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    )}
-                  </View>
-                )}
-
-                {selectedDebrid === 'TorBox' && (
-                  <View className="gap-y-2">
-                    <Text className="text-gray-400 text-xs">TorBox API Key</Text>
-                    <View className="flex-row items-center bg-white/5 rounded-lg px-3">
-                        <TextInput
-                            className="flex-1 text-white p-2 h-11"
-                            placeholder="Enter API Key"
-                            placeholderTextColor="#666"
-                            value={torboxKey}
-                            onChangeText={setTorboxKey}
-                            secureTextEntry
-                        />
-                        <TouchableOpacity onPress={handleTorBoxSave} className="bg-blue-600 px-3 py-1.5 rounded-md">
-                            <Text className="text-white text-xs font-bold">Save</Text>
-                        </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
-              </View>
-            )}
-          </View>
-        </AnimatedSection>
 
         <AnimatedSection delay={250}>
           <View className="mb-6">
@@ -1048,30 +702,6 @@ const Settings = ({ navigation }: Props) => {
           </View>
         </AnimatedSection>
       </View>
-      {/* Engine Logs Modal */}
-      {showLogs && (
-        <View className="absolute top-0 left-0 right-0 bottom-0 z-[999] bg-black/90 p-5 pt-12">
-            <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-white text-lg font-bold">Engine Diagnostics</Text>
-                <TouchableOpacity onPress={() => setShowLogs(false)}>
-                    <AntDesign name="close" size={24} color="white" />
-                </TouchableOpacity>
-            </View>
-            <ScrollView className="flex-1 bg-[#111] rounded-lg p-3 border border-[#333]">
-                <Text className="text-[#00FF00] font-mono text-[10px]">
-                    {logs || "No logs available"}
-                </Text>
-            </ScrollView>
-            <TouchableOpacity 
-               onPress={() => {
-                  Clipboard.setString(logs);
-                  ToastAndroid.show('Logs copied to clipboard', ToastAndroid.SHORT);
-               }}
-               className="bg-blue-600 p-4 rounded-xl mt-4 items-center">
-                <Text className="text-white font-bold">Copy Logs to Clipboard</Text>
-            </TouchableOpacity>
-        </View>
-      )}
     </Animated.ScrollView>
   );
 };

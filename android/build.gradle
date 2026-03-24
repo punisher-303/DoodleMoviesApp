@@ -3,10 +3,10 @@
 buildscript {
     ext {
         buildToolsVersion = findProperty('android.buildToolsVersion') ?: '35.0.0'
-        minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '24')
+        minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '26')
         compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '35')
         targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '35')
-        kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.25'
+        kotlinVersion = findProperty('android.kotlinVersion') ?: '2.0.21'
 
         ndkVersion = "28.0.13004108"
     }
@@ -18,7 +18,8 @@ buildscript {
 
      dependencies {
         classpath("com.android.tools.build:gradle:8.7.0")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.25")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("org.jetbrains.kotlin:compose-compiler-gradle-plugin:$kotlinVersion")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("com.google.gms:google-services:4.3.15")
     }
@@ -41,19 +42,26 @@ allprojects {
             url(new File(['node', '--print', "require.resolve('jsc-android/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim(), '../dist'))
         }
     }
+    // AUTO-APPLY COMPOSE COMPILER PLUGIN TO EXPO AND APP IF NEEDED
+    subprojects {
+        plugins.withId('org.jetbrains.kotlin.android') {
+            if (project.name == 'app' || project.name.startsWith('expo')) {
+                apply plugin: 'org.jetbrains.kotlin.plugin.compose'
+            }
+        }
+    }
 }
 
 // Optional: Force certain versions to avoid conflicts
 subprojects {
     project.configurations.all {
-        resolutionStrategy.eachDependency { details ->
-            if (details.requested.group == 'com.facebook.react' && details.requested.name.contains('react-native')) {
-                details.useVersion "0.76.9" // Replace with your RN version
-            }
-        }
         resolutionStrategy {
             force 'com.google.android.gms:play-services-measurement-impl:21.5.0'
             force 'com.google.android.gms:play-services-measurement-api:21.5.0'
+            // FORCE 16KB ALIGNED VERSIONS OF GIF/AVIF DECODERS
+            force 'com.github.penfeizhou.android.animation:gif:3.0.5'
+            force 'com.github.penfeizhou.android.animation:avif:3.0.5'
+            force 'com.github.penfeizhou.android.animation:glide-plugin:3.0.5'
         }
     }
 }

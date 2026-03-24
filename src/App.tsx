@@ -42,6 +42,7 @@ import SeriesEpisodes from './screens/settings/SeriesEpisodes';
 import WatchHistory from './screens/WatchHistory';
 import SubtitlePreference from './screens/settings/SubtitleSettings';
 import Extensions from './screens/settings/Extensions';
+import ProviderSourceManager from './screens/settings/components/ProviderSourceManager';
 import Constants from 'expo-constants';
 import { settingsStorage } from './lib/storage';
 import { updateProvidersService } from './lib/services/UpdateProviders';
@@ -56,7 +57,6 @@ import { checkNotifications, openSettings, RESULTS, check, request, PERMISSIONS 
 import { MaterialIcons } from '@expo/vector-icons';
 import useAppModeStore from './lib/zustand/appModeStore';
 import DoodleTVStack from './navigation/DoodleTVStack';
-import TorrEngineService from './lib/services/TorrEngineService';
 
 enableScreens(true);
 enableFreeze(true);
@@ -179,6 +179,7 @@ export type SettingsStackParamList = {
   WatchHistoryStack: undefined;
   SubTitlesPreferences: undefined;
   Extensions: undefined;
+  ProviderSourceManager: undefined;
   Production: undefined;
 };
 
@@ -386,15 +387,7 @@ const App = () => {
       updateProvidersService.stopAutomaticUpdateCheck();
     };
   }, []);
-  // Initialize torrent engine at startup
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      console.log('[App] Proactively ensuring torrent engine...');
-      TorrEngineService.ensureEngine().catch(e => 
-        console.log('[App] Initial engine start ignored (will retry on playback)', e.message)
-      );
-    }
-  }, []);
+  // Initialize torrent engine (REMOVED)
 
 
 
@@ -494,6 +487,7 @@ const App = () => {
         <SettingsStack.Screen name="Preferences" component={Preferences} />
         <SettingsStack.Screen name="Downloads" component={Downloads} />
         <SettingsStack.Screen name="Extensions" component={Extensions} />
+        <SettingsStack.Screen name="ProviderSourceManager" component={ProviderSourceManager} />
         <SettingsStack.Screen
           name="WatchHistoryStack"
           component={WatchHistoryStackScreen}

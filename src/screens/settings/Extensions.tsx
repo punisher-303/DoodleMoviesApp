@@ -30,8 +30,9 @@ import useContentStore from '../../lib/zustand/contentStore';
 import {
   extensionStorage,
   ProviderExtension,
-} from '../../lib/storage/extensionStorage';
+} from '../../lib/storage';
 import { extensionManager } from '../../lib/services/ExtensionManager';
+import { createProviderSource } from '../../lib/utils/helpers';
 import {
   updateProvidersService,
   UpdateInfo,
@@ -222,6 +223,9 @@ const Extensions = ({ navigation }: Props) => {
   const [selectedType, setSelectedType] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isCategoryModalVisible, setCategoryModalVisible] = useState(false);
+  const [isAddSourceModalVisible, setIsAddSourceModalVisible] = useState(false);
+  const [newSourceInput, setNewSourceInput] = useState('punisher-303');
+  const [isAddingSource, setIsAddingSource] = useState(false);
 
   const isMounted = useRef(true);
 
@@ -463,6 +467,35 @@ const Extensions = ({ navigation }: Props) => {
     );
   };
 
+  const handleAddSource = async () => {
+    const value = newSourceInput.trim();
+    if (!value) return;
+
+    if (isMounted.current) setIsAddingSource(true);
+    try {
+      const newSource = createProviderSource(value);
+      
+      // Try to fetch manifest to validate
+      const providers = await extensionManager.fetchManifest(newSource, true);
+      
+      extensionStorage.addProviderSources(newSource.author, newSource.url);
+      extensionStorage.setDefaultProviderSource(newSource.author);
+      
+      if (isMounted.current) {
+        setIsAddSourceModalVisible(false);
+        setNewSourceInput('punisher-303');
+        loadProviders();
+        setAvailableProviders(providers);
+        Alert.alert('Success', `Added provider source from ${newSource.author}`);
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to add provider source.');
+    } finally {
+      if (isMounted.current) setIsAddingSource(null as any); // Reset adding state
+      setIsAddingSource(false);
+    }
+  };
+
   const uniqueTypes = useMemo(() => {
     const all = [...(installedProviders || []), ...(availableProviders || [])];
     const types = new Set(all.map(p => p.type).filter(Boolean));
@@ -518,6 +551,9 @@ const Extensions = ({ navigation }: Props) => {
               )}
             </>
           )}
+          <TouchableOpacity onPress={() => setIsAddSourceModalVisible(true)}>
+            <Feather name="plus-circle" size={24} color={primary} />
+          </TouchableOpacity>
           <TouchableOpacity onPress={handleRefresh}>
             <Feather name="refresh-cw" size={24} color={primary} />
           </TouchableOpacity>
@@ -649,7 +685,6 @@ const Extensions = ({ navigation }: Props) => {
           <Feather name="filter" size={14} color={selectedCategory !== 'All' ? 'white' : 'gray'} />
         </TouchableOpacity>
       </View>
-
       <FlashList
         data={currentData}
         estimatedItemSize={110}
@@ -670,13 +705,22 @@ const Extensions = ({ navigation }: Props) => {
           />
         )}
         ListEmptyComponent={
-          <View className="flex-1 justify-center items-center py-20">
-            <MaterialCommunityIcons name="package-variant" size={64} color="gray" />
-            <Text className="text-gray-400 text-lg mt-4">
+          <View className="flex-1 justify-center items-center py-20 px-8">
+            <MaterialCommunityIcons name="package-variant" size={64} color="#333" />
+            <Text className="text-gray-400 text-lg mt-4 text-center">
               {searchQuery || selectedType !== 'All' || selectedCategory !== 'All'
                 ? 'No matching providers found'
-                : activeTab === 'installed' ? 'No providers installed' : 'No providers available'}
+                : activeTab === 'installed' ? 'No providers installed' : 'No provider sources added yet'}
             </Text>
+            {activeTab === 'available' && !searchQuery && (
+              <TouchableOpacity
+                onPress={() => setIsAddSourceModalVisible(true)}
+                style={{ backgroundColor: primary }}
+                className="mt-6 px-6 py-3 rounded-xl flex-row items-center">
+                <Feather name="plus-circle" size={18} color="white" />
+                <Text className="text-white font-bold ml-2">Add Provider Source</Text>
+              </TouchableOpacity>
+            )}
           </View>
         }
         contentContainerStyle={{ paddingBottom: 100 }}
@@ -690,6 +734,68 @@ const Extensions = ({ navigation }: Props) => {
           />
         }
       />
+
+      {/* Add Source Modal */}
+      <Modal
+        visible={isAddSourceModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsAddSourceModalVisible(false)}>
+        <TouchableWithoutFeedback onPress={() => setIsAddSourceModalVisible(false)}>
+          <View className="flex-1 justify-center bg-black/80 px-6">
+            <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+              <View className="bg-tertiary rounded-3xl p-6 border border-quaternary shadow-2xl">
+                <View className="flex-row items-center mb-6">
+                  <View 
+                    style={{ backgroundColor: `${primary}20` }}
+                    className="p-3 rounded-2xl mr-4">
+                    <Feather name="plus-circle" size={24} color={primary} />
+                  </View>
+                  <View>
+                    <Text className="text-white text-xl font-bold">Add Source</Text>
+                    <Text className="text-gray-400 text-xs">GitHub username or Repo URL</Text>
+                  </View>
+                </View>
+
+                <View className="bg-quaternary rounded-xl p-3 border border-white/10 mb-6">
+                  <TextInput
+                    className="text-white text-base"
+                    placeholder="e.g. punisher-303"
+                    placeholderTextColor="#666"
+                    value={newSourceInput}
+                    onChangeText={setNewSourceInput}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoFocus={true}
+                  />
+                </View>
+
+                <View className="flex-row gap-3">
+                  <TouchableOpacity
+                    onPress={() => setIsAddSourceModalVisible(false)}
+                    className="flex-1 bg-white/5 py-4 rounded-xl items-center border border-white/5">
+                    <Text className="text-gray-300 font-bold">Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleAddSource}
+                    disabled={isAddingSource || !newSourceInput.trim()}
+                    style={{ backgroundColor: primary, opacity: isAddingSource ? 0.7 : 1 }}
+                    className="flex-2 py-4 rounded-xl items-center px-8 flex-row justify-center">
+                    {isAddingSource ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <>
+                        <Feather name="check" size={18} color="white" className="mr-2" />
+                        <Text className="text-white font-bold ml-2">Add Source</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
 
       <Modal
         visible={isCategoryModalVisible}

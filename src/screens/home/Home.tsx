@@ -59,6 +59,19 @@ const Home = ({ }: Props) => {
     enabled: !!(installedProviders?.length && provider?.value),
   });
 
+  // Memoized data for FlashList to prevent unstable references
+  const memoizedHomeData = useMemo(() => {
+    if (isLoading && provider?.value) {
+      try {
+        return providerManager.getCatalog({ providerValue: provider.value });
+      } catch (e) {
+        console.error('Home Page Catalog Fetch Error:', e);
+        return [];
+      }
+    }
+    return homeData;
+  }, [homeData, isLoading, provider?.value]);
+
   // Memoized scroll handler
   const handleScroll = useCallback((event: any) => {
     const newBackgroundColor =
@@ -169,17 +182,7 @@ const Home = ({ }: Props) => {
                   <ContinueWatching />
                 </>
               }
-              data={(() => {
-                if (isLoading && provider?.value) {
-                  try {
-                    return providerManager.getCatalog({ providerValue: provider.value });
-                  } catch (e) {
-                    console.error('Home Page Catalog Fetch Error:', e);
-                    return [];
-                  }
-                }
-                return homeData;
-              })()}
+              data={memoizedHomeData}
               keyExtractor={(item, index) => `${item.filter}-${index}`}
               renderItem={({ item, index }) => (
                 <View className={index === 0 ? '-mt-6 relative z-20' : 'relative z-20'}>
@@ -199,6 +202,8 @@ const Home = ({ }: Props) => {
               }
               estimatedItemSize={210}
               removeClippedSubviews={true}
+              maxToRenderPerBatch={5}
+              windowSize={5}
             />
           </Drawer>
         </View>

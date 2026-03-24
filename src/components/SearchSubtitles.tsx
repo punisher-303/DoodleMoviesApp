@@ -97,7 +97,6 @@ const SearchSubtitles = ({
       }
       setSearchResults(data);
     } catch (e: any) {
-      console.log('openSubtitles err', e);
       setLoading(false);
       setError(e?.message);
       ToastAndroid.show('Error fetching subtitles', ToastAndroid.SHORT);
@@ -257,4 +256,4 @@ const SearchSubtitles = ({
   );
 };
 
-export default SearchSubtitles;
+export default React.memo(SearchSubtitles);

@@ -1,5 +1,5 @@
 import { AndroidImportance } from '@notifee/react-native';
-import { extensionStorage, ProviderExtension } from '../storage/extensionStorage';
+import { extensionStorage, ProviderExtension } from '../storage';
 import { extensionManager } from './ExtensionManager';
 import { settingsStorage } from '../storage';
 import { notificationService } from './Notification';

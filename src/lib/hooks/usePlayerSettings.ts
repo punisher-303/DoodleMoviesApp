@@ -18,6 +18,7 @@ export const usePlayerProgress = ({
 }: UsePlayerProgressOptions) => {
   const videoPositionRef = useRef({ position: 0, duration: 0 });
   const lastSavedPositionRef = useRef(0);
+  const lastSavedHistoryPositionRef = useRef(0);
 
   // Memoized progress handler
   const handleProgress = useCallback(
@@ -42,12 +43,15 @@ export const usePlayerProgress = ({
           );
         }
 
-        // Store progress data for watch history display
-        storeWatchProgressForHistory(
-          routeParams.episodeList[routeParams.linkIndex].link,
-          currentTime,
-          seekableDuration,
-        );
+        // Store progress data for watch history display (Throttled to every 10s)
+        if (Math.abs(currentTime - lastSavedHistoryPositionRef.current) > 10) {
+          storeWatchProgressForHistory(
+            routeParams.episodeList[routeParams.linkIndex].link,
+            currentTime,
+            seekableDuration,
+          );
+          lastSavedHistoryPositionRef.current = currentTime;
+        }
       }
 
       // Save progress periodically (every 5 seconds)
@@ -128,7 +132,7 @@ export const usePlayerSettings = () => {
   const [showControls, setShowControls] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    'audio' | 'subtitle' | 'server' | 'quality' | 'speed' | 'fastForward' | 'general'
+    'audio' | 'subtitle' | 'server' | 'quality' | 'speed'
   >('audio');
   const [resizeMode, setResizeMode] = useState<any>('none');
   const [playbackRate, setPlaybackRate] = useState(1.0);

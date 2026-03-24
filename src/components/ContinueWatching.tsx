@@ -349,4 +349,4 @@ const ContinueWatching = () => {
   );
 };
 
-export default ContinueWatching;
+export default React.memo(ContinueWatching);

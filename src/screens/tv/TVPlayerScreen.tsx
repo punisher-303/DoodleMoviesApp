@@ -23,15 +23,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { DoodleTVStackParamList } from '../../App';
-import { VLCPlayer } from 'react-native-vlc-media-player';
-import {
-  ResizeMode,
+import Video, {
+  VideoRef,
   SelectedTrackType,
+  ResizeMode,
   OnLoadData,
   OnProgressData,
   OnVideoErrorData,
-} from '../../types/video';
-type VideoRef = any;
+} from 'react-native-video';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -53,17 +52,14 @@ const useStream = (options: { activeEpisode: any; routeParams: any }) => {
   const [error, setError] = useState(null);
   useEffect(() => {
     if (streamUrl) {
-      setTimeout(() => {
-        setIsLoading(false);
-        setStreamData([{ link: streamUrl, quality: 'auto' }]);
-      }, 500);
+      setIsLoading(false);
+      setStreamData([{ link: streamUrl, quality: 'auto' }]);
     } else {
       setIsLoading(false);
       setError('No stream URL provided');
     }
   }, [streamUrl]);
   const switchToNextStream = useCallback(() => {
-    console.log('No next stream to switch to.');
     return false;
   }, []);
   return {
@@ -510,7 +506,6 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
 
   const handleVideoError = useCallback(
     (e: OnVideoErrorData) => {
-      console.log('PlayerError', e);
 
       if (
         e.error?.errorString ===
@@ -682,28 +677,27 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
       <StatusBar hidden />
 
       <View style={styles.videoWrapper}>
-        <VLCPlayer
-          ref={playerRef as any}
-          source={{ uri: selectedStream?.link, initOptions: ['--network-caching=5000', '--sout-mux-caching=5000', '--drop-late-frames', '--skip-frames'] }}
+        <Video
+          ref={playerRef}
+          source={{ uri: selectedStream?.link }}
           style={styles.backgroundVideo}
+          controls={false}
           paused={isPaused}
-          onProgress={(e: any) => {
-            if (e.duration) {
-              handleProgress({ 
-                currentTime: e.currentTime / 1000, 
-                playableDuration: e.duration / 1000,
-                seekableDuration: e.duration / 1000 
-              });
-              if (duration === 0) {
-                handleLoad({ duration: e.duration / 1000 } as any);
-              }
-            }
-          }}
-          onEnd={switchToNextStream}
-          onError={(e: any) => handleVideoError({ error: { errorString: 'VLC Error', errorCode: '0' } })}
-          videoAspectRatio={resizeMode === ResizeMode.STRETCH ? '16:9' : resizeMode === ResizeMode.COVER ? '4:3' : undefined}
-          autoAspectRatio={resizeMode === ResizeMode.CONTAIN || resizeMode === ResizeMode.NONE}
+          onLoad={handleVideoLoad}
+          onProgress={handleProgress}
+          onError={handleVideoError}
+          resizeMode={resizeMode}
           rate={playbackRate}
+          selectedTextTrack={selectedTextTrack}
+          selectedAudioTrack={selectedAudioTrack}
+          selectedVideoTrack={selectedVideoTrack}
+          bufferConfig={{
+            minBufferMs: 15000,
+            maxBufferMs: 50000,
+            bufferForPlaybackMs: 1500,
+            bufferForPlaybackAfterRebufferMs: 3000,
+            backBufferDurationMs: 30000,
+          }}
         />
         {/* New Gesture Overlay to capture all touches */}
         <TouchableNativeFeedback

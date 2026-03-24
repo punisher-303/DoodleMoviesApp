@@ -43,6 +43,9 @@ export class ProviderManager {
         });
       },
       Object,
+      axios: providerContext.axios,
+      cheerio: providerContext.cheerio,
+      Crypto: providerContext.Crypto,
     };
   }
 
@@ -58,6 +61,9 @@ export class ProviderManager {
       const Object = context.Object;
       const console = context.console;
       const Promise = context.Promise;
+      const axios = context.axios;
+      const cheerio = context.cheerio;
+      const Crypto = context.Crypto;
       
       ${moduleCode}
       

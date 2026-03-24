@@ -81,7 +81,7 @@ const Preferences = () => {
   );
 
   const [alwaysUseExternalDownload, setAlwaysUseExternalDownload] = useState(
-    settingsStorage.getBool('alwaysExternalDownloader') || false,
+    settingsStorage.isExternalDownloaderEnabled(),
   );
 
   const [telemetryOptIn, setTelemetryOptIn] = useState<boolean>(

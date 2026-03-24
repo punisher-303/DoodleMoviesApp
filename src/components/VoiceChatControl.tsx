@@ -223,4 +223,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default VoiceChatControl;
+export default React.memo(VoiceChatControl);

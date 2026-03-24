@@ -77,7 +77,7 @@ module.exports = () => {
     expo: {
       name: 'Doodle',
       displayName: 'Doodle',
-      newArchEnabled: true,
+      newArchEnabled: false,
       autolinking: { exclude: ['expo-splash-screen'] },
       plugins,
       slug: 'doodle-movies',
@@ -95,7 +95,7 @@ module.exports = () => {
         ...(hasAndroidGoogleServices
           ? { googleServicesFile: androidGoogleServicesFile }
           : {}),
-        minSdkVersion: 24,
+        minSdkVersion: 26,
         edgeToEdgeEnabled: true,
         package: 'com.doodle.movies',
         versionCode: 192, // UPDATED TO MATCH GRADLE
