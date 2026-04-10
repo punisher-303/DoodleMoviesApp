@@ -1177,6 +1177,24 @@ const Player = ({ route }: Props): React.JSX.Element => {
     isSyncingVideo,
   ]);
 
+  // ── FIX: Use refs for high-frequency values to prevent videoPlayerProps from recomputing on every progress tick
+  const isPlayingRef = useRef(isPlaying);
+  const stuckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [videoCurrentTime, setVideoCurrentTime] = useState(0);
+
+  // ── FIX: Sync ref with state
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  // ── FIX: Throttled UI state updates – only every 2 seconds for UI elements
+  useEffect(() => {
+    const id = setInterval(() => {
+      setVideoCurrentTime(videoPositionRef.current.position);
+    }, 2000);
+    return () => clearInterval(id);
+  }, []);
+
   useEffect(() => {
     if (autoSkipIntro && !hasSkippedIntroRef.current) {
       const currentPositionSeconds = videoPositionRef.current.position;
@@ -1198,12 +1216,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
         }
       }
     }
-  }, [
-    videoPositionRef.current.position,
-    autoSkipIntro,
-    skipDuration,
-    activeEpisode?.link,
-  ]);
+  }, [videoCurrentTime, autoSkipIntro, skipDuration, activeEpisode?.link]);
 
   const playbacks = useMemo(
     () => [0.25, 0.5, 1.0, 1.25, 1.35, 1.5, 1.75, 2],
@@ -1330,6 +1343,8 @@ const Player = ({ route }: Props): React.JSX.Element => {
       } else {
         // switchToNextStream already shows its own "Trying next..." toast
         setShowControls(true);
+        // Reset stuck timer if it was pending
+        if (stuckTimeoutRef.current) clearTimeout(stuckTimeoutRef.current);
       }
     },
     [
@@ -1519,15 +1534,16 @@ const Player = ({ route }: Props): React.JSX.Element => {
         -1,
       );
 
-      // Stuck Loading Protection: Auto-skip if source is stuck
-      const timeoutMs = 20000; // 20s timeout
+      // Stuck Loading Protection: Auto-skip if source is stuck (Sync with Vega-Next: 10s)
+      const timeoutMs = 10000; 
 
       stuckTimeout = setTimeout(() => {
         if (streamLoading && !isPlayerLocked) {
-           console.log(`[Player] Detected stuck loading after ${timeoutMs/1000}s on ${selectedStream?.server}, rotating...`);
+           console.log(`[Player] Detected stuck loading after 10s on ${selectedStream?.server}, rotating...`);
            handleVideoError({ error: 'STUCK_LOADING' });
         }
       }, timeoutMs); 
+      stuckTimeoutRef.current = stuckTimeout;
     } else {
       loadingOpacity.value = withTiming(0, { duration: 400 });
     }
@@ -1731,6 +1747,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
       onPlaybackStateChanged: (e: any) => {
         const playing = e.isPlaying;
         setIsPlaying(playing);
+        isPlayingRef.current = playing;
         if (watchTogetherMode && isSessionLeader) {
           sendTimeUpdate(videoPositionRef.current.position, playing);
         }

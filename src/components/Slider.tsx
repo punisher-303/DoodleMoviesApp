@@ -36,6 +36,25 @@ export default function Slider({
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
 
+  const renderItem = useCallback(({ item }: { item: any }) => {
+    if ('type' in item && item.type === 'skeleton') {
+      return (
+        <View className="mx-2 gap-0 flex mb-3 justify-center items-center">
+          <SkeletonLoader height={150} width={100} />
+          <SkeletonLoader height={12} width={97} />
+        </View>
+      );
+    }
+    return (
+      <SliderItem
+        item={item as Post}
+        navigation={navigation}
+        providerValue={providerValue}
+        provider={provider}
+      />
+    );
+  }, [navigation, providerValue, provider]);
+
   const displayData = useMemo(() => {
     if (isLoading && (!posts || posts.length === 0)) {
         return SKELETON_DATA;
@@ -70,24 +89,7 @@ export default function Slider({
           horizontal
           estimatedItemSize={116}
           contentContainerStyle={{ paddingHorizontal: 3, paddingTop: 7 }}
-          renderItem={({ item }) => {
-            if ('type' in item && item.type === 'skeleton') {
-                return (
-                    <View className="mx-2 gap-0 flex mb-3 justify-center items-center">
-                        <SkeletonLoader height={150} width={100} />
-                        <SkeletonLoader height={12} width={97} />
-                    </View>
-                );
-            }
-            return (
-                <SliderItem
-                  item={item as Post}
-                  navigation={navigation}
-                  providerValue={providerValue}
-                  provider={provider}
-                />
-            );
-          }}
+          renderItem={renderItem}
           ListFooterComponent={
             !isLoading && displayData.length === 0 ? (
               <View className="flex flex-row w-96 justify-center h-10 items-center">
@@ -132,9 +134,9 @@ const SliderItem = React.memo(({
             // Check if it's a direct person reference (e.g. person_id:1234:Name)
             if (item.link.startsWith('person_id:')) {
               const personId = linkParts[1];
-              navigation.navigate('CastDetail', {
-                personId: personId,
-                name: name,
+              navigation.navigate('CastMovie', {
+                castId: personId,
+                castName: name,
               });
             } else {
               //@ts-ignore

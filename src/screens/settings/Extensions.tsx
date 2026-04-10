@@ -81,8 +81,8 @@ const ProviderCard = memo(({
 
     return (
       <View
-        className="bg-tertiary rounded-xl p-3 py-2 mb-2 mx-4 shadow-sm border border-quaternary"
-        style={{ elevation: 2 }}>
+        className="bg-tertiary rounded-2xl p-5 py-3 mb-4 mx-4 shadow-lg border border-quaternary"
+        style={{ elevation: 4 }}>
         <View className="flex-row items-center gap-4 justify-between">
           {/* Left: Icon */}
           {item.icon ? (
@@ -223,9 +223,6 @@ const Extensions = ({ navigation }: Props) => {
   const [selectedType, setSelectedType] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isCategoryModalVisible, setCategoryModalVisible] = useState(false);
-  const [isAddSourceModalVisible, setIsAddSourceModalVisible] = useState(false);
-  const [newSourceInput, setNewSourceInput] = useState('punisher-303');
-  const [isAddingSource, setIsAddingSource] = useState(false);
 
   const isMounted = useRef(true);
 
@@ -467,45 +464,24 @@ const Extensions = ({ navigation }: Props) => {
     );
   };
 
-  const handleAddSource = async () => {
-    const value = newSourceInput.trim();
-    if (!value) return;
-
-    if (isMounted.current) setIsAddingSource(true);
-    try {
-      const newSource = createProviderSource(value);
-      
-      // Try to fetch manifest to validate
-      const providers = await extensionManager.fetchManifest(newSource, true);
-      
-      extensionStorage.addProviderSources(newSource.author, newSource.url);
-      extensionStorage.setDefaultProviderSource(newSource.author);
-      
-      if (isMounted.current) {
-        setIsAddSourceModalVisible(false);
-        setNewSourceInput('punisher-303');
-        loadProviders();
-        setAvailableProviders(providers);
-        Alert.alert('Success', `Added provider source from ${newSource.author}`);
-      }
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to add provider source.');
-    } finally {
-      if (isMounted.current) setIsAddingSource(null as any); // Reset adding state
-      setIsAddingSource(false);
-    }
-  };
-
   const uniqueTypes = useMemo(() => {
     const all = [...(installedProviders || []), ...(availableProviders || [])];
     const types = new Set(all.map(p => p.type).filter(Boolean));
-    return ['All', ...Array.from(types)];
+    return ['All', ...Array.from(types).sort()];
   }, [installedProviders, availableProviders]);
 
   const uniqueCategories = useMemo(() => {
     const all = [...(installedProviders || []), ...(availableProviders || [])];
-    const cats = new Set(all.map(p => p.category).filter(Boolean));
-    return ['All', ...Array.from(cats)];
+    const categories = new Set<string>();
+    
+    all.forEach(p => {
+      if (p.category) {
+        const cat = p.category.charAt(0).toUpperCase() + p.category.slice(1).toLowerCase();
+        categories.add(cat);
+      }
+    });
+
+    return ['All', ...Array.from(categories).sort()];
   }, [installedProviders, availableProviders]);
 
   const currentData = useMemo(() => {
@@ -551,8 +527,8 @@ const Extensions = ({ navigation }: Props) => {
               )}
             </>
           )}
-          <TouchableOpacity onPress={() => setIsAddSourceModalVisible(true)}>
-            <Feather name="plus-circle" size={24} color={primary} />
+          <TouchableOpacity onPress={() => navigation.navigate('AddExtension')}>
+            <AntDesign name="pluscircleo" size={22} color={primary} />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleRefresh}>
             <Feather name="refresh-cw" size={24} color={primary} />
@@ -735,68 +711,7 @@ const Extensions = ({ navigation }: Props) => {
         }
       />
 
-      {/* Add Source Modal */}
-      <Modal
-        visible={isAddSourceModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setIsAddSourceModalVisible(false)}>
-        <TouchableWithoutFeedback onPress={() => setIsAddSourceModalVisible(false)}>
-          <View className="flex-1 justify-center bg-black/80 px-6">
-            <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
-              <View className="bg-tertiary rounded-3xl p-6 border border-quaternary shadow-2xl">
-                <View className="flex-row items-center mb-6">
-                  <View 
-                    style={{ backgroundColor: `${primary}20` }}
-                    className="p-3 rounded-2xl mr-4">
-                    <Feather name="plus-circle" size={24} color={primary} />
-                  </View>
-                  <View>
-                    <Text className="text-white text-xl font-bold">Add Source</Text>
-                    <Text className="text-gray-400 text-xs">GitHub username or Repo URL</Text>
-                  </View>
-                </View>
-
-                <View className="bg-quaternary rounded-xl p-3 border border-white/10 mb-6">
-                  <TextInput
-                    className="text-white text-base"
-                    placeholder="e.g. punisher-303"
-                    placeholderTextColor="#666"
-                    value={newSourceInput}
-                    onChangeText={setNewSourceInput}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    autoFocus={true}
-                  />
-                </View>
-
-                <View className="flex-row gap-3">
-                  <TouchableOpacity
-                    onPress={() => setIsAddSourceModalVisible(false)}
-                    className="flex-1 bg-white/5 py-4 rounded-xl items-center border border-white/5">
-                    <Text className="text-gray-300 font-bold">Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleAddSource}
-                    disabled={isAddingSource || !newSourceInput.trim()}
-                    style={{ backgroundColor: primary, opacity: isAddingSource ? 0.7 : 1 }}
-                    className="flex-2 py-4 rounded-xl items-center px-8 flex-row justify-center">
-                    {isAddingSource ? (
-                      <ActivityIndicator size="small" color="white" />
-                    ) : (
-                      <>
-                        <Feather name="check" size={18} color="white" className="mr-2" />
-                        <Text className="text-white font-bold ml-2">Add Source</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-
+      {/* Category Selection Modal */}
       <Modal
         visible={isCategoryModalVisible}
         transparent={true}

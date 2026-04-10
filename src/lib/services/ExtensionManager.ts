@@ -1,6 +1,11 @@
 import { extensionStorage, ProviderExtension, ProviderModule, ProviderSource, settingsStorage } from '../storage';
 import { createProviderSource } from '../utils/helpers';
 import axios from 'axios';
+
+export interface DynamicProviderExtension extends ProviderExtension {
+  sourceUrl?: string; // Track original source for refreshing
+}
+
 /**
  * Extension manager service for handling dynamic provider loading
  */
@@ -38,6 +43,61 @@ export class ExtensionManager {
   }
 
   /**
+   * Fetch custom manifest from any GitHub repository
+   */
+  async fetchCustomManifest(
+    repoShorthand: string,
+  ): Promise<DynamicProviderExtension[]> {
+    try {
+      // 1. Convert "username/repo" or "repo" to a valid raw GitHub URL
+      let baseUrl = '';
+      if (repoShorthand.startsWith('http')) {
+        baseUrl = repoShorthand.replace('github.com', 'raw.githubusercontent.com');
+      } else {
+        const parts = repoShorthand.split('/');
+        const user = parts.length > 1 ? parts[0] : 'punisher-303'; // Default user
+        const repo = parts.length > 1 ? parts[1] : parts[0];
+        baseUrl = `https://raw.githubusercontent.com/${user}/${repo}/refs/heads/main`;
+      }
+
+      const manifestUrl = `${baseUrl}/manifest.json`;
+      console.log('Fetching custom manifest from:', manifestUrl);
+
+      let response;
+      try {
+        response = await axios.get(manifestUrl, {timeout: 10000});
+      } catch (e: any) {
+        if (e.response?.status === 404 && baseUrl.includes('/refs/heads/main')) {
+          const fallbackUrl = manifestUrl.replace('/refs/heads/main', '/refs/heads/master');
+          response = await axios.get(fallbackUrl, {timeout: 10000});
+          baseUrl = baseUrl.replace('/refs/heads/main', '/refs/heads/master');
+        } else {
+          throw e;
+        }
+      }
+
+      if (!response.data || !Array.isArray(response.data)) {
+        throw new Error('Invalid custom manifest format');
+      }
+
+      // 2. Map results and inject the source property dynamically
+      const source: ProviderSource = {
+        author: repoShorthand.split('/')[0],
+        url: baseUrl,
+      };
+
+      return response.data.map((item: any) => ({
+        ...item,
+        source,
+        sourceUrl: baseUrl, // Track the original URL for refreshing
+      }));
+    } catch (error) {
+      console.error('Failed to fetch custom manifest:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Fetch latest manifest from GitHub
    */
   async fetchManifest(
@@ -72,9 +132,36 @@ export class ExtensionManager {
         ? `${this.baseUrlTestMode}/manifest.json`
         : this.getManifest(activeSource.url);
       console.log('Fetching manifest from:', manifestUrl);
-      const response = await axios.get(manifestUrl, {
-        timeout: 10000,
-      });
+      let response;
+      try {
+        response = await axios.get(manifestUrl, {
+          timeout: 10000,
+        });
+      } catch (error: any) {
+        // Fallback: try master branch if main branch fails for git-based URLs
+        if (
+          error.response?.status === 404 &&
+          activeSource.url.includes('/refs/heads/main')
+        ) {
+          const fallbackUrl = activeSource.url.replace(
+            '/refs/heads/main',
+            '/refs/heads/master',
+          );
+          console.log('Main branch 404, trying master branch fallback:', fallbackUrl);
+
+          try {
+            response = await axios.get(this.getManifest(fallbackUrl), {
+              timeout: 10000,
+            });
+            // Update activeSource URL to use master branch for future requests
+            activeSource.url = fallbackUrl;
+          } catch (innerError) {
+            throw error; // Throw original error if fallback also fails
+          }
+        } else {
+          throw error;
+        }
+      }
 
       if (!response.data || !Array.isArray(response.data)) {
         throw new Error('Invalid manifest format');

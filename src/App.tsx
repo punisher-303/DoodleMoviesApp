@@ -6,7 +6,9 @@ import Settings from './screens/settings/Settings';
 import WatchList from './screens/WatchList';
 import Search from './screens/Search';
 import ScrollList from './screens/ScrollList';
-import CastDetail from './screens/CastDetail';
+import CastMovie from './screens/CastMovie';
+import Login from './screens/Login';
+import { userSession } from './lib/services/login';
 import {
   NavigationContainer,
   createNavigationContainerRef,
@@ -42,6 +44,8 @@ import SeriesEpisodes from './screens/settings/SeriesEpisodes';
 import WatchHistory from './screens/WatchHistory';
 import SubtitlePreference from './screens/settings/SubtitleSettings';
 import Extensions from './screens/settings/Extensions';
+import AddExtension from './screens/AddExtension';
+import ProviderCheck from './screens/settings/ProviderCheck';
 import ProviderSourceManager from './screens/settings/components/ProviderSourceManager';
 import Constants from 'expo-constants';
 import { settingsStorage } from './lib/storage';
@@ -80,7 +84,7 @@ export type HomeStackParamList = {
     providerValue?: string;
     genre: string;
   };
-  CastDetail: { personId: string; name: string };
+  CastMovie: { castId: string; castName: string };
   Webview: { link: string };
 };
 
@@ -117,6 +121,7 @@ export type RootStackParamList = {
     server?: any;
     doNotTrack?: boolean;
   };
+  Login: undefined;
 };
 
 export type DoodleTVStackParamList = {
@@ -136,7 +141,7 @@ export type DoodleTVRootStackParamList = {
 
 export type SearchStackParamList = {
   Search: undefined;
-  CastDetail: { personId: string; name: string };
+  CastMovie: { castId: string; castName: string };
   ScrollList: {
     filter: string;
     title?: string;
@@ -180,6 +185,8 @@ export type SettingsStackParamList = {
   SubTitlesPreferences: undefined;
   Extensions: undefined;
   ProviderSourceManager: undefined;
+  ProviderCheck: undefined;
+  AddExtension: undefined;
   Production: undefined;
 };
 
@@ -404,7 +411,7 @@ const App = () => {
         <HomeStack.Screen name="Info" component={Info} />
         <HomeStack.Screen name="ScrollList" component={ScrollList} />
         <HomeStack.Screen name="GenreList" component={ScrollList} />
-        <HomeStack.Screen name="CastDetail" component={CastDetail} />
+        <HomeStack.Screen name="CastMovie" component={CastMovie} />
         <HomeStack.Screen name="Webview" component={WebView} />
       </HomeStack.Navigator>
     );
@@ -420,7 +427,7 @@ const App = () => {
           freezeOnBlur: true,
         }}>
         <SearchStack.Screen name="Search" component={Search} />
-        <SearchStack.Screen name="CastDetail" component={CastDetail} />
+        <SearchStack.Screen name="CastMovie" component={CastMovie} />
         <SearchStack.Screen name="ScrollList" component={ScrollList} />
         <SearchStack.Screen name="GenreList" component={ScrollList} />
         <SearchStack.Screen name="Info" component={Info} />
@@ -487,6 +494,8 @@ const App = () => {
         <SettingsStack.Screen name="Preferences" component={Preferences} />
         <SettingsStack.Screen name="Downloads" component={Downloads} />
         <SettingsStack.Screen name="Extensions" component={Extensions} />
+        <SettingsStack.Screen name="AddExtension" component={AddExtension} />
+        <SettingsStack.Screen name="ProviderCheck" component={ProviderCheck} />
         <SettingsStack.Screen name="ProviderSourceManager" component={ProviderSourceManager} />
         <SettingsStack.Screen
           name="WatchHistoryStack"
@@ -668,6 +677,17 @@ const App = () => {
   }
 
   function VideoRootStackScreen() {
+    const [isLoggedIn, setIsLoggedIn] = React.useState(userSession.isLoggedIn());
+
+    React.useEffect(() => {
+      const sub = DeviceEventEmitter.addListener('userLoggedIn', () => setIsLoggedIn(true));
+      const sub2 = DeviceEventEmitter.addListener('userLoggedOut', () => setIsLoggedIn(false));
+      return () => {
+        sub.remove();
+        sub2.remove();
+      };
+    }, []);
+
     return (
       <Stack.Navigator
         screenOptions={{
@@ -677,12 +697,18 @@ const App = () => {
           freezeOnBlur: true,
           contentStyle: { backgroundColor: 'transparent' },
         }}>
-        <Stack.Screen name="TabStack" component={TabStack} />
-        <Stack.Screen
-          name="Player"
-          component={Player}
-          options={{ orientation: 'landscape' }}
-        />
+        {!isLoggedIn ? (
+          <Stack.Screen name="Login" component={Login} />
+        ) : (
+          <>
+            <Stack.Screen name="TabStack" component={TabStack} />
+            <Stack.Screen
+              name="Player"
+              component={Player}
+              options={{ orientation: 'landscape' }}
+            />
+          </>
+        )}
       </Stack.Navigator>
     );
   }

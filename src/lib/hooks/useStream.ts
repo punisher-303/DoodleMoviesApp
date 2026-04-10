@@ -166,7 +166,7 @@ export const useStream = ({
       let streamIndex = 0;
       let skippedHubcloud = false;
 
-      // Check for 'hubcloud' and skip if found
+      // Check for 'hubcloud' and skip if found (Vega-Next Logic)
       while (
         initialStream &&
         initialStream.server?.toLowerCase() === 'hubcloud' &&

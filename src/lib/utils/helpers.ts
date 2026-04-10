@@ -113,14 +113,30 @@ export const createProviderSource = (value: string): ProviderSource => {
     };
   }
 
-  const author = input.replace(/^@/, '').trim();
-  if (!author) {
-    throw new Error('Invalid GitHub author name');
+  const rawInput = input.replace(/^@/, '').trim();
+  if (!rawInput) {
+    throw new Error('Invalid GitHub author or repository name');
+  }
+
+  // Split by / to separate user and repo (e.g., username/repo)
+  const parts = rawInput.split('/');
+  const author = parts[0];
+
+  // If we have a repo name specified, handle it. Otherwise check for default.
+  let repoAndBranch = parts[1] || DEFAULT_REPO_NAME;
+
+  // Handle branch specification with # (e.g., username/repo#dev)
+  const branchParts = repoAndBranch.split('#');
+  const repo = branchParts[0] || DEFAULT_REPO_NAME;
+  const branch = branchParts[1] || DEFAULT_BRANCH;
+
+  if (!author || !repo) {
+    throw new Error('Invalid format. Use @username or @username/repository#branch');
   }
 
   return {
     author,
-    url: buildRawGithubUrl(author),
+    url: buildRawGithubUrl(author, repo, branch),
     isDefault: false,
   };
 };

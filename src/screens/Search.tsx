@@ -122,20 +122,23 @@ const RenderHeader = ({ title, index }: { title: string; index: number }) => (
 
 const RenderGenreItem = ({ item, index, primary, handleSearch }: any) => (
   <Animated.View
-    entering={FadeInDown.delay(index * 50)}
+    entering={FadeInDown.delay(index * 30)}
     layout={Layout.springify()}>
     <View className="px-4">
       <TouchableOpacity
-        className="py-3 border-b border-white/10"
+        className="py-1.5"
         onPress={() => handleSearch(item.name)}>
-        <View className="flex-row items-center">
-          <Ionicons
-            name={item.icon}
-            size={20}
-            color={primary}
-            style={{ marginRight: 12 }}
-          />
-          <Text className="text-white text-base">{item.name}</Text>
+        <View className="flex-row items-center bg-white/5 rounded-xl px-4 py-3 border border-white/5">
+          <View className="w-10 h-10 rounded-full bg-primary/20 items-center justify-center mr-4" style={{ backgroundColor: `${primary}20` }}>
+             <Ionicons
+              name={item.icon}
+              size={20}
+              color={primary}
+            />
+          </View>
+          <Text className="text-white text-base font-medium">{item.name}</Text>
+          <View className="flex-1" />
+          <Feather name="chevron-right" size={16} color="#444" />
         </View>
       </TouchableOpacity>
     </View>
@@ -144,23 +147,31 @@ const RenderGenreItem = ({ item, index, primary, handleSearch }: any) => (
 
 const RenderMovieItem = ({ item, index, primary, handleSearch }: any) => (
   <Animated.View
-    entering={FadeInDown.delay(index * 50)}
+    entering={FadeInDown.delay(index * 30)}
     layout={Layout.springify()}>
     <View className="px-4">
       <TouchableOpacity
-        className="py-3 border-b border-white/10"
+        className="py-1.5"
         onPress={() => handleSearch(item.Title || item.l)}>
-        <View className="flex-row items-center">
-          <Ionicons
-            name={item.type === 'genre-movie' ? 'star-outline' : 'film-outline'}
-            size={20}
-            color={primary}
-            style={{ marginRight: 12 }}
-          />
+        <View className="flex-row items-center bg-white/5 rounded-xl p-2 border border-white/5">
+          {item.i?.imageUrl || item.Poster ? (
+             <Image 
+                source={{ uri: item.i?.imageUrl || item.Poster }} 
+                className="w-12 h-16 rounded-lg mr-4 bg-zinc-800"
+                resizeMode="cover"
+             />
+          ) : (
+            <View className="w-12 h-16 rounded-lg mr-4 bg-zinc-800 items-center justify-center">
+               <Ionicons
+                name={item.type === 'genre-movie' ? 'star-outline' : 'film-outline'}
+                size={20}
+                color={primary}
+              />
+            </View>
+          )}
           <View className="flex-1">
-            <Text className="text-white text-base" numberOfLines={1}>{item.Title || item.l}</Text>
-            {/* FIX: Ensure subtitle is a single concatenated string inside Text */}
-            <Text className="text-white/50 text-xs" numberOfLines={1}>
+            <Text className="text-white text-base font-semibold" numberOfLines={1}>{item.Title || item.l}</Text>
+            <Text className="text-white/50 text-xs font-medium" numberOfLines={1}>
               {((item.Type || item.q) === 'series' || item.q === 'tv_series'
                 ? 'TV Show'
                 : 'Movie') +
@@ -168,6 +179,7 @@ const RenderMovieItem = ({ item, index, primary, handleSearch }: any) => (
                 (item.Year || item.y)}
             </Text>
           </View>
+          <Feather name="arrow-up-left" size={18} color="#666" style={{ marginRight: 8 }} />
         </View>
       </TouchableOpacity>
     </View>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -294,10 +295,10 @@ const Suggestion = () => {
 
   // Filter the suggestions based on removedIds before rendering
   const filteredSuggestions = suggestions.filter(
-    item => !removedIds.has(item.imdbID),
+    item => !removedIds.has(item.imdbID)
   );
 
-  const renderItem = ({ item, index }: { item: SuggestItem; index: number }) => (
+  const renderItem = useCallback(({ item, index }: { item: SuggestItem; index: number }) => (
     <Animated.View
       entering={FadeInDown.delay(index * 70)}
       layout={Layout.springify()}>
@@ -330,15 +331,14 @@ const Suggestion = () => {
           </View>
         </TouchableOpacity>
 
-        {/* Remove button - Separate focusable for TV */}
         <TouchableOpacity
           onPress={() => handleRemoveSuggestion(item.imdbID)}
           className="p-3 bg-[#141414] rounded-xl border border-white/10 justify-center items-center">
           <Ionicons name="close" size={24} color="#FF6347" />
         </TouchableOpacity>
       </View>
-    </Animated.View >
-  );
+    </Animated.View>
+  ), [primary, handleClick, handleRemoveSuggestion]);
 
   return (
     <View className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
@@ -359,12 +359,14 @@ const Suggestion = () => {
           </Animated.Text>
         </View>
       ) : filteredSuggestions.length > 0 ? (
-        <FlatList
+        <FlashList
           data={filteredSuggestions}
           keyExtractor={(item, idx) => `${item.imdbID || item.Title}-${idx}`}
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 20 }}
+          estimatedItemSize={90}
+          removeClippedSubviews={true}
         />
       ) : suggestions.length > 0 ? (
         // State for when all suggestions have been removed

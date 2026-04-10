@@ -10,6 +10,7 @@ module.exports = {
         },
       },
     ],
+    '@babel/plugin-transform-export-namespace-from',
     'nativewind/babel',
     'react-native-reanimated/plugin',
   ],

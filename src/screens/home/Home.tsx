@@ -72,12 +72,16 @@ const Home = ({ }: Props) => {
     return homeData;
   }, [homeData, isLoading, provider?.value]);
 
-  // Memoized scroll handler
+  // Memoized scroll handler with state-change guard for better performance
   const handleScroll = useCallback((event: any) => {
-    const newBackgroundColor =
-      event.nativeEvent.contentOffset.y > 0 ? 'black' : 'transparent';
-    setBackgroundColor(newBackgroundColor);
-  }, []);
+    const scrollY = event.nativeEvent.contentOffset.y;
+    const newBackgroundColor = scrollY > 10 ? 'black' : 'transparent';
+    
+    // Only update state if the value changed
+    if (backgroundColor !== newBackgroundColor) {
+      setBackgroundColor(newBackgroundColor);
+    }
+  }, [backgroundColor]);
 
   // Stable hero post calculation
   const heroPost = useMemo(() => {
@@ -201,9 +205,10 @@ const Home = ({ }: Props) => {
                 </>
               }
               estimatedItemSize={210}
-              removeClippedSubviews={true}
-              maxToRenderPerBatch={5}
+              removeClippedSubviews={Platform.OS === 'android'}
+              maxToRenderPerBatch={3}
               windowSize={5}
+              initialNumToRender={2}
             />
           </Drawer>
         </View>

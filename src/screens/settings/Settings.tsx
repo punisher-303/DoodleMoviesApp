@@ -46,6 +46,10 @@ import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import Animated, { FadeInDown, FadeInUp, Layout } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import RenderProviderFlagIcon from '../../components/RenderProviderFLagIcon';
+import { userSession, User } from '../../lib/services/login';
+import { DiscordRPC } from '../../lib/services/DiscordRPC';
+import ProfileAvatar from '../Profileavatar';
+import { deviceStorage } from '../../lib/Mmkv'; // Use existing MMKV if available or session storage
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
@@ -72,60 +76,95 @@ type IconElement = React.ReactElement<{
   name: string;
 }>;
 
-const InternalOptionRow = React.memo(
-  ({
-    icon,
-    text,
-    onPress,
-    primaryColor,
-    isLast = false,
-  }: {
-    icon: IconElement;
-    text: string;
-    onPress: () => void;
-    primaryColor: string;
-    isLast?: boolean;
-  }) => (
+const InternalOptionRow = React.memo(({ icon, text, onPress, primaryColor, isLast = false }: any) => {
+  return (
     <TouchableOpacity
       onPress={onPress}
-      className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#262626]' : ''
-        }`}>
+      className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#262626]' : ''}`}>
       <View className="flex-row items-center">
         {React.cloneElement(icon, { size: 22, color: primaryColor })}
         <Text className="text-white ml-3 text-base">{text}</Text>
       </View>
       <Feather name="chevron-right" size={20} color="gray" />
     </TouchableOpacity>
-  ),
-);
+  );
+});
 
 // Helper for External Links
-const ExternalLinkRow = React.memo(
-  ({
-    icon,
-    text,
-    url,
-    iconColor,
-    isLast = false,
-  }: {
-    icon: IconElement;
-    text: string;
-    url: string;
-    iconColor: string;
-    isLast?: boolean;
-  }) => (
+const ExternalLinkRow = React.memo(({ icon, text, url, iconColor, isLast = false }: any) => {
+  return (
     <TouchableOpacity
       onPress={() => Linking.openURL(url)}
-      className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#262626]' : ''
-        }`}>
+      className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#262626]' : ''}`}>
       <View className="flex-row items-center">
         {React.cloneElement(icon, { size: 22, color: iconColor })}
         <Text className="text-white ml-3 text-base">{text}</Text>
       </View>
       <Feather name="external-link" size={20} color="gray" />
     </TouchableOpacity>
-  ),
-);
+  );
+});
+
+const ProfileSection = React.memo(({ currentUser, handleLogout, navigation }: any) => (
+  <View className="mb-6 bg-[#1A1A1A] rounded-2xl p-4 flex-row items-center border border-[#262626]">
+    <ProfileAvatar size={60} editable={currentUser !== null} />
+    <View className="ml-4 flex-1">
+      <Text className="text-white text-lg font-bold">
+        {currentUser ? currentUser.name : 'Guest User'}
+      </Text>
+      <Text className="text-gray-400 text-xs">
+        {currentUser ? currentUser.email : 'Sign in to sync your data'}
+      </Text>
+    </View>
+    <TouchableOpacity
+      className={`px-4 py-2 rounded-xl ${currentUser ? 'bg-[#262626]' : 'bg-white'}`}
+      onPress={currentUser ? handleLogout : () => navigation.navigate('Login')}>
+      <Text
+        style={{
+          color: currentUser ? '#ef4444' : '#000',
+          fontWeight: 'bold',
+        }}>
+        {currentUser ? 'Logout' : 'Sign In'}
+      </Text>
+    </TouchableOpacity>
+  </View>
+));
+
+const AppModeSection = React.memo(({ appMode, setAppMode, primary, navigation }: any) => (
+  <View className="mb-6 flex-col gap-3">
+    <Text className="text-gray-400 text-sm mb-1">App Mode</Text>
+    <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+      <View className="flex-row items-center justify-between p-4">
+        <View className="flex-row items-center">
+          <MaterialCommunityIcons
+            name="television-play"
+            size={22}
+            color={primary}
+          />
+          <Text className="text-white ml-3 text-base">
+            TV Mode
+          </Text>
+        </View>
+        <Switch
+          trackColor={{ false: '#767577', true: primary }}
+          thumbColor={'#f4f3f4'}
+          ios_backgroundColor="#3e3e3e"
+          onValueChange={() => {
+            const newMode = appMode === 'doodleTv' ? 'video' : 'doodleTv';
+            setAppMode(newMode);
+            if (settingsStorage.isHapticFeedbackEnabled()) {
+              ReactNativeHapticFeedback.trigger('impactLight', {
+                enableVibrateFallback: true,
+                ignoreAndroidSystemSettings: false,
+              });
+            }
+          }}
+          value={appMode === 'doodleTv'}
+        />
+      </View>
+    </View>
+  </View>
+));
 
 const Settings = ({ navigation }: Props) => {
   const tabNavigation =
@@ -145,6 +184,8 @@ const Settings = ({ navigation }: Props) => {
   const [networkProxyMode, setNetworkProxyMode] = useState(
     settingsStorage.isNetworkProxyEnabled(),
   );
+  const [currentUser, setCurrentUser] = useState<User | null>(userSession.getCurrentUser());
+  const [discordRPCEnabled, setDiscordRPCEnabled] = useState(settingsStorage.isDiscordRPCEnabled());
   const [syncLink, setSyncLink] = useState('');
   // ---------------------------------
 
@@ -273,6 +314,32 @@ const Settings = ({ navigation }: Props) => {
       ToastAndroid.SHORT,
     );
   }, [networkProxyMode]);
+
+  const toggleDiscordRPC = useCallback(() => {
+    const newState = !discordRPCEnabled;
+    setDiscordRPCEnabled(newState);
+    settingsStorage.setDiscordRPCEnabled(newState);
+    
+    if (!newState) {
+      DiscordRPC.disconnect();
+    }
+  }, [discordRPCEnabled]);
+
+  const handleLogout = useCallback(() => {
+    Alert.alert('Logout', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          await userSession.signOut();
+          setCurrentUser(null);
+          DeviceEventEmitter.emit('userLoggedOut');
+          ToastAndroid.show('Logged out', ToastAndroid.SHORT);
+        },
+      },
+    ]);
+  }, []);
   // --------------------
 
   // --- UPDATED PARSING LOGIC TO PREVENT CRASH ---
@@ -422,6 +489,15 @@ const Settings = ({ navigation }: Props) => {
           <Text className="text-2xl font-bold text-white mb-6">Settings</Text>
         </Animated.View>
 
+        {/* Profile Section */}
+        <AnimatedSection delay={50}>
+           <ProfileSection 
+             currentUser={currentUser} 
+             handleLogout={handleLogout} 
+             navigation={rootNavigation} 
+           />
+        </AnimatedSection>
+
         {/* Content provider section */}
         <AnimatedSection delay={100}>
           <View className="mb-6 flex-col gap-3">
@@ -491,39 +567,43 @@ const Settings = ({ navigation }: Props) => {
                   value={networkProxyMode}
                 />
               </View>
+              
+              <View className="flex-row items-center justify-between p-4 border-t border-[#262626]">
+                <View className="flex-row items-center flex-1 pr-2">
+                  <MaterialCommunityIcons
+                    name="discord"
+                    size={22}
+                    color="#5865F2"
+                  />
+                  <View className="flex-col ml-3 flex-1">
+                    <Text className="text-white text-base">
+                      Discord Rich Presence
+                    </Text>
+                    <Text className="text-gray-400 text-xs mt-0.5">
+                      Show what you're watching on Discord.
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  trackColor={{ false: '#767577', true: primary }}
+                  thumbColor={discordRPCEnabled ? '#f4f3f4' : '#f4f3f4'}
+                  ios_backgroundColor="#3e3e3e"
+                  onValueChange={toggleDiscordRPC}
+                  value={discordRPCEnabled}
+                />
+              </View>
             </View>
           </View>
         </AnimatedSection>
         {/* ----------------------------------- */}
 
-        {/* App Mode */}
-        <AnimatedSection delay={50}>
-          <View className="mb-6 flex-col gap-3">
-            <Text className="text-gray-400 text-sm mb-1">App Mode</Text>
-            <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-              <TouchableOpacity
-                className="flex-row items-center justify-between p-4"
-                onPress={toggleAppMode}>
-                <View className="flex-row items-center">
-                  <MaterialCommunityIcons
-                    name="television-play"
-                    size={22}
-                    color={primary}
-                  />
-                  <Text className="text-white ml-3 text-base">
-                    Doodle-TV Mode
-                  </Text>
-                </View>
-                <Switch
-                  trackColor={{ false: '#3f3f46', true: primary }}
-                  thumbColor={'white'}
-                  ios_backgroundColor="#3e3e3e"
-                  value={appMode === 'doodleTv'}
-                  onValueChange={toggleAppMode}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
+         {/* App Mode */}
+        <AnimatedSection delay={140}>
+           <AppModeSection 
+             appMode={appMode} 
+             toggleAppMode={toggleAppMode} 
+             primary={primary} 
+           />
         </AnimatedSection>
 
         {/* Watch Together Section */}
@@ -608,6 +688,14 @@ const Settings = ({ navigation }: Props) => {
                 icon={<MaterialCommunityIcons name="history" />}
                 text="Watch History"
                 onPress={() => navigation.navigate('WatchHistoryStack')}
+                primaryColor={primary}
+              />
+
+              {/* Diagnostics */}
+              <InternalOptionRow
+                icon={<MaterialCommunityIcons name="shield-sync" />}
+                text="Diagnostics"
+                onPress={() => navigation.navigate('ProviderCheck')}
                 primaryColor={primary}
               />
 

@@ -23,7 +23,6 @@ export interface IStorageService {
  * Base storage service that wraps MMKV operations
  */
 export class StorageService implements IStorageService {
-  // Define storage variable with proper typing
   private storage;
 
   constructor(instanceId?: string) {
@@ -33,7 +32,6 @@ export class StorageService implements IStorageService {
       : loader.initialize();
   }
 
-  // String operations
   getString(key: string): string | undefined {
     return this.storage.getString(key);
   }
@@ -42,7 +40,6 @@ export class StorageService implements IStorageService {
     this.storage.setString(key, value);
   }
 
-  // Boolean operations
   getBool(key: string, defaultValue?: boolean): boolean {
     const value = this.storage.getBool(key);
     return value === undefined ? defaultValue || false : value;
@@ -52,23 +49,17 @@ export class StorageService implements IStorageService {
     this.storage.setBool(key, value);
   }
 
-  // Number operations
   getNumber(key: string): number | undefined {
-    // Use getInt or getFloat equivalent methods which exist in MMKV
     return this.storage.getInt(key);
   }
 
   setNumber(key: string, value: number): void {
-    // Use setInt for number values
     this.storage.setInt(key, value);
   }
 
-  // Object operations
   getObject<T>(key: string): T | undefined {
     const json = this.storage.getString(key);
-    if (!json) {
-      return undefined;
-    }
+    if (!json) return undefined;
     try {
       return JSON.parse(json) as T;
     } catch (e) {
@@ -81,7 +72,6 @@ export class StorageService implements IStorageService {
     this.storage.setString(key, JSON.stringify(value));
   }
 
-  // Array operations
   getArray<T>(key: string): T[] | undefined {
     return this.getObject<T[]>(key);
   }
@@ -90,14 +80,11 @@ export class StorageService implements IStorageService {
     this.setObject(key, value);
   }
 
-  // Delete operations
   delete(key: string): void {
     this.storage.removeItem(key);
   }
 
-  // Check if key exists
   contains(key: string): boolean {
-    // Check if key exists by attempting to get the value
     return (
       this.storage.getString(key) !== undefined ||
       this.storage.getBool(key) !== undefined ||
@@ -105,12 +92,53 @@ export class StorageService implements IStorageService {
     );
   }
 
-  // Clear all storage
   clearAll(): void {
     this.storage.clearStore();
   }
 }
 
-// Create and export default instances
-export const mainStorage: IStorageService = new StorageService();
-export const cacheStorage: IStorageService = new StorageService('cache');
+// ─────────────────────────────────────────────────────────────
+// Per-user storage manager (Performance & Security Imporvement from VegaNext)
+// ─────────────────────────────────────────────────────────────
+
+const GUEST_PARTITION = 'main';
+const CACHE_PARTITION = 'cache';
+
+class UserStorageService {
+  private _userId: string | null = null;
+  private _main: IStorageService = new StorageService(GUEST_PARTITION);
+  private _cache: IStorageService = new StorageService(CACHE_PARTITION);
+
+  setCurrentUser(userId: string | null): void {
+    this._userId = userId;
+    if (userId) {
+      this._main = new StorageService(`user-main-${userId}`);
+      this._cache = new StorageService(`user-cache-${userId}`);
+    } else {
+      this._main = new StorageService(GUEST_PARTITION);
+      this._cache = new StorageService(CACHE_PARTITION);
+    }
+  }
+
+  get main(): IStorageService { return this._main; }
+  get cache(): IStorageService { return this._cache; }
+}
+
+export const storageService = new UserStorageService();
+
+// Proxy re-exports to ensure zero changes needed in other files
+export const mainStorage: IStorageService = new Proxy({} as IStorageService, {
+  get(_target, prop: keyof IStorageService) {
+    const target = storageService.main;
+    const value = target[prop];
+    return typeof value === 'function' ? value.bind(target) : value;
+  }
+});
+
+export const cacheStorage: IStorageService = new Proxy({} as IStorageService, {
+  get(_target, prop: keyof IStorageService) {
+    const target = storageService.cache;
+    const value = target[prop];
+    return typeof value === 'function' ? value.bind(target) : value;
+  }
+});

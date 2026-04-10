@@ -27,6 +27,8 @@ interface SearchPageData {
   name: string;
 }
 
+const CATEGORIES = ['All', 'Movies', 'Series', 'Anime', 'Cartoon', 'Cdrama', 'Donghua', 'Drama', 'Kdrama', 'Movie/tvshow', 'Tvshow'];
+
 // Extract header to a separate component to prevent re-rendering the whole list when loading changes
 const SearchHeader = React.memo(
   ({
@@ -37,6 +39,7 @@ const SearchHeader = React.memo(
     activeCategory,
     setActiveCategory,
     loadingCount,
+    totalResults,
   }: {
     filter: string;
     isAllLoaded: boolean;
@@ -45,9 +48,8 @@ const SearchHeader = React.memo(
     activeCategory: string;
     setActiveCategory: (category: string) => void;
     loadingCount: number;
+    totalResults: number;
   }) => {
-    const categories = ['All', 'Movies', 'Series', 'Anime', 'Cartoon', 'Cdrama', 'Donghua', 'Drama', 'Kdrama', 'Movie/tvshow', 'Tvshow'];
-
     return (
       <View className="mb-4" style={{ paddingTop: topPadding }}>
         <View className="mb-4">
@@ -60,6 +62,11 @@ const SearchHeader = React.memo(
             </Text>
             {!isAllLoaded && (
               <ActivityIndicator size="small" color={primary} className="ml-3" />
+            )}
+            {isAllLoaded && totalResults > 0 && (
+              <View className="ml-3 bg-white/10 rounded-full px-2 py-0.5">
+                <Text className="text-white text-[10px] font-bold">{totalResults} Found</Text>
+              </View>
             )}
           </View>
           {!isAllLoaded && (
@@ -76,7 +83,7 @@ const SearchHeader = React.memo(
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ gap: 10, paddingRight: 20 }}
         >
-          {categories.map((category) => {
+          {CATEGORIES.map((category) => {
             const isActive = activeCategory === category;
             return (
               <TouchableOpacity
@@ -131,6 +138,7 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
 
   const resultsQueue = useRef<SearchPageData[]>([]);
   const updateInterval = useRef<NodeJS.Timeout | null>(null);
+  const hasLoadedFirstItemRef = useRef(false);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -144,27 +152,26 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
     const initialLoading = new Set(installedProviders.map(p => p.value));
     setLoadingProviders(initialLoading);
 
-    // Start batch update interval - pushes queued results to state every 400ms
+    // Start batch update interval - pushes queued results to state every 200ms
     // to prevent JS thread congestion and keep UI interactive (tapable).
     updateInterval.current = setInterval(() => {
-        if (resultsQueue.current.length > 0 && isMounted.current) {
-            const batch = [...resultsQueue.current];
-            resultsQueue.current = [];
-            setSearchData(prev => {
-                // Merge batch results carefully
-                const next = [...prev];
-                batch.forEach(newBlock => {
-                    const idx = next.findIndex(p => p.value === newBlock.value);
-                    if (idx === -1) {
-                        next.push(newBlock);
-                    } else {
-                        next[idx] = newBlock;
-                    }
-                });
-                return next;
-            });
-        }
-    }, 400);
+      if (resultsQueue.current.length > 0 && isMounted.current) {
+        const batch = [...resultsQueue.current];
+        resultsQueue.current = [];
+        setSearchData(prev => {
+          const next = [...prev];
+          batch.forEach(newBlock => {
+            const idx = next.findIndex(p => p.value === newBlock.value);
+            if (idx === -1) {
+              next.push(newBlock);
+            } else {
+              next[idx] = newBlock;
+            }
+          });
+          return next;
+        });
+      }
+    }, 200);
 
     const fetchProviderData = async (item: (typeof installedProviders)[0]) => {
       try {
@@ -195,15 +202,22 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
             return titleLower.includes(searchKeywordLower) || searchWords.every(word => titleLower.includes(word));
           });
 
-          // Queue the results instead of direct setState
-          resultsQueue.current.push({
+          const newData: SearchPageData = {
             title: item.display_name,
             Posts: cleanRawData,
             filter: route.params.filter,
             providerValue: item.value,
             value: item.value,
             name: item.display_name,
-          });
+          };
+
+          // Immediate render for the very first result to feel instant
+          if (!hasLoadedFirstItemRef.current) {
+            hasLoadedFirstItemRef.current = true;
+            setSearchData([newData]);
+          } else {
+            resultsQueue.current.push(newData);
+          }
         }
       } catch (error) {
         if (!signal.aborted && isMounted.current) {
@@ -237,8 +251,9 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
 
   // Memoize and sort the data so loaded providers appear first, 
   // currently loading providers are in the middle, and empty providers are hidden/discarded.
-  const sortedSearchData = useMemo(() => {
-    return searchData.map(providerBlock => {
+  const { results: sortedSearchData, totalCount: totalResultsCount } = useMemo(() => {
+    let total = 0;
+    const mapped = searchData.map(providerBlock => {
       // 1. INSTANT CATEGORY FILTERING:
       // Filter the existing posts according to the selected button instantly 
       // without needing to query the network scraper.
@@ -307,6 +322,8 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
       // This prevents the arrays from randomly jumping around the screen during React re-renders
       return a.name.localeCompare(b.name);
     });
+
+    return { results: sorted, totalCount: total };
   }, [searchData, loadingProviders, activeCategory]);
 
   const renderItem: ListRenderItem<SearchPageData> = useCallback(
@@ -358,6 +375,7 @@ const SearchResults = ({ route }: Props): React.ReactElement => {
             activeCategory={activeCategory}
             setActiveCategory={setActiveCategory}
             loadingCount={loadingProviders.size}
+            totalResults={totalResultsCount}
           />
         }
         ListFooterComponent={<View className="h-16" />}

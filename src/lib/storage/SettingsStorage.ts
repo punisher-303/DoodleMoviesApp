@@ -45,6 +45,7 @@ export enum SettingsKeys {
 
   NETWORK_PROXY = 'networkProxyMode',
   ALWAYS_EXTERNAL_DOWNLOADER = 'alwaysExternalDownloader',
+  DISCORD_RPC = 'discordRPC',
 }
 
 /**
@@ -287,6 +288,14 @@ export class SettingsStorage {
 
   setExternalDownloaderEnabled(enabled: boolean): void {
     mainStorage.setBool(SettingsKeys.ALWAYS_EXTERNAL_DOWNLOADER, enabled);
+  }
+
+  isDiscordRPCEnabled(): boolean {
+    return mainStorage.getBool(SettingsKeys.DISCORD_RPC) === true;
+  }
+
+  setDiscordRPCEnabled(enabled: boolean): void {
+    mainStorage.setBool(SettingsKeys.DISCORD_RPC, enabled);
   }
 }
 
