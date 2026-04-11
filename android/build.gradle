@@ -2,18 +2,12 @@
 
 buildscript {
     ext {
-        buildToolsVersion = findProperty('android.buildToolsVersion') ?: '36.0.0'
+        buildToolsVersion = findProperty('android.buildToolsVersion') ?: '35.0.0'
         minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '26')
-        compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '36')
-        targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '36')
+        compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '35')
+        targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '35')
+        kotlinVersion = findProperty('android.kotlinVersion') ?: '2.0.21'
 
-        // Alias without "Version" suffix for AGP 8.x compatibility
-        compileSdk = compileSdkVersion
-        minSdk = minSdkVersion
-        targetSdk = targetSdkVersion
-
-        kotlinVersion = findProperty('android.kotlinVersion') ?: '2.1.20'
-        kspVersion = findProperty('kspVersion') ?: '2.1.20-2.0.1'
         ndkVersion = "28.0.13004108"
     }
     repositories {
@@ -21,8 +15,9 @@ buildscript {
         mavenCentral()
         maven { url 'https://www.jitpack.io' }
     }
-    dependencies {
-        classpath("com.android.tools.build:gradle:8.7.2")
+
+     dependencies {
+        classpath("com.android.tools.build:gradle:8.7.0")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
         classpath("org.jetbrains.kotlin:compose-compiler-gradle-plugin:$kotlinVersion")
         classpath("com.facebook.react:react-native-gradle-plugin")
@@ -30,9 +25,9 @@ buildscript {
     }
 }
 
-apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
 
+// Optional: For Kotlin projects
 allprojects {
     repositories {
         google()
@@ -40,15 +35,24 @@ allprojects {
         maven { url 'https://www.jitpack.io' }
         maven {
             // React Native Android binaries
-            url(new File(providers.exec {
-                workingDir(rootDir)
-                commandLine("node", "--print", "require.resolve('react-native/package.json')")
-            }.standardOutput.asText.get().trim(), '../android'))
+            url(new File(['node', '--print', "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim(), '../android'))
+        }
+        maven {
+            // Android JSC binaries
+            url(new File(['node', '--print', "require.resolve('jsc-android/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim(), '../dist'))
+        }
+    }
+    // AUTO-APPLY COMPOSE COMPILER PLUGIN TO EXPO AND APP IF NEEDED
+    subprojects {
+        plugins.withId('org.jetbrains.kotlin.android') {
+            if (project.name == 'app' || project.name.startsWith('expo')) {
+                apply plugin: 'org.jetbrains.kotlin.plugin.compose'
+            }
         }
     }
 }
 
-// Force certain versions across all subprojects to avoid conflicts
+// Optional: Force certain versions to avoid conflicts
 subprojects {
     project.configurations.all {
         resolutionStrategy {
@@ -58,12 +62,6 @@ subprojects {
             force 'com.github.penfeizhou.android.animation:gif:3.0.5'
             force 'com.github.penfeizhou.android.animation:avif:3.0.5'
             force 'com.github.penfeizhou.android.animation:glide-plugin:3.0.5'
-        }
-    }
-
-    plugins.withId('org.jetbrains.kotlin.android') {
-        if (project.name == 'app' || project.name.startsWith('expo')) {
-            apply plugin: 'org.jetbrains.kotlin.plugin.compose'
         }
     }
 }

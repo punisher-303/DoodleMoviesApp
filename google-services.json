@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "798975271908",
+    "firebase_url": "https://doodle-movies-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "doodle-movies",
     "storage_bucket": "doodle-movies.firebasestorage.app"
   },
@@ -12,7 +13,12 @@
           "package_name": "com.doodle.movies"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "798975271908-onpqv7hvmqqfjgn2pha8e0run68ddmku.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAKPA3bgXs5KYRCwt1eUeSgpKM9mfKszhk"
@@ -20,7 +26,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "798975271908-onpqv7hvmqqfjgn2pha8e0run68ddmku.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

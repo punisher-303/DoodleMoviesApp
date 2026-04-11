@@ -77,12 +77,12 @@ module.exports = () => {
     expo: {
       name: 'Doodle',
       displayName: 'Doodle',
-      newArchEnabled: true,
+      newArchEnabled: false,
       autolinking: { exclude: ['expo-splash-screen'] },
       plugins,
       slug: 'doodle-movies',
       version: '10.0.9', // UPDATED VERSION TO MATCH GRADLE
-      sdkVersion: '55.0.0',
+      sdkVersion: '52.0.0',
       userInterfaceStyle: 'dark',
       // NEW: EAS Update configuration
       updates: {
