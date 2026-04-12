@@ -82,7 +82,7 @@ module.exports = () => {
       plugins,
       slug: 'doodle-movies',
       version: '10.0.9', // UPDATED VERSION TO MATCH GRADLE
-      sdkVersion: '52.0.0',
+      sdkVersion: '54.0.0',
       userInterfaceStyle: 'dark',
       // NEW: EAS Update configuration
       updates: {

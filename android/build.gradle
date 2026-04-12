@@ -62,6 +62,12 @@ subprojects {
             force 'com.github.penfeizhou.android.animation:gif:3.0.5'
             force 'com.github.penfeizhou.android.animation:avif:3.0.5'
             force 'com.github.penfeizhou.android.animation:glide-plugin:3.0.5'
+
+            eachDependency { details ->
+                if (details.requested.group == 'com.facebook.react' && details.requested.name.contains('react-native')) {
+                    details.useVersion "0.81.5"
+                }
+            }
         }
     }
 }

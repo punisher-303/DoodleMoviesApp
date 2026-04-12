@@ -177,9 +177,8 @@ if (keystorePropertiesFile.exists()) {
     //     }
     // }
      packagingOptions {
-        jniLibs {
+         jniLibs {
             // 16KB alignment is best achieved with uncompressed packaging
-            // TorrServerModule.kt handles manual extraction if needed
             useLegacyPackaging false
         }
         // Handle potential library conflicts
