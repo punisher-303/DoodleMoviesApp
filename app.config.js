@@ -77,7 +77,7 @@ module.exports = () => {
     expo: {
       name: 'Doodle',
       displayName: 'Doodle',
-      newArchEnabled: false,
+      newArchEnabled: true,
       autolinking: { exclude: ['expo-splash-screen'] },
       plugins,
       slug: 'doodle-movies',
