@@ -1,6 +1,6 @@
 // File: src/screens/tv/LiveTVScreen.tsx
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, {useState, useEffect, useCallback, useMemo} from 'react';
 import {
   View,
   Text,
@@ -9,18 +9,15 @@ import {
   Dimensions,
   StyleSheet,
   ActivityIndicator,
+  Image,
   TextInput,
   Alert,
-  BackHandler,
 } from 'react-native';
-import { Image } from 'expo-image';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { DoodleTVStackParamList } from '../../App';
-import { useNavigation } from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {DoodleTVStackParamList} from '../../App';
+import {useNavigation} from '@react-navigation/native';
 import useThemeStore from '../../lib/zustand/themeStore';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
+import {MaterialCommunityIcons} from '@expo/vector-icons';
 
 // Define the type for a single TV channel
 interface TVChannel {
@@ -87,7 +84,7 @@ const parseJsonChannels = (jsonContent: any): TVChannel[] => {
 };
 
 const LiveTVScreen: React.FC = () => {
-  const { primary } = useThemeStore(state => state);
+  const {primary} = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<DoodleTVStackParamList>>();
   const [channels, setChannels] = useState<TVChannel[]>([]);
@@ -101,16 +98,15 @@ const LiveTVScreen: React.FC = () => {
   const [tempFilters, setTempFilters] = useState<{
     country: string;
     genre: string;
-  }>({ country: '', genre: '' });
+  }>({country: '', genre: ''});
   const [heroChannel, setHeroChannel] = useState<TVChannel | null>(null);
-  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchChannels = async () => {
       try {
         setLoading(true);
 
-        const m3uSources = [
+        const sources = [
           'https://iptv-org.github.io/iptv/index.country.m3u',
           'https://iptv-org.github.io/iptv/index.m3u',
           'https://iptv-org.github.io/iptv/categories/movies.m3u',
@@ -119,13 +115,23 @@ const LiveTVScreen: React.FC = () => {
         ];
         const jsonSource = 'https://18plus-brown.vercel.app/api/livetv';
 
+        const m3uPromises = sources.map(url => fetch(url));
+        const jsonPromise = fetch(jsonSource);
+
+        const [m3uResponses, jsonResponse] = await Promise.allSettled([
+          Promise.allSettled(m3uPromises),
+          jsonPromise,
+        ]);
+
+        // This is the key change: update the state as each data source is processed
+        // to make the initial load feel faster.
         const uniqueChannelUrls = new Set<string>();
 
-        const processM3U = async (url: string) => {
-          try {
-            const res = await fetch(url);
-            if (res.ok) {
-              const m3uContent = await res.text();
+        // Process M3U responses first
+        if (m3uResponses.status === 'fulfilled') {
+          for (const response of m3uResponses.value) {
+            if (response.status === 'fulfilled' && response.value.ok) {
+              const m3uContent = await response.value.text();
               const parsedChannels = parseM3U(m3uContent);
               const newChannels = [];
               for (const channel of parsedChannels) {
@@ -134,42 +140,40 @@ const LiveTVScreen: React.FC = () => {
                   newChannels.push(channel);
                 }
               }
-              if (newChannels.length > 0) {
-                setChannels(prev => [...prev, ...newChannels]);
-              }
+              setChannels(prevChannels => [...prevChannels, ...newChannels]);
+            } else if (response.status === 'rejected') {
+              console.error('Failed to fetch M3U source:', response.reason);
+            } else {
+              console.error(
+                'Failed to fetch M3U source:',
+                response.value.status,
+              );
             }
-          } catch (err) {
-            console.error(`Failed to fetch M3U: ${url}`, err);
           }
-        };
+        } else {
+          console.error('Failed to fetch M3U sources:', m3uResponses.reason);
+        }
 
-        const processJSON = async (url: string) => {
-          try {
-            const res = await fetch(url);
-            if (res.ok) {
-              const jsonContent = await res.json();
-              const parsedChannels = parseJsonChannels(jsonContent);
-              const newChannels = [];
-              for (const channel of parsedChannels) {
-                if (!uniqueChannelUrls.has(channel.streamUrl)) {
-                  uniqueChannelUrls.add(channel.streamUrl);
-                  newChannels.push(channel);
-                }
-              }
-              if (newChannels.length > 0) {
-                setChannels(prev => [...prev, ...newChannels]);
-              }
+        // Process JSON response
+        if (jsonResponse.status === 'fulfilled' && jsonResponse.value.ok) {
+          const jsonContent = await jsonResponse.value.json();
+          const parsedChannels = parseJsonChannels(jsonContent);
+          const newChannels = [];
+          for (const channel of parsedChannels) {
+            if (!uniqueChannelUrls.has(channel.streamUrl)) {
+              uniqueChannelUrls.add(channel.streamUrl);
+              newChannels.push(channel);
             }
-          } catch (err) {
-            console.error(`Failed to fetch JSON: ${url}`, err);
           }
-        };
-
-        // Run all fetchers in parallel, but they update state independently
-        await Promise.allSettled([
-          ...m3uSources.map(url => processM3U(url)),
-          processJSON(jsonSource),
-        ]);
+          setChannels(prevChannels => [...prevChannels, ...newChannels]);
+        } else if (jsonResponse.status === 'rejected') {
+          console.error('Failed to fetch JSON source:', jsonResponse.reason);
+        } else {
+          console.error(
+            'Failed to fetch JSON source:',
+            jsonResponse.value.status,
+          );
+        }
       } catch (error) {
         console.error('Failed to fetch or parse channels:', error);
         Alert.alert(
@@ -192,23 +196,6 @@ const LiveTVScreen: React.FC = () => {
       setHeroChannel(null);
     }
   }, [channels]);
-
-  useEffect(() => {
-    const backAction = () => {
-      if (showFilterModal) {
-        setShowFilterModal(false);
-        return true;
-      }
-      return false;
-    };
-
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      backAction,
-    );
-
-    return () => backHandler.remove();
-  }, [showFilterModal]);
 
   const allGenres = useMemo(() => {
     const genres = channels.map(channel => channel.groupTitle).filter(Boolean);
@@ -255,7 +242,7 @@ const LiveTVScreen: React.FC = () => {
   }, [tempFilters]);
 
   const handleClearModalFilters = useCallback(() => {
-    setTempFilters({ country: '', genre: '' });
+    setTempFilters({country: '', genre: ''});
     setCountrySearchText('');
     setGenreSearchText('');
   }, []);
@@ -274,8 +261,6 @@ const LiveTVScreen: React.FC = () => {
     if (heroChannel) {
       navigation.navigate('TVPlayerScreen', {
         streamUrl: heroChannel.streamUrl,
-        title: heroChannel.name,
-        poster: heroChannel.logo,
       });
     }
   }, [navigation, heroChannel]);
@@ -289,7 +274,7 @@ const LiveTVScreen: React.FC = () => {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
       {showFilterModal ? (
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
@@ -311,7 +296,7 @@ const LiveTVScreen: React.FC = () => {
             {filteredCountries.length > 0 ? (
               <FlatList
                 data={filteredCountries}
-                renderItem={({ item }) => (
+                renderItem={({item}) => (
                   <TouchableOpacity
                     style={[
                       styles.filterListItem,
@@ -320,7 +305,7 @@ const LiveTVScreen: React.FC = () => {
                       },
                     ]}
                     onPress={() =>
-                      setTempFilters(prev => ({ ...prev, country: item }))
+                      setTempFilters(prev => ({...prev, country: item}))
                     }>
                     <Text style={styles.filterListItemText}>{item}</Text>
                   </TouchableOpacity>
@@ -347,14 +332,14 @@ const LiveTVScreen: React.FC = () => {
             {filteredGenres.length > 0 ? (
               <FlatList
                 data={filteredGenres}
-                renderItem={({ item }) => (
+                renderItem={({item}) => (
                   <TouchableOpacity
                     style={[
                       styles.filterListItem,
-                      tempFilters.genre === item && { backgroundColor: primary },
+                      tempFilters.genre === item && {backgroundColor: primary},
                     ]}
                     onPress={() =>
-                      setTempFilters(prev => ({ ...prev, genre: item }))
+                      setTempFilters(prev => ({...prev, genre: item}))
                     }>
                     <Text style={styles.filterListItemText}>{item}</Text>
                   </TouchableOpacity>
@@ -370,7 +355,7 @@ const LiveTVScreen: React.FC = () => {
           </View>
 
           <TouchableOpacity
-            style={[styles.doneButton, { backgroundColor: primary }]}
+            style={[styles.doneButton, {backgroundColor: primary}]}
             onPress={handleApplyFilters}>
             <Text style={styles.doneButtonText}>Done</Text>
           </TouchableOpacity>
@@ -378,7 +363,7 @@ const LiveTVScreen: React.FC = () => {
       ) : (
         <>
           <View style={styles.headerContainer}>
-            <Text style={styles.header}>TV Channels</Text>
+            <Text style={styles.header}>Live TV Channels</Text>
             <TouchableOpacity
               onPress={handleSettings}
               style={styles.settingsIcon}>
@@ -391,10 +376,9 @@ const LiveTVScreen: React.FC = () => {
               onPress={handleHeroChannelPress}
               style={styles.heroContainer}>
               <Image
-                source={{ uri: heroChannel.logo }}
+                source={{uri: heroChannel.logo}}
                 style={styles.heroLogo}
-                contentFit="cover"
-                cachePolicy="memory-disk"
+                resizeMode="cover"
               />
               <Text style={styles.heroChannelName} numberOfLines={1}>
                 {heroChannel.name}
@@ -441,23 +425,16 @@ const LiveTVScreen: React.FC = () => {
 
           <FlatList
             data={filteredChannels}
-            renderItem={({ item }) => {
+            renderItem={({item}) => {
               return (
                 <TouchableOpacity
                   onPress={() =>
                     navigation.navigate('TVPlayerScreen', {
                       streamUrl: item.streamUrl,
-                      title: item.name,
-                      poster: item.logo,
                     })
                   }
-                  style={[styles.channelItem, styles.channelItemContainer]}>
-                  <Image
-                    source={{ uri: item.logo }}
-                    style={styles.channelLogo}
-                    contentFit="contain"
-                    cachePolicy="memory-disk"
-                  />
+                  style={styles.channelItem}>
+                  <Image source={{uri: item.logo}} style={styles.channelLogo} />
                   <Text style={styles.channelName} numberOfLines={1}>
                     {item.name}
                   </Text>
@@ -538,11 +515,9 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 20,
   },
-  channelItemContainer: {
+  channelItem: {
     flex: 1,
     margin: 5,
-  },
-  channelItem: {
     padding: 10,
     borderRadius: 10,
     alignItems: 'center',

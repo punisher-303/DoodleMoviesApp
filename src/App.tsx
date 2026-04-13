@@ -61,6 +61,10 @@ import { checkNotifications, openSettings, RESULTS, check, request, PERMISSIONS 
 import { MaterialIcons } from '@expo/vector-icons';
 import useAppModeStore from './lib/zustand/appModeStore';
 import DoodleTVStack from './navigation/DoodleTVStack';
+import Onboarding from './screens/Onboarding';
+import ChatHistory from './screens/ChatHistory';
+import { mainStorage } from './lib/storage';
+import { downloadManager } from './lib/services/DownloadManager';
 
 enableScreens(true);
 enableFreeze(true);
@@ -122,9 +126,12 @@ export type RootStackParamList = {
     doNotTrack?: boolean;
   };
   Login: undefined;
+  Onboarding: undefined;
+  ChatHistory: undefined;
+  MainStack: undefined;
 };
 
-export type DoodleTVStackParamList = {
+export type VegaTVStackParamList = {
   LiveTVScreen: undefined;
   TVPlayerScreen: {
     streamUrl: string;
@@ -135,7 +142,7 @@ export type DoodleTVStackParamList = {
   DoodleTVSettingsScreen: undefined;
 };
 
-export type DoodleTVRootStackParamList = {
+export type TVRootStackParamList = {
   DoodleTVStack: NavigatorScreenParams<DoodleTVStackParamList>;
 };
 
@@ -197,7 +204,7 @@ export type TabStackParamList = {
   SettingsStack: undefined;
 };
 const Tab = createBottomTabNavigator<TabStackParamList>();
-const DoodleTVRootStack = createNativeStackNavigator<DoodleTVRootStackParamList>();
+const TVRootStack = createNativeStackNavigator<TVRootStackParamList>();
 
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 const App = () => {
@@ -244,6 +251,20 @@ const App = () => {
     return () => {
       subscription.remove();
     };
+  }, []);
+
+  // ✅ New Fix: Recover downloads on startup and foreground
+  useEffect(() => {
+    downloadManager.resetStaleDownloads();
+  }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextState => {
+      if (nextState === 'active') {
+        downloadManager.refreshFromStorage();
+      }
+    });
+    return () => subscription.remove();
   }, []);
 
   SystemUI.setBackgroundColorAsync('black');
@@ -658,9 +679,9 @@ const App = () => {
     }
   }, []);
 
-  function DoodleTVRootStackScreen() {
+  function TVRootStackScreen() {
     return (
-      <DoodleTVRootStack.Navigator
+      <TVRootStack.Navigator
         screenOptions={{
           headerShown: false,
           animation: Platform.OS === 'android' ? 'none' : 'ios_from_right',
@@ -668,11 +689,11 @@ const App = () => {
           freezeOnBlur: true,
           contentStyle: { backgroundColor: 'transparent' },
         }}>
-        <DoodleTVRootStack.Screen
+        <TVRootStack.Screen
           name="DoodleTVStack"
           component={DoodleTVStack}
         />
-      </DoodleTVRootStack.Navigator>
+      </TVRootStack.Navigator>
     );
   }
 
@@ -688,8 +709,11 @@ const App = () => {
       };
     }, []);
 
+    const hasSeenOnboarding = mainStorage.getBool('hasSeenOnboarding') === true;
+
     return (
       <Stack.Navigator
+        initialRouteName={hasSeenOnboarding ? (isLoggedIn ? 'TabStack' : 'Login') : 'Onboarding'}
         screenOptions={{
           headerShown: false,
           animation: Platform.OS === 'android' ? 'none' : 'ios_from_right',
@@ -697,6 +721,7 @@ const App = () => {
           freezeOnBlur: true,
           contentStyle: { backgroundColor: 'transparent' },
         }}>
+        <Stack.Screen name="Onboarding" component={Onboarding} />
         {!isLoggedIn ? (
           <Stack.Screen name="Login" component={Login} />
         ) : (
@@ -707,6 +732,7 @@ const App = () => {
               component={Player}
               options={{ orientation: 'landscape' }}
             />
+            <Stack.Screen name="ChatHistory" component={ChatHistory} />
           </>
         )}
       </Stack.Navigator>
@@ -792,8 +818,8 @@ const App = () => {
                     notification: primary,
                   },
                 }}>
-                {appMode === 'doodleTv' ? (
-                  <DoodleTVRootStackScreen />
+                {appMode === 'tv' ? (
+                  <TVRootStackScreen />
                 ) : (
                   <VideoRootStackScreen />
                 )}

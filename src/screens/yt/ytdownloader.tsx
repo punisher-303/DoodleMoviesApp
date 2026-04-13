@@ -38,7 +38,7 @@ export const YTDownloader = {
         notification: true,
         title: safeFileName,
         path: `${downloads}/${safeFileName}`,
-        description: 'Downloading via Vega Next',
+        description: 'Downloading via Doodle',
         mime: mimeType || 'video/mp4',
         mediaScannable: true,
       },

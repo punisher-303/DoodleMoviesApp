@@ -1,4 +1,6 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+// File: src/screens/tv/TVPlayerScreen.tsx
+
+import React, {useEffect, useState, useRef, useCallback, useMemo} from 'react';
 import {
   ScrollView,
   Text,
@@ -20,9 +22,10 @@ import Animated, {
   withSequence,
   withDelay,
   Layout,
+  runOnJS,
 } from 'react-native-reanimated';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { DoodleTVStackParamList } from '../../App';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {DoodleTVStackParamList} from '../../App';
 import Video, {
   VideoRef,
   SelectedTrackType,
@@ -31,18 +34,22 @@ import Video, {
   OnProgressData,
   OnVideoErrorData,
 } from 'react-native-video';
-import { useNavigation } from '@react-navigation/native';
-import { MaterialIcons, Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import FullScreenChz from 'react-native-fullscreen-chz';
-import OrientationLocker from 'react-native-orientation-locker';
-import useThemeStore from '../../lib/zustand/themeStore';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import OrientationLocker, {
+  LANDSCAPE,
+  PORTRAIT,
+} from 'react-native-orientation-locker';
 
-
-// --- Local Hooks ---
-
-const useStream = (options: { activeEpisode: any; routeParams: any }) => {
-  const { streamUrl } = options.routeParams;
+// --- Placeholder/Mock Hooks & Stores ---
+const useThemeStore = (state: string) => {
+  return {primary: '#007AFF'};
+};
+const useStream = (options: {activeEpisode: any; routeParams: any}) => {
+  const {streamUrl} = options.routeParams;
   const [selectedStream, setSelectedStream] = useState({
     link: streamUrl,
     quality: 'auto',
@@ -52,14 +59,17 @@ const useStream = (options: { activeEpisode: any; routeParams: any }) => {
   const [error, setError] = useState(null);
   useEffect(() => {
     if (streamUrl) {
-      setIsLoading(false);
-      setStreamData([{ link: streamUrl, quality: 'auto' }]);
+      setTimeout(() => {
+        setIsLoading(false);
+        setStreamData([{link: streamUrl, quality: 'auto'}]);
+      }, 500);
     } else {
       setIsLoading(false);
       setError('No stream URL provided');
     }
   }, [streamUrl]);
   const switchToNextStream = useCallback(() => {
+    console.log('No next stream to switch to.');
     return false;
   }, []);
   return {
@@ -67,13 +77,12 @@ const useStream = (options: { activeEpisode: any; routeParams: any }) => {
     selectedStream,
     setSelectedStream,
     externalSubs: [],
-    setExternalSubs: () => { },
+    setExternalSubs: () => {},
     isLoading,
     error,
     switchToNextStream,
   };
 };
-
 const useVideoSettings = () => {
   const [audioTracks, setAudioTracks] = useState([]);
   const [textTracks, setTextTracks] = useState([]);
@@ -108,7 +117,7 @@ const useVideoSettings = () => {
     if (index === -1) {
       setSelectedTextTrack(null);
     } else {
-      setSelectedTextTrack({ type: SelectedTrackType.INDEX, value: index });
+      setSelectedTextTrack({type: SelectedTrackType.INDEX, value: index});
     }
   }, []);
 
@@ -132,7 +141,7 @@ const useVideoSettings = () => {
         value: selectedQualityIndex,
       };
     }
-    return { type: SelectedTrackType.AUTO };
+    return {type: SelectedTrackType.AUTO};
   }, [selectedQualityIndex, videoTracks]);
 
   return {
@@ -152,22 +161,17 @@ const useVideoSettings = () => {
     handleSelectSubtitle,
   };
 };
-
 const usePlayerSettings = () => {
   const [showControls, setShowControls] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState('quality');
-  const [resizeMode, setResizeMode] = useState<ResizeMode>(ResizeMode.CONTAIN);
+  const [resizeMode, setResizeMode] = useState<ResizeMode>('contain');
   const [playbackRate, setPlaybackRate] = useState(1.0);
   const [isPlayerLocked, setIsPlayerLocked] = useState(false);
   const [showUnlockButton, setShowUnlockButton] = useState(false);
   const unlockButtonTimerRef = useRef(null);
   const handleResizeMode = useCallback(() => {
-    setResizeMode(prevMode =>
-      prevMode === ResizeMode.CONTAIN
-        ? ResizeMode.COVER
-        : ResizeMode.CONTAIN,
-    );
+    setResizeMode(prevMode => (prevMode === 'contain' ? 'cover' : 'contain'));
   }, []);
   const togglePlayerLock = useCallback(() => {
     setIsPlayerLocked(prev => !prev);
@@ -205,7 +209,6 @@ const usePlayerSettings = () => {
     unlockButtonTimerRef,
   };
 };
-
 const usePlayerProgress = (options: {
   activeEpisode: any;
   routeParams: any;
@@ -215,7 +218,7 @@ const usePlayerProgress = (options: {
   const [duration, setDuration] = useState(0);
   const [isPaused, setIsPaused] = useState(true);
   const videoPositionRef = useRef(0);
-  const updatePlaybackInfo = useCallback(() => { }, []);
+  const updatePlaybackInfo = useCallback(() => {}, []);
   const handleProgress = useCallback((data: OnProgressData) => {
     videoPositionRef.current = data.currentTime;
     setCurrentTime(data.currentTime);
@@ -242,7 +245,7 @@ const usePlayerGestures = ({
   setIsPaused,
   setShowControls,
 }: any) => {
-  const { width, height } = Dimensions.get('window');
+  const {width, height} = Dimensions.get('window');
   const [volume, setVolume] = useState(0.5);
   const [brightness, setBrightness] = useState(0.5);
   const [showVolumeIndicator, setShowVolumeIndicator] = useState(false);
@@ -276,7 +279,7 @@ const usePlayerGestures = ({
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onPanResponderMove: (evt, gestureState) => {
-          const { dx, dy, x0 } = gestureState;
+          const {dx, dy, x0} = gestureState;
 
           // Horizontal swipe for seeking
           if (Math.abs(dx) > Math.abs(dy) * 2 && Math.abs(dx) > 10) {
@@ -341,13 +344,13 @@ const usePlayerGestures = ({
 };
 
 type TVPlayerScreenProps = NativeStackScreenProps<
-  DoodleTVStackParamList,
+  VegaTVStackParamList,
   'TVPlayerScreen'
 >;
 
-const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
-  const { primary } = useThemeStore(state => state);
-  const { streamUrl, poster, title, subtitle } = route.params;
+const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({route}) => {
+  const {primary} = useThemeStore('primary');
+  const {streamUrl, poster, title, subtitle} = route.params;
 
   const navigation = useNavigation();
   const playerRef: React.RefObject<VideoRef> = useRef(null);
@@ -364,11 +367,11 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
 
   const loadingContainerStyle = useAnimatedStyle(() => ({
     opacity: loadingOpacity.value,
-    transform: [{ scale: loadingScale.value }],
+    transform: [{scale: loadingScale.value}],
   }));
 
   const loadingIconStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${loadingRotation.value}deg` }],
+    transform: [{rotate: `${loadingRotation.value}deg`}],
   }));
 
   const controlsStyle = useAnimatedStyle(() => ({
@@ -376,16 +379,16 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
   }));
 
   const settingsStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: settingsTranslateY.value }],
+    transform: [{translateY: settingsTranslateY.value}],
     opacity: settingsOpacity.value,
   }));
 
   const lockButtonStyle = useAnimatedStyle(() => ({
     opacity: lockButtonOpacity.value,
-    transform: [{ translateX: lockButtonTranslateX.value }],
+    transform: [{translateX: lockButtonTranslateX.value}],
   }));
 
-  const [activeEpisode] = useState({ link: streamUrl });
+  const [activeEpisode] = useState({link: streamUrl});
   const {
     selectedStream,
     isLoading: streamLoading,
@@ -506,10 +509,11 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
 
   const handleVideoError = useCallback(
     (e: OnVideoErrorData) => {
+      console.log('PlayerError', e);
 
       if (
         e.error?.errorString ===
-        'ExoPlaybackException: ERROR_CODE_BEHIND_LIVE_WINDOW' ||
+          'ExoPlaybackException: ERROR_CODE_BEHIND_LIVE_WINDOW' ||
         e.error?.errorCode === '21002'
       ) {
         ToastAndroid.show(
@@ -537,30 +541,18 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
   useEffect(() => {
     FullScreenChz.enable();
 
-    // Check for large screen (tablet/foldable) - considering width > 768 as large
-    const { width, height } = Dimensions.get('window');
-    const isLargeScreen = Math.min(width, height) >= 768;
-
-    if (!isLargeScreen) {
-      // Use a safe check and call the imperative method
-      if (OrientationLocker && OrientationLocker.lockToLandscape) {
-        OrientationLocker.lockToLandscape();
-      } else {
-        console.warn('OrientationLocker.lockToLandscape is not available.');
-      }
+    // Use a safe check and call the imperative method
+    if (OrientationLocker && OrientationLocker.lockToLandscape) {
+      OrientationLocker.lockToLandscape();
+    } else {
+      console.warn('OrientationLocker.lockToLandscape is not available.');
     }
 
     const unsubscribe = navigation.addListener('beforeRemove', () => {
       FullScreenChz.disable();
-      if (!isLargeScreen) {
-        // Use a safe check and call the imperative method
-        if (OrientationLocker && OrientationLocker.lockToPortrait) {
-          OrientationLocker.lockToPortrait();
-        }
-      } else {
-        if (OrientationLocker && OrientationLocker.unlockAllOrientations) {
-          OrientationLocker.unlockAllOrientations();
-        }
+      // Use a safe check and call the imperative method
+      if (OrientationLocker && OrientationLocker.lockToPortrait) {
+        OrientationLocker.lockToPortrait();
       }
     });
     return unsubscribe;
@@ -568,20 +560,20 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
 
   useEffect(() => {
     if (streamLoading) {
-      loadingOpacity.value = withTiming(1, { duration: 800 });
-      loadingScale.value = withTiming(1, { duration: 800 });
+      loadingOpacity.value = withTiming(1, {duration: 800});
+      loadingScale.value = withTiming(1, {duration: 800});
       loadingRotation.value = withRepeat(
         withSequence(
-          withDelay(500, withTiming(180, { duration: 900 })),
-          withTiming(180, { duration: 600 }),
-          withTiming(360, { duration: 900 }),
-          withTiming(360, { duration: 600 }),
+          withDelay(500, withTiming(180, {duration: 900})),
+          withTiming(180, {duration: 600}),
+          withTiming(360, {duration: 900}),
+          withTiming(360, {duration: 600}),
         ),
         -1,
       );
     } else {
-      loadingOpacity.value = withTiming(0, { duration: 250 });
-      loadingScale.value = withTiming(0.8, { duration: 250 });
+      loadingOpacity.value = withTiming(0, {duration: 250});
+      loadingScale.value = withTiming(0.8, {duration: 250});
     }
   }, [streamLoading, loadingOpacity, loadingScale, loadingRotation]);
 
@@ -595,7 +587,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
     });
     controlsOpacity.value = withTiming(
       showControls && !isPlayerLocked && !showSettings ? 1 : 0,
-      { duration: 250 },
+      {duration: 250},
     );
   }, [
     isPlayerLocked,
@@ -610,9 +602,9 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
   useEffect(() => {
     settingsTranslateY.value = withTiming(
       showSettings ? 0 : Dimensions.get('window').height,
-      { duration: 250 },
+      {duration: 250},
     );
-    settingsOpacity.value = withTiming(showSettings ? 1 : 0, { duration: 250 });
+    settingsOpacity.value = withTiming(showSettings ? 1 : 0, {duration: 250});
   }, [showSettings, settingsTranslateY, settingsOpacity]);
 
   const handleVideoLoad = useCallback(
@@ -679,7 +671,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
       <View style={styles.videoWrapper}>
         <Video
           ref={playerRef}
-          source={{ uri: selectedStream?.link }}
+          source={{uri: selectedStream?.link}}
           style={styles.backgroundVideo}
           controls={false}
           paused={isPaused}
@@ -691,13 +683,6 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
           selectedTextTrack={selectedTextTrack}
           selectedAudioTrack={selectedAudioTrack}
           selectedVideoTrack={selectedVideoTrack}
-          bufferConfig={{
-            minBufferMs: 15000,
-            maxBufferMs: 50000,
-            bufferForPlaybackMs: 1500,
-            bufferForPlaybackAfterRebufferMs: 3000,
-            backBufferDurationMs: 30000,
-          }}
         />
         {/* New Gesture Overlay to capture all touches */}
         <TouchableNativeFeedback
@@ -716,7 +701,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                 />
                 <View style={styles.volumeBar}>
                   <View
-                    style={[styles.volumeFill, { height: `${volume * 100}%` }]}
+                    style={[styles.volumeFill, {height: `${volume * 100}%`}]}
                   />
                 </View>
               </View>
@@ -802,7 +787,6 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handlePlayPause}
-                  
                   style={styles.middleButton}>
                   <Ionicons
                     name={
@@ -832,7 +816,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     <View
                       style={[
                         styles.progressIndicator,
-                        { width: `${(currentTime / duration) * 100}%` },
+                        {width: `${(currentTime / duration) * 100}%`},
                       ]}
                     />
                   </View>
@@ -880,7 +864,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     <Text style={styles.footerButtonText}>{playbackRate}x</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    onPress={() => { }}
+                    onPress={() => {}}
                     style={styles.footerButton}>
                     <MaterialIcons
                       name="picture-in-picture-alt"
@@ -956,7 +940,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                   <Text
                     style={[
                       styles.trackText,
-                      { color: selectedQualityIndex === -1 ? primary : 'white' },
+                      {color: selectedQualityIndex === -1 ? primary : 'white'},
                     ]}>
                     Auto
                   </Text>
@@ -975,7 +959,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     <Text
                       style={[
                         styles.trackText,
-                        { color: selectedQualityIndex === i ? primary : 'white' },
+                        {color: selectedQualityIndex === i ? primary : 'white'},
                       ]}>
                       {formatQuality(
                         track.height > track.width ? track.width : track.height,
@@ -1003,7 +987,7 @@ const TVPlayerScreen: React.FC<TVPlayerScreenProps> = ({ route }) => {
                     <Text
                       style={[
                         styles.trackText,
-                        { color: playbackRate === rate ? primary : 'white' },
+                        {color: playbackRate === rate ? primary : 'white'},
                       ]}>
                       {rate}x
                     </Text>
@@ -1105,7 +1089,8 @@ const styles = StyleSheet.create({
   },
   videoWrapper: {
     flex: 1,
-    backgroundColor: 'black',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   backgroundVideo: {
     position: 'absolute',
@@ -1113,61 +1098,74 @@ const styles = StyleSheet.create({
     left: 0,
     bottom: 0,
     right: 0,
+    backgroundColor: 'black',
   },
-  gestureOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
-    right: 0,
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
   },
   controlsOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
-    right: 0,
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'space-between',
     padding: 20,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   controlsHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
   },
   headerButton: {
     padding: 10,
   },
+  headerTitleContainer: {
+    flex: 1,
+    paddingHorizontal: 10,
+  },
+  videoTitleText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  videoSubtitleText: {
+    color: 'gray',
+    fontSize: 14,
+  },
   lockButton: {
-    alignSelf: 'flex-end',
+    padding: 10,
+    borderRadius: 50,
   },
   middleControls: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 40,
+    flex: 1,
   },
   middleButton: {
-    justifyContent: 'center',
     alignItems: 'center',
+    marginHorizontal: 30,
+    position: 'relative',
   },
   middleButtonText: {
-    position: 'absolute',
     color: 'white',
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: 'bold',
+    position: 'absolute',
+    top: '30%',
+    left: '50%',
+    transform: [{translateX: -10}, {translateY: -10}],
   },
   rotateLeft: {
-    transform: [{ scaleX: -1 }],
+    transform: [{scaleX: -1}],
   },
   rotateRight: {
-    transform: [{ scaleX: 1 }],
+    transform: [{scaleX: 1}],
   },
   controlsFooter: {
-    width: '100%',
+    justifyContent: 'space-between',
   },
   timeContainer: {
     flexDirection: 'row',
@@ -1176,141 +1174,137 @@ const styles = StyleSheet.create({
   },
   timeText: {
     color: 'white',
-    fontSize: 12,
-    minWidth: 40,
-    textAlign: 'center',
+    fontSize: 14,
+    marginHorizontal: 5,
   },
   progressBar: {
     flex: 1,
-    height: 4,
+    height: 5,
     backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 2,
-    marginHorizontal: 10,
+    borderRadius: 5,
   },
   progressIndicator: {
     height: '100%',
-    backgroundColor: '#FF3B30',
-    borderRadius: 2,
+    backgroundColor: '#ff0000',
+    borderRadius: 5,
   },
   footerButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 10,
   },
   footerButton: {
     alignItems: 'center',
-    justifyContent: 'center',
   },
   footerButtonText: {
     color: 'white',
-    fontSize: 10,
-    marginTop: 2,
-  },
-  lockButtonContainer: {
-    position: 'absolute',
-    left: 40,
-    zIndex: 20,
-  },
-  floatingLockButton: {
-    backgroundColor: 'white',
-    padding: 10,
-    borderRadius: 25,
-  },
-  centerIndicator: {
-    position: 'absolute',
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    padding: 20,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  volumeBar: {
-    width: 6,
-    height: 60,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 3,
-    marginTop: 10,
-    justifyContent: 'flex-end',
-  },
-  volumeFill: {
-    width: '100%',
-    backgroundColor: 'white',
-    borderRadius: 3,
-  },
-  seekIndicatorContainer: {
-    position: 'absolute',
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    padding: 20,
-    borderRadius: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  seekIndicatorText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginLeft: 10,
+    fontSize: 12,
   },
   settingsModal: {
     position: 'absolute',
+    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    height: '50%',
-    backgroundColor: '#1c1c1c',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    zIndex: 100,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    flexDirection: 'row',
+    zIndex: 20,
+    paddingTop: 40,
   },
   settingsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    zIndex: 1,
   },
   settingsContent: {
     flex: 1,
   },
   settingsBody: {
     flex: 1,
+    paddingHorizontal: 20,
   },
   tabHeading: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    margin: 20,
     marginBottom: 10,
   },
   trackItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    justifyContent: 'space-between',
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#333',
   },
   trackText: {
     fontSize: 16,
-    color: 'white',
+    fontWeight: '500',
   },
   messageText: {
     color: 'white',
-    fontSize: 16,
-    textAlign: 'center',
+    fontSize: 18,
   },
-  loadingContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'black',
+  lockButtonContainer: {
+    position: 'absolute',
+    alignSelf: 'center',
+    top: '50%',
+    transform: [{translateY: -20}],
+    zIndex: 100,
   },
   unlockButton: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 15,
+    padding: 10,
     borderRadius: 50,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  centerIndicator: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{translateX: -20}, {translateY: -50}],
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 10,
+    borderRadius: 10,
+    zIndex: 10,
+  },
+  volumeBar: {
+    width: 10,
+    height: 80,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 5,
+    marginTop: 10,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  volumeFill: {
+    width: '100%',
+    backgroundColor: 'white',
+  },
+  seekIndicatorContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{translateX: -50}, {translateY: -20}],
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 10,
+    borderRadius: 10,
+    zIndex: 10,
+  },
+  seekIndicatorText: {
+    color: 'white',
+    fontSize: 24,
+    marginLeft: 10,
+  },
+  // NEW STYLE
+  gestureOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 5, // A Z-index higher than the video but lower than the controls
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

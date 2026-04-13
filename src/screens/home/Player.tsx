@@ -1657,12 +1657,14 @@ const Player = ({ route }: Props): React.JSX.Element => {
       source: {
         textTracks: externalSubs,
         uri: selectedStream?.link || '',
+        // ✅ FIX: Tuned buffer config - faster start, less aggressive pre-buffering
+        //         to reduce the initial "big buffering" pause at video start.
         bufferConfig: {
-          minBufferMs: 15000,
-          maxBufferMs: 50000,
-          bufferForPlaybackMs: 1500,
-          bufferForPlaybackAfterRebufferMs: 3000,
-          backBufferDurationMs: 30000,
+          minBufferMs: 5000, // Only keep 5s minimum (was 15s - too slow to start)
+          maxBufferMs: 30000, // Cap at 30s (was 50s - wasted memory)
+          bufferForPlaybackMs: 1500, // Start after 1.5s
+          bufferForPlaybackAfterRebufferMs: 3000, 
+          backBufferDurationMs: 10000, // 10s back buffer
         },
         shouldCache: true,
         ...(selectedStream?.type === 'm3u8' && { type: 'm3u8' }),

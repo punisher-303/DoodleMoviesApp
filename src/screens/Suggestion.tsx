@@ -1,16 +1,14 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
-
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+// Suggestion.tsx
+import React, {useEffect, useState, useCallback} from 'react';
+import {View, Text, FlatList, TouchableOpacity, Image} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import Animated, {FadeInDown, Layout} from 'react-native-reanimated';
+import {Ionicons} from '@expo/vector-icons';
 import useThemeStore from '../lib/zustand/themeStore';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
-import { MMKV } from '../lib/Mmkv';
-import { SearchStackParamList } from '../App';
+import {MMKV} from '../lib/Mmkv';
+import {SearchStackParamList} from '../App';
 
 // --- Type Definitions ---
 interface SuggestItem {
@@ -28,7 +26,7 @@ interface IMDBApiResult {
   id: string; // imdbID
   l: string; // title
   y?: number; // year
-  i?: { imageUrl: string; height: number; width: number }; // image/poster
+  i?: {imageUrl: string; height: number; width: number}; // image/poster
   q?: 'feature' | 'tv_series' | 'video' | 'short'; // query type
 }
 
@@ -57,10 +55,9 @@ const cleanTitleForImdbApi = (title: string): string => {
 };
 
 const Suggestion = () => {
-  const insets = useSafeAreaInsets();
   const navigation =
     useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
-  const { primary } = useThemeStore(state => state);
+  const {primary} = useThemeStore(state => state);
 
   const watchHistoryZustand = useWatchHistoryStore(state => state.history);
 
@@ -146,15 +143,16 @@ const Suggestion = () => {
     // 💡 FIX: Inject inferred genre into the enhanced query
     if (inferredGenre) {
       // e.g., "The Matrix" is in history. Query: "The Matrix similar sci-fi movie"
-      enhancedQuery = `${coreQuery} similar ${inferredGenre} ${queryTitle.includes('series') ? 'series' : 'movie'
-        }`;
+      enhancedQuery = `${coreQuery} similar ${inferredGenre} ${
+        queryTitle.includes('series') ? 'series' : 'movie'
+      }`;
     }
 
     const genreFallback = inferredGenre
       ? `best ${inferredGenre} titles` // Use the inferred genre for a broad search
       : isAnime
-        ? 'top action anime'
-        : 'top rated movies';
+      ? 'top action anime'
+      : 'top rated movies';
 
     let finalSuggestions: SuggestItem[] = [];
     const collectedIds = new Set<string>();
@@ -281,7 +279,7 @@ const Suggestion = () => {
   }, [generateSuggestionsFromHistory]);
 
   const handleClick = (title: string) => {
-    navigation.navigate('SearchResults', { filter: title });
+    navigation.navigate('SearchResults', {filter: title});
   };
 
   // Handler to remove a suggestion
@@ -295,53 +293,57 @@ const Suggestion = () => {
 
   // Filter the suggestions based on removedIds before rendering
   const filteredSuggestions = suggestions.filter(
-    item => !removedIds.has(item.imdbID)
+    item => !removedIds.has(item.imdbID),
   );
 
-  const renderItem = useCallback(({ item, index }: { item: SuggestItem; index: number }) => (
+  const renderItem = ({item, index}: {item: SuggestItem; index: number}) => (
     <Animated.View
       entering={FadeInDown.delay(index * 70)}
-      layout={Layout.springify()}>
-      <View className="mb-3 px-4 flex-row items-center">
-        <TouchableOpacity
-          className="flex-1 bg-[#141414] p-3 rounded-xl border border-white/10 flex-row items-center mr-2"
-          onPress={() => handleClick(item.Title)}>
-          {item.Poster ? (
-            <Image
-              source={{ uri: item.Poster }}
-              className="w-12 h-16 rounded mr-3"
-              resizeMode="cover"
-            />
-          ) : (
-            <View className="w-12 h-16 mr-3 bg-white/10 rounded items-center justify-center">
-              <Ionicons name="film-outline" size={24} color={primary} />
-            </View>
-          )}
-          <View className="flex-1 pr-2">
-            <Text
-              className="text-white text-base font-semibold"
-              numberOfLines={1}>
-              {item.Title}
-            </Text>
-            <Text className="text-white/50 text-xs" numberOfLines={1}>
-              {`${item.Type === 'series' ? 'TV SERIES' : 'MOVIE'
-                } · Suggested from: ${item.sourceQueryIndex === 0 ? 'Recent' : 'History'} · ${item.Year || 'N/A'
-                }`}
-            </Text>
+      layout={Layout.springify()}
+      className="mb-3 px-4">
+      <TouchableOpacity
+        className="bg-[#141414] p-3 rounded-xl border border-white/10 flex-row items-center"
+        onPress={() => handleClick(item.Title)}
+        activeOpacity={0.7}>
+        {item.Poster ? (
+          <Image
+            source={{uri: item.Poster}}
+            className="w-12 h-16 rounded mr-3"
+            resizeMode="cover"
+          />
+        ) : (
+          <View className="w-12 h-16 mr-3 bg-white/10 rounded items-center justify-center">
+            <Ionicons name="film-outline" size={24} color={primary} />
           </View>
-        </TouchableOpacity>
+        )}
+        <View className="flex-1 pr-2">
+          <Text
+            className="text-white text-base font-semibold"
+            numberOfLines={1}>
+            {item.Title}
+          </Text>
+          <Text className="text-white/50 text-xs" numberOfLines={1}>
+            {`${
+              item.Type === 'series' ? 'TV SERIES' : 'MOVIE'
+            } · Suggested from: ${item.querySourceTitle} · ${
+              item.Year || 'N/A'
+            }`}
+          </Text>
+        </View>
 
+        {/* Remove button */}
         <TouchableOpacity
           onPress={() => handleRemoveSuggestion(item.imdbID)}
-          className="p-3 bg-[#141414] rounded-xl border border-white/10 justify-center items-center">
-          <Ionicons name="close" size={24} color="#FF6347" />
+          className="p-2 ml-2"
+          hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+          <Ionicons name="close-circle-outline" size={24} color="#FF6347" />
         </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
     </Animated.View>
-  ), [primary, handleClick, handleRemoveSuggestion]);
+  );
 
   return (
-    <View className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-black">
       <View className="px-4 pt-4">
         <Text className="text-white text-xl font-bold mb-1">
           🍿 Recommendations
@@ -359,14 +361,12 @@ const Suggestion = () => {
           </Animated.Text>
         </View>
       ) : filteredSuggestions.length > 0 ? (
-        <FlashList
+        <FlatList
           data={filteredSuggestions}
           keyExtractor={(item, idx) => `${item.imdbID || item.Title}-${idx}`}
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          estimatedItemSize={90}
-          removeClippedSubviews={true}
+          contentContainerStyle={{paddingBottom: 20}}
         />
       ) : suggestions.length > 0 ? (
         // State for when all suggestions have been removed

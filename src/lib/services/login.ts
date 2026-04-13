@@ -108,6 +108,13 @@ class UserSession {
     return this._finaliseLogin(this._mapSupabaseUser(data.user));
   }
 
+  async sendPasswordReset(email: string): Promise<void> {
+    const {error} = await this.supabase.auth.resetPasswordForEmail(
+      email.trim().toLowerCase(),
+    );
+    if (error) throw new Error(error.message);
+  }
+
   async signOut(): Promise<void> {
     if (this.currentUser) {
       await cloudSyncService.pushUserData(this.currentUser.id).catch(() => {});
